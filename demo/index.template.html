@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weight of evidence trapezoid diagram</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main>
+    <header class="introduction">
+      <div class="language-control"><label for="language" data-i18n="language.label">Language</label><select id="language"></select></div>
+      <p class="eyebrow">@bycelium/evidences-diagrams</p>
+      <h1 data-i18n="app.heading">Weight of evidence diagram</h1>
+      <p data-i18n="app.intro">Add evidence, adjust its illustrative weight, and explore combined weight, dissonance, and color.</p>
+    </header>
+    <div class="workspace">
+      <div class="main-column">
+        <section class="result" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">
+          <div class="visual-summary"><p id="probability-description" class="visually-hidden"></p>
+            <figure id="visualization"><div class="cone-wrap">
+              <h2 id="resultant-label" class="resultant-label" data-i18n="diagram.resultNone">Combined weight of evidence: None (0 dBan)</h2>
+              <div class="prior-handles-zone" data-i18n-aria-label="prior.handlesLabel" aria-label="Adjustable prior bounds on the posterior axis">
+                <canvas id="prior-resultant" class="prior-resultant" aria-hidden="true"></canvas>
+                <div class="prior-track"><div id="prior-band" class="prior-band"></div>
+                  <button type="button" class="prior-handle prior-handle-min" data-prior-handle="min" role="slider" data-i18n-aria-label="prior.minHandle" aria-label="Adjust the minimum prior bound"></button>
+                  <button type="button" class="prior-handle prior-handle-max" data-prior-handle="max" role="slider" data-i18n-aria-label="prior.maxHandle" aria-label="Adjust the maximum prior bound"></button>
+                </div><p id="prior-band-text" class="prior-band-text"></p>
+              </div>
+              <canvas id="cone-ruler" class="cone-ruler" aria-hidden="true"></canvas>
+              <div class="cone-viewport"><div id="cone-scroll" class="cone-scroll" tabindex="0" data-i18n-aria-label="diagram.historyLabel" aria-label="Graphical evidence history, from the current summary to older evidence">
+                <canvas id="cone" class="cone-canvas" role="img" aria-describedby="probability-description cone-description" data-i18n="diagram.canvasFallback" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">The diagram shows the posterior interval horizontally and absolute weight vertically.</canvas>
+                <div id="cone-spacer" class="cone-spacer" aria-hidden="true"></div></div>
+                <div class="measures" aria-live="polite" aria-atomic="true"><div class="dissonance-measure"><span data-i18n="measure.dissonance">Dissonance</span> <output id="dissonance">0%</output></div><div id="probability" class="probability"><output id="probability-text" aria-describedby="probability-description" data-i18n="measure.noEvidence">No evidence</output></div></div>
+              </div><p id="cone-description" class="visually-hidden"></p>
+            </div><figcaption data-i18n="diagram.caption">Height measures absolute weight. Arrows follow each item of evidence at plus or minus 45 degrees.</figcaption></figure>
+          </div>
+        </section>
+        <section class="settings" aria-labelledby="settings-title">
+          <div class="settings-header"><h2 id="settings-title" data-i18n="evidence.heading">Evidence</h2><button type="button" id="reset" data-i18n="action.reset">Reset</button></div>
+          <p class="illustrative-note"><span data-i18n="evidence.illustrative">Illustrative weights only; adjust them for the evidence and context.</span> <span data-i18n="evidence.independence">Several reports can repeat the same source. Check whether evidence is independent before combining its weight.</span></p>
+          <section class="current-evidence" data-i18n-aria-label="evidence.editorLabel" aria-label="Evidence editor">
+            <div class="table-wrap"><table><thead><tr><th scope="col" data-i18n="evidence.category">Category</th><th scope="col" data-i18n="evidence.for">For</th><th scope="col" data-i18n="evidence.against">Against</th></tr></thead><tbody id="category-rows"></tbody></table></div>
+            <div class="category-adders">
+              <form id="preset-category-form" class="category-form"><label for="category-preset" data-i18n="category.preset">Category preset</label><div class="category-form-row"><select id="category-preset"></select><button type="submit" data-i18n="category.addPreset">Add preset</button></div></form>
+              <form id="category-form" class="category-form" novalidate><label for="category-name" data-i18n="category.name">Category name</label><div class="category-form-row"><input id="category-name" maxlength="80" data-i18n-placeholder="category.placeholder" placeholder="New category" aria-describedby="category-error"><button type="submit" data-i18n="category.add">Add category</button></div><p id="category-error" class="bounds-error" role="alert" hidden></p></form>
+            </div>
+            <div class="evidence-header"><p id="trajectory-summary" class="trajectory-summary" aria-live="polite" data-i18n="measure.noEvidence">No evidence</p></div>
+            <p id="trajectory-empty" class="trajectory-empty" data-i18n="evidence.empty">Add an item of evidence.</p><ol id="evidence-history" class="evidence-trace" data-i18n-aria-label="evidence.addedLabel" aria-label="Added evidence" hidden></ol>
+          </section>
+          <section class="prior-bounds" aria-labelledby="prior-bounds-title"><h3 id="prior-bounds-title" data-i18n="prior.heading">Prior opinion</h3>
+            <div class="bounds-fields"><label for="prior-min-decibans"><span data-i18n="prior.minimum">Min</span> <input id="prior-min-decibans" type="number" step="1" value="-15" inputmode="numeric" aria-describedby="prior-bounds-error"> dBan</label><label for="prior-max-decibans"><span data-i18n="prior.maximum">Max</span> <input id="prior-max-decibans" type="number" step="1" value="15" inputmode="numeric" aria-describedby="prior-bounds-error"> dBan</label></div>
+            <div id="prior-presets" class="prior-presets" data-i18n-aria-label="prior.presetsLabel" aria-label="Prior-bound presets"><button type="button" data-prior-min="-5" data-prior-max="5">−5 / +5</button><button type="button" data-prior-min="-10" data-prior-max="10">−10 / +10</button><button type="button" data-prior-min="-15" data-prior-max="15">−15 / +15</button><button type="button" data-prior-min="-5" data-prior-max="0" data-i18n="prior.slightNegative">Slightly negative: −5 / 0</button><button type="button" data-prior-min="20" data-prior-max="30" data-i18n="prior.veryPositive">Very positive: +20 / +30</button><button type="button" data-prior-min="0" data-prior-max="0" data-i18n="prior.exactFifty">Exact 50% prior</button></div>
+            <p id="prior-bounds-error" class="bounds-error" role="alert" hidden></p><p class="bounds-help" data-i18n="prior.fixedHelp">Equal bounds represent a fixed prior.</p>
+          </section>
+        </section>
+      </div>
+      <div class="controls">
+        <section class="scenarios" aria-labelledby="scenarios-title"><h2 id="scenarios-title" data-i18n="scenario.heading">Example scenarios</h2><div id="scenario-list" class="presets"></div></section>
+        <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.</p>
+          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.">Triangular color legend.</canvas>
+          <div class="color" data-i18n-aria-label="palette.currentAria" aria-label="Current summary color"><span id="swatch" class="swatch" aria-hidden="true"></span><code id="hex">#9ca3af</code></div>
+          <div class="palette"><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Saturation threshold</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1"></label><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label></div>
+          <p class="palette-help" data-i18n="palette.help">The threshold controls the color transition beyond the gray region defined by the prior bounds.</p>
+        </section>
+      </div>
+    </div>
+  </main><script type="module" src="./main.js"></script>
+</body>
+</html>

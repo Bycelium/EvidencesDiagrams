@@ -1,0 +1,3749 @@
+<!-- Generated from demo/index.template.html, demo/style.css, demo/main.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weight of evidence trapezoid diagram</title>
+  <style>
+:root {
+  color-scheme: light;
+  font: 16px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #fff;
+  accent-color: #64748b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+main {
+  width: min(760px, calc(100% - 1rem));
+  margin: 0 auto;
+  padding: .75rem 0 2rem;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: .2rem;
+  font-size: clamp(1.6rem, 4vw, 2.15rem);
+  line-height: 1.05;
+  letter-spacing: -.04em;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 1.3rem;
+}
+
+.introduction {
+  max-width: 700px;
+  margin-bottom: .6rem;
+}
+
+.introduction > p:last-child {
+  margin-bottom: 0;
+  font-size: .85rem;
+}
+
+.eyebrow {
+  margin-bottom: .2rem;
+  color: #476078;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.workspace {
+  display: block;
+}
+
+.main-column {
+  display: grid;
+  min-width: 0;
+  gap: .65rem;
+}
+
+.controls {
+  display: grid;
+  min-width: 0;
+  gap: .65rem;
+  margin-top: .65rem;
+}
+
+.result,
+.settings,
+.scenarios,
+.color-legend {
+  min-width: 0;
+  border: 1px solid #d5dde7;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(38 52 69 / 5%);
+}
+
+.result {
+  position: sticky;
+  z-index: 2;
+  top: .3rem;
+  padding: .7rem .85rem;
+}
+
+.settings-header,
+.evidence-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.color {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .45rem;
+  padding: .35rem .55rem;
+  border: 1px solid #d5dde7;
+  border-radius: 999px;
+}
+
+.color[hidden],
+#visualization[hidden] {
+  display: none;
+}
+
+.swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid rgb(15 23 42 / 35%);
+  border-radius: 50%;
+}
+
+.color code {
+  font-size: .8rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.measures {
+  position: absolute;
+  z-index: 4;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: .5rem;
+  pointer-events: none;
+}
+
+.measures div {
+  min-width: 0;
+  padding: .24rem .38rem;
+  border: 1px solid rgb(203 213 225 / 75%);
+  border-radius: 5px;
+  color: #172033;
+  background: rgb(248 250 252 / 88%);
+  font-size: .9rem;
+  font-weight: 750;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.measures .probability {
+  background: rgb(232 240 248 / 90%);
+}
+
+.cone-viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+.prior-handle {
+  position: absolute;
+  z-index: 5;
+  top: 1px;
+  width: 1.9rem;
+  min-height: 1.9rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: ew-resize;
+  transform: none;
+  touch-action: none;
+}
+
+.prior-handle:hover,
+.prior-handle:active {
+  border-color: transparent;
+  background: transparent;
+}
+
+.prior-handle:focus-visible {
+  outline: 2px solid #0f172a;
+  outline-offset: -3px;
+  background: transparent;
+}
+
+.prior-handle::before {
+  position: absolute;
+  top: 2px;
+  width: 9px;
+  height: 21px;
+  border: 3px solid var(--prior-color, #0f172a);
+  content: '';
+}
+
+.prior-handle::after {
+  position: absolute;
+  top: 24px;
+  left: var(--prior-anchor, 50%);
+  width: 2px;
+  height: 4px;
+  background: var(--prior-color, #0f172a);
+  content: '';
+  transform: translateX(-50%);
+}
+
+.prior-handle-min::before {
+  left: var(--bracket-x, var(--prior-anchor, 50%));
+  border-right: 0;
+}
+
+.prior-handle-max::before {
+  left: calc(var(--bracket-x, var(--prior-anchor, 50%)) - 9px);
+  border-left: 0;
+}
+.prior-handle.is-active::before { border-width: 4px; }
+
+.prior-track.is-exact::before,
+.prior-track.is-exact::after {
+  position: absolute;
+  z-index: 6;
+  left: var(--caret-x, 50%);
+  background: var(--prior-color, #0f172a);
+  content: '';
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.prior-track.is-exact::before {
+  top: 2px;
+  width: 2px;
+  height: 24px;
+}
+
+.prior-track.is-exact::after {
+  top: 2px;
+  width: 10px;
+  height: 3px;
+  box-shadow: 0 21px 0 var(--prior-color, #0f172a);
+}
+
+.prior-track.is-exact .prior-handle::before,
+.prior-track.is-exact .prior-handle::after {
+  display: none;
+}
+
+.prior-handles-zone {
+  margin: .05rem 0 .15rem;
+}
+
+.prior-band-text {
+  margin: .12rem 0 0;
+  color: #0f172a;
+  font-size: .9rem;
+  font-weight: 750;
+  line-height: 1.18;
+  text-align: center;
+}
+
+.prior-track {
+  position: relative;
+  height: 30px;
+  overflow: visible;
+}
+
+.prior-band {
+  position: absolute;
+  top: 9px;
+  z-index: 1;
+  min-width: 2px;
+  height: .78rem;
+  overflow: visible;
+  border: 1px solid rgb(15 23 42 / 45%);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
+  color: #0f172a;
+}
+
+.prior-resultant {
+  display: block;
+  width: 100%;
+  height: 30px;
+  pointer-events: none;
+}
+
+figure {
+  margin: 0;
+}
+
+.visual-summary {
+  display: block;
+}
+
+.cone-wrap {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.cone-ruler,
+.cone-canvas {
+  display: block;
+  width: 100%;
+}
+
+.resultant-label {
+  display: block;
+  margin: 0 0 .2rem;
+  color: #0f172a;
+  font-size: clamp(1rem, 3.3vw, 1.18rem);
+  font-weight: 850;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+
+.cone-ruler {
+  position: relative;
+  z-index: 2;
+  border: 0;
+  background: #f8fafc;
+}
+
+.cone-scroll {
+  position: relative;
+  height: 300px;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  overscroll-behavior: contain;
+  border: 0;
+  border-radius: 0;
+  background: #f8fafc;
+  scrollbar-gutter: auto;
+}
+
+.cone-scroll.is-scrollable {
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.cone-spacer {
+  min-height: 0;
+}
+
+@media (max-width: 460px) {
+  .measures { align-items: end; gap: .25rem; }
+  .measures div { white-space: normal; font-size: .78rem; }
+  .prior-handle { font-size: .75rem; }
+}
+
+.cone-canvas {
+  position: sticky;
+  top: 0;
+  margin-bottom: calc(-1 * var(--cone-height, 300px));
+  pointer-events: none;
+}
+
+figcaption {
+  display: none;
+}
+
+.settings {
+  overflow: hidden;
+}
+
+.settings-header {
+  align-items: center;
+  padding: .55rem .8rem;
+  border-bottom: 1px solid #d5dde7;
+}
+
+button {
+  min-height: 2.45rem;
+  padding: .48rem .72rem;
+  border: 1px solid #b9c5d2;
+  border-radius: 8px;
+  color: #1f3147;
+  background: #f8fafc;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: #7b8fa4;
+  background: #eef3f7;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #cbd5e1;
+  outline-offset: 2px;
+}
+
+.current-evidence {
+  padding: 0;
+}
+
+.prior-bounds {
+  padding: .5rem .8rem .6rem;
+  border-top: 1px solid #d5dde7;
+  background: #f8fafc;
+}
+
+.prior-bounds h3 {
+  margin: 0;
+  font-size: .86rem;
+}
+
+.prior-bounds > p {
+  margin: .22rem 0 0;
+  color: #526478;
+  font-size: .72rem;
+}
+
+.bounds-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .55rem;
+  margin-top: .3rem;
+}
+
+.bounds-fields label {
+  display: flex;
+  align-items: center;
+  gap: .18rem;
+  color: #526478;
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.bounds-fields input {
+  width: 5rem;
+  min-height: 1.85rem;
+  padding: .22rem .35rem;
+  border: 1px solid #b9c5d2;
+  border-radius: 7px;
+  color: #172033;
+  background: #fff;
+}
+
+.bounds-fields input[aria-invalid="true"] {
+  border-color: #b91c1c;
+  background: #fff7f7;
+}
+
+.prior-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-top: .35rem;
+}
+
+.prior-presets button {
+  min-height: 1.85rem;
+  padding: .2rem .4rem;
+  font-size: .68rem;
+  white-space: nowrap;
+}
+
+.prior-bounds .bounds-error {
+  margin-top: .5rem;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.prior-bounds .bounds-help {
+  margin: .35rem 0 0;
+  font-size: .72rem;
+}
+
+.evidence-header {
+  align-items: baseline;
+  margin: .6rem .8rem 0;
+}
+
+.trajectory-summary {
+  margin: 0;
+  color: #526478;
+  font-size: .75rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.trajectory-empty {
+  margin: .5rem .8rem .7rem;
+  padding: .55rem;
+  border-radius: 9px;
+  color: #526478;
+  background: #f3f6f9;
+  font-size: .8rem;
+}
+
+.evidence-trace {
+  max-height: min(58vh, 34rem);
+  margin: .5rem .8rem .8rem;
+  padding: .3rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #dce3ea;
+  border-radius: 10px;
+  background: #f8fafc;
+  list-style: none;
+  scrollbar-gutter: stable;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+th,
+td {
+  padding: .3rem .55rem;
+  border-bottom: 1px solid #e4e9ef;
+  text-align: left;
+}
+
+thead th {
+  height: 1.8rem;
+  color: #64748b;
+  background: #f8fafc;
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+thead th:first-child {
+  width: 34%;
+}
+
+thead th:not(:first-child) {
+  width: 33%;
+}
+
+tbody tr {
+  min-height: 4rem;
+}
+
+tbody tr:last-child th,
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody th {
+  font-size: .78rem;
+  line-height: 1.15;
+}
+
+.weight {
+  min-width: 0;
+}
+
+.weight-setting {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.weight input[type="range"] {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 5rem;
+}
+
+.weight-setting strong {
+  flex: 0 0 auto;
+  min-width: 4.25rem;
+  font-size: .74rem;
+  white-space: nowrap;
+}
+
+.weight output {
+  min-width: 2.2rem;
+  color: #172033;
+  font-size: .74rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.weight-band {
+  min-width: 0;
+  overflow: hidden;
+  color: #64748b;
+  font-size: .58rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weight-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .3rem;
+  margin-top: .15rem;
+}
+
+.add-evidence {
+  flex: 0 0 auto;
+  min-height: 1.7rem;
+  padding: .18rem .4rem;
+  font-size: .7rem;
+}
+
+.add-evidence[data-direction="for"] {
+  color: #14532d;
+  border-color: #9fc9ac;
+  background: #effaf2;
+}
+
+.add-evidence[data-direction="for"]:hover {
+  border-color: #4f8f63;
+  background: #dcfce7;
+}
+
+.add-evidence[data-direction="against"] {
+  color: #7f1d1d;
+  border-color: #e4aaaa;
+  background: #fff5f5;
+}
+
+.add-evidence[data-direction="against"]:hover {
+  border-color: #c96767;
+  background: #fee2e2;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .35rem;
+}
+
+.history-item + .history-item {
+  margin-top: .25rem;
+}
+
+.evidence-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  min-width: 0;
+  min-height: 2.3rem;
+  padding: .35rem .55rem;
+  border-color: transparent;
+  text-align: left;
+  background: transparent;
+}
+
+.evidence-step:hover,
+.evidence-step[aria-pressed="true"] {
+  border-color: #94a3b8;
+  background: #fff;
+}
+
+.step-name,
+.step-measure {
+  font-size: .72rem;
+}
+
+.step-name {
+  overflow: hidden;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.step-measure {
+  flex: 0 0 auto;
+  color: #526478;
+}
+
+.history-item[data-direction="for"] .step-measure {
+  color: #166534;
+}
+
+.history-item[data-direction="against"] .step-measure {
+  color: #991b1b;
+}
+
+.remove-evidence {
+  min-height: 2rem;
+  padding: .3rem .5rem;
+  color: #7f1d1d;
+  border-color: transparent;
+  background: transparent;
+  font-size: .7rem;
+}
+
+.remove-evidence:hover {
+  border-color: #d8dee6;
+  background: #fff;
+}
+
+.scenarios,
+.color-legend {
+  padding: 1rem 1.1rem;
+}
+
+.scenarios h2,
+.color-legend h2 {
+  margin-bottom: .75rem;
+  font-size: 1.05rem;
+}
+
+.presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .45rem;
+}
+
+.presets button {
+  min-height: 3rem;
+  padding: .55rem .7rem;
+  line-height: 1.25;
+  text-align: left;
+}
+
+.palette {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.55fr) repeat(4, minmax(72px, 1fr));
+  align-items: end;
+  gap: .65rem;
+}
+
+.palette label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .3rem;
+  color: #526478;
+  font-size: .72rem;
+  font-weight: 750;
+}
+
+.palette label span {
+  grid-column: 1 / -1;
+}
+
+.palette .threshold span {
+  grid-column: auto;
+}
+
+.palette .threshold input {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.palette input[type="color"] {
+  width: 100%;
+  min-width: 0;
+  height: 2.45rem;
+  padding: .2rem;
+  border: 1px solid #b9c5d2;
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.palette-help {
+  margin: .75rem 0 0;
+  color: #5b6b7d;
+  font-size: .78rem;
+}
+
+.color-legend {
+  padding: 1rem 1.1rem;
+  text-align: center;
+}
+
+.color-legend > p {
+  margin: .25rem 0 .6rem;
+  color: #5b6b7d;
+  font-size: .78rem;
+}
+
+.color-legend .color {
+  width: fit-content;
+  margin: .55rem auto 0;
+}
+
+.color-legend .palette {
+  margin-top: .8rem;
+}
+
+#legend-triangle {
+  display: block;
+  width: min(100%, 260px);
+  height: auto;
+  margin: 0 auto;
+}
+
+.language-control {
+  display: flex;
+  float: right;
+  align-items: center;
+  gap: .4rem;
+  margin-left: 1rem;
+  font-size: .8rem;
+  font-weight: 750;
+}
+
+.language-control select {
+  padding: .25rem .4rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.illustrative-note {
+  margin: .45rem .9rem 0;
+  color: #526478;
+  font-size: .78rem;
+}
+
+.category-form {
+  display: grid;
+  gap: .35rem;
+  padding: .7rem .9rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.category-form > label {
+  font-size: .78rem;
+  font-weight: 750;
+}
+
+.category-adders {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+}
+
+.category-form-row {
+  display: flex;
+  gap: .5rem;
+}
+
+.category-form-row input {
+  min-width: 0;
+  flex: 1;
+}
+
+.category-form-row select {
+  min-width: 0;
+  flex: 1;
+}
+
+.category-name-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem;
+}
+
+.category-name-cell > span {
+  display: grid;
+  gap: .12rem;
+}
+
+.category-name-cell small {
+  color: #64748b;
+  font-size: .66rem;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.remove-category {
+  flex: 0 0 auto;
+  width: 1.65rem;
+  min-height: 1.65rem;
+  padding: .2rem .35rem;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+@media (min-width: 1041px) {
+  main {
+    width: min(1180px, calc(100% - 2rem));
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+    align-items: start;
+    gap: .8rem;
+  }
+
+  .main-column {
+    gap: .8rem;
+  }
+
+  .controls {
+    display: grid;
+    align-content: start;
+    gap: .8rem;
+    margin-top: 0;
+  }
+
+  .color-legend { order: -1; }
+
+  .color-legend .palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .color-legend .palette .threshold {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1040px) {
+  .palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .palette .threshold {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 820px) {
+  main {
+    width: min(100% - 1rem, 700px);
+    padding-top: 1rem;
+  }
+
+  .workspace {
+    display: block;
+  }
+
+  .result {
+    z-index: 2;
+    top: .35rem;
+    margin-bottom: 0;
+    padding: .75rem;
+    box-shadow: 0 8px 22px rgb(38 52 69 / 10%);
+  }
+
+  figcaption {
+    display: none;
+  }
+
+  .controls {
+    gap: .75rem;
+  }
+
+  .evidence-trace {
+    max-height: min(34vh, 19rem);
+  }
+
+  .scenarios,
+  .color-legend {
+    padding: .9rem;
+  }
+}
+
+@media (max-width: 520px) {
+  main {
+    width: calc(100% - .7rem);
+    padding: .6rem 0 1.5rem;
+  }
+
+  .introduction {
+    margin-bottom: .6rem;
+  }
+
+  .introduction > p:last-child {
+    font-size: .84rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  .color {
+    padding: .25rem .45rem;
+  }
+
+  .cone-wrap {
+    width: 100%;
+  }
+
+  .settings-header {
+    padding: .8rem;
+  }
+
+  th,
+  td {
+    padding: .3rem;
+  }
+
+  thead th:first-child {
+    width: 30%;
+  }
+
+  thead th:not(:first-child) {
+    width: 35%;
+  }
+
+  tbody th {
+    font-size: .7rem;
+    overflow-wrap: anywhere;
+  }
+
+  .weight-setting {
+    gap: .25rem;
+  }
+
+  .weight input[type="range"] {
+    min-width: 2.8rem;
+  }
+
+  .weight-setting strong {
+    min-width: 3.75rem;
+    font-size: .66rem;
+  }
+
+  .weight-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: .15rem;
+  }
+
+  .add-evidence {
+    width: 100%;
+  }
+
+  .remove-evidence {
+    min-height: 2.25rem;
+  }
+
+  .category-adders {
+    grid-template-columns: 1fr;
+  }
+
+  .palette {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .presets {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 620px) and (max-width: 820px) {
+  .introduction > p:last-child,
+  .eyebrow,
+  figcaption {
+    display: none;
+  }
+
+  .introduction {
+    margin-bottom: .35rem;
+  }
+
+  h1 {
+    margin-bottom: 0;
+    font-size: 1.45rem;
+  }
+
+  .cone-scroll {
+    height: min(300px, 40vh);
+  }
+
+  .evidence-trace {
+    max-height: 30vh;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button {
+    transition: background-color .15s, border-color .15s, box-shadow .15s;
+  }
+}
+</style>
+</head>
+<body>
+  <main>
+    <header class="introduction">
+      <div class="language-control"><label for="language" data-i18n="language.label">Language</label><select id="language"></select></div>
+      <p class="eyebrow">@bycelium/evidences-diagrams</p>
+      <h1 data-i18n="app.heading">Weight of evidence diagram</h1>
+      <p data-i18n="app.intro">Add evidence, adjust its illustrative weight, and explore combined weight, dissonance, and color.</p>
+    </header>
+    <div class="workspace">
+      <div class="main-column">
+        <section class="result" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">
+          <div class="visual-summary"><p id="probability-description" class="visually-hidden"></p>
+            <figure id="visualization"><div class="cone-wrap">
+              <h2 id="resultant-label" class="resultant-label" data-i18n="diagram.resultNone">Combined weight of evidence: None (0 dBan)</h2>
+              <div class="prior-handles-zone" data-i18n-aria-label="prior.handlesLabel" aria-label="Adjustable prior bounds on the posterior axis">
+                <canvas id="prior-resultant" class="prior-resultant" aria-hidden="true"></canvas>
+                <div class="prior-track"><div id="prior-band" class="prior-band"></div>
+                  <button type="button" class="prior-handle prior-handle-min" data-prior-handle="min" role="slider" data-i18n-aria-label="prior.minHandle" aria-label="Adjust the minimum prior bound"></button>
+                  <button type="button" class="prior-handle prior-handle-max" data-prior-handle="max" role="slider" data-i18n-aria-label="prior.maxHandle" aria-label="Adjust the maximum prior bound"></button>
+                </div><p id="prior-band-text" class="prior-band-text"></p>
+              </div>
+              <canvas id="cone-ruler" class="cone-ruler" aria-hidden="true"></canvas>
+              <div class="cone-viewport"><div id="cone-scroll" class="cone-scroll" tabindex="0" data-i18n-aria-label="diagram.historyLabel" aria-label="Graphical evidence history, from the current summary to older evidence">
+                <canvas id="cone" class="cone-canvas" role="img" aria-describedby="probability-description cone-description" data-i18n="diagram.canvasFallback" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">The diagram shows the posterior interval horizontally and absolute weight vertically.</canvas>
+                <div id="cone-spacer" class="cone-spacer" aria-hidden="true"></div></div>
+                <div class="measures" aria-live="polite" aria-atomic="true"><div class="dissonance-measure"><span data-i18n="measure.dissonance">Dissonance</span> <output id="dissonance">0%</output></div><div id="probability" class="probability"><output id="probability-text" aria-describedby="probability-description" data-i18n="measure.noEvidence">No evidence</output></div></div>
+              </div><p id="cone-description" class="visually-hidden"></p>
+            </div><figcaption data-i18n="diagram.caption">Height measures absolute weight. Arrows follow each item of evidence at plus or minus 45 degrees.</figcaption></figure>
+          </div>
+        </section>
+        <section class="settings" aria-labelledby="settings-title">
+          <div class="settings-header"><h2 id="settings-title" data-i18n="evidence.heading">Evidence</h2><button type="button" id="reset" data-i18n="action.reset">Reset</button></div>
+          <p class="illustrative-note"><span data-i18n="evidence.illustrative">Illustrative weights only; adjust them for the evidence and context.</span> <span data-i18n="evidence.independence">Several reports can repeat the same source. Check whether evidence is independent before combining its weight.</span></p>
+          <section class="current-evidence" data-i18n-aria-label="evidence.editorLabel" aria-label="Evidence editor">
+            <div class="table-wrap"><table><thead><tr><th scope="col" data-i18n="evidence.category">Category</th><th scope="col" data-i18n="evidence.for">For</th><th scope="col" data-i18n="evidence.against">Against</th></tr></thead><tbody id="category-rows"></tbody></table></div>
+            <div class="category-adders">
+              <form id="preset-category-form" class="category-form"><label for="category-preset" data-i18n="category.preset">Category preset</label><div class="category-form-row"><select id="category-preset"></select><button type="submit" data-i18n="category.addPreset">Add preset</button></div></form>
+              <form id="category-form" class="category-form" novalidate><label for="category-name" data-i18n="category.name">Category name</label><div class="category-form-row"><input id="category-name" maxlength="80" data-i18n-placeholder="category.placeholder" placeholder="New category" aria-describedby="category-error"><button type="submit" data-i18n="category.add">Add category</button></div><p id="category-error" class="bounds-error" role="alert" hidden></p></form>
+            </div>
+            <div class="evidence-header"><p id="trajectory-summary" class="trajectory-summary" aria-live="polite" data-i18n="measure.noEvidence">No evidence</p></div>
+            <p id="trajectory-empty" class="trajectory-empty" data-i18n="evidence.empty">Add an item of evidence.</p><ol id="evidence-history" class="evidence-trace" data-i18n-aria-label="evidence.addedLabel" aria-label="Added evidence" hidden></ol>
+          </section>
+          <section class="prior-bounds" aria-labelledby="prior-bounds-title"><h3 id="prior-bounds-title" data-i18n="prior.heading">Prior opinion</h3>
+            <div class="bounds-fields"><label for="prior-min-decibans"><span data-i18n="prior.minimum">Min</span> <input id="prior-min-decibans" type="number" step="1" value="-15" inputmode="numeric" aria-describedby="prior-bounds-error"> dBan</label><label for="prior-max-decibans"><span data-i18n="prior.maximum">Max</span> <input id="prior-max-decibans" type="number" step="1" value="15" inputmode="numeric" aria-describedby="prior-bounds-error"> dBan</label></div>
+            <div id="prior-presets" class="prior-presets" data-i18n-aria-label="prior.presetsLabel" aria-label="Prior-bound presets"><button type="button" data-prior-min="-5" data-prior-max="5">−5 / +5</button><button type="button" data-prior-min="-10" data-prior-max="10">−10 / +10</button><button type="button" data-prior-min="-15" data-prior-max="15">−15 / +15</button><button type="button" data-prior-min="-5" data-prior-max="0" data-i18n="prior.slightNegative">Slightly negative: −5 / 0</button><button type="button" data-prior-min="20" data-prior-max="30" data-i18n="prior.veryPositive">Very positive: +20 / +30</button><button type="button" data-prior-min="0" data-prior-max="0" data-i18n="prior.exactFifty">Exact 50% prior</button></div>
+            <p id="prior-bounds-error" class="bounds-error" role="alert" hidden></p><p class="bounds-help" data-i18n="prior.fixedHelp">Equal bounds represent a fixed prior.</p>
+          </section>
+        </section>
+      </div>
+      <div class="controls">
+        <section class="scenarios" aria-labelledby="scenarios-title"><h2 id="scenarios-title" data-i18n="scenario.heading">Example scenarios</h2><div id="scenario-list" class="presets"></div></section>
+        <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.</p>
+          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.">Triangular color legend.</canvas>
+          <div class="color" data-i18n-aria-label="palette.currentAria" aria-label="Current summary color"><span id="swatch" class="swatch" aria-hidden="true"></span><code id="hex">#9ca3af</code></div>
+          <div class="palette"><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Saturation threshold</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1"></label><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label></div>
+          <p class="palette-help" data-i18n="palette.help">The threshold controls the color transition beyond the gray region defined by the prior bounds.</p>
+        </section>
+      </div>
+    </div>
+  </main><script>
+"use strict";
+(() => {
+  // dist/aggregation.js
+  function aggregateEvidence(contributions) {
+    let netWeightDecibans = 0;
+    let absoluteWeightDecibans = 0;
+    let maximumWeight = 0;
+    for (const contribution of contributions) {
+      const weight = contribution?.weightDecibans;
+      if (typeof weight !== "number" || !Number.isFinite(weight)) {
+        throw new RangeError("Each contribution must contain a finite weightDecibans value.");
+      }
+      netWeightDecibans += weight;
+      absoluteWeightDecibans += Math.abs(weight);
+      maximumWeight = Math.max(maximumWeight, Math.abs(weight));
+    }
+    if (absoluteWeightDecibans === 0) {
+      return { netWeightDecibans: 0, absoluteWeightDecibans: 0, dissonance: 0 };
+    }
+    let dissonance;
+    if (Number.isFinite(netWeightDecibans) && Number.isFinite(absoluteWeightDecibans)) {
+      dissonance = 1 - Math.abs(netWeightDecibans) / absoluteWeightDecibans;
+    } else {
+      let normalizedNetWeight = 0;
+      let normalizedAbsoluteWeight = 0;
+      for (const { weightDecibans: weight } of contributions) {
+        normalizedNetWeight += weight / maximumWeight;
+        normalizedAbsoluteWeight += Math.abs(weight) / maximumWeight;
+      }
+      netWeightDecibans = normalizedNetWeight * maximumWeight;
+      absoluteWeightDecibans = normalizedAbsoluteWeight * maximumWeight;
+      dissonance = 1 - Math.abs(normalizedNetWeight) / normalizedAbsoluteWeight;
+    }
+    return { netWeightDecibans, absoluteWeightDecibans, dissonance };
+  }
+
+  // dist/priors.js
+  var DEFAULT_PRIORS = Object.freeze({
+    minPriorDecibans: -15,
+    maxPriorDecibans: 15
+  });
+  function validatePriors(options) {
+    if (options !== void 0 && (typeof options !== "object" || options === null)) {
+      throw new RangeError("Probability-bound options must be an object.");
+    }
+    const minPriorDecibans2 = options?.minPriorDecibans === void 0 ? DEFAULT_PRIORS.minPriorDecibans : options.minPriorDecibans;
+    const maxPriorDecibans2 = options?.maxPriorDecibans === void 0 ? DEFAULT_PRIORS.maxPriorDecibans : options.maxPriorDecibans;
+    if (typeof minPriorDecibans2 !== "number" || typeof maxPriorDecibans2 !== "number" || !Number.isFinite(minPriorDecibans2) || !Number.isFinite(maxPriorDecibans2)) {
+      throw new RangeError("Priors must be finite numbers.");
+    }
+    if (minPriorDecibans2 > maxPriorDecibans2) {
+      throw new RangeError("The minimum prior cannot exceed the maximum prior.");
+    }
+    return { minPriorDecibans: minPriorDecibans2, maxPriorDecibans: maxPriorDecibans2 };
+  }
+
+  // dist/color.js
+  var DEFAULT_COLOR_OPTIONS = Object.freeze({
+    ...DEFAULT_PRIORS,
+    saturationThresholdDecibans: 30,
+    anchors: Object.freeze({
+      gray: "#9ca3af",
+      yellow: "#eab308",
+      green: "#22c55e",
+      red: "#ef4444"
+    })
+  });
+  function trianglePosition(summary, options = {}) {
+    const { midpoint, halfWidth, threshold, min, max } = colorGeometry(options);
+    const netWeight = summary?.netWeightDecibans;
+    const absoluteWeight = summary?.absoluteWeightDecibans;
+    const dissonance = summary?.dissonance;
+    if (typeof netWeight !== "number" || Number.isNaN(netWeight) || typeof absoluteWeight !== "number" || Number.isNaN(absoluteWeight) || absoluteWeight < Math.abs(netWeight) || !Number.isFinite(dissonance) || dissonance < 0 || dissonance > 1) {
+      throw new RangeError("The summary must contain valid weights and dissonance.");
+    }
+    const height = Math.min(absoluteWeight / threshold, 1) * dissonance;
+    let orientation = normalizedOrientation(netWeight, midpoint, halfWidth, threshold);
+    if (Math.abs(orientation) === 1 && netWeight + min <= 0 && netWeight + max >= 0) {
+      orientation *= 1 - Number.EPSILON;
+    }
+    return { x: (1 - height) * orientation, height };
+  }
+  function color(summary, options = {}) {
+    return triangleColor(trianglePosition(summary, options), options);
+  }
+  function triangleColor(position, options = {}) {
+    const { halfWidth, threshold } = colorGeometry(options);
+    const x = position?.x;
+    const y = position?.height;
+    if (!Number.isFinite(x) || !Number.isFinite(y) || y < 0 || y > 1 || Math.abs(x) > 1 - y + 8 * Number.EPSILON) {
+      throw new RangeError("The position must lie within the normalized triangle.");
+    }
+    const customAnchors = options?.anchors ?? {};
+    const gray = parseAnchor("gray", customAnchors.gray);
+    const yellow = parseAnchor("yellow", customAnchors.yellow);
+    const green = parseAnchor("green", customAnchors.green);
+    const red = parseAnchor("red", customAnchors.red);
+    const orientation = y === 1 ? 0 : clamp(x / (1 - y));
+    const saturation = directionalSaturation(Math.abs(orientation), halfWidth, threshold);
+    const grayWeight = (1 - y) * (1 - saturation);
+    const yellowWeight = y;
+    const agreementWeight = (1 - y) * saturation;
+    const agreementAnchor = orientation < 0 ? red : green;
+    const channels = gray.map((channel, index) => Math.round(channel * grayWeight + yellow[index] * yellowWeight + agreementAnchor[index] * agreementWeight));
+    return `#${channels.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+  }
+  function colorGeometry(options) {
+    const { minPriorDecibans: min, maxPriorDecibans: max } = validatePriors(options);
+    const threshold = options.saturationThresholdDecibans === void 0 ? DEFAULT_COLOR_OPTIONS.saturationThresholdDecibans : options.saturationThresholdDecibans;
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+      throw new RangeError("The saturation threshold must be a finite positive number.");
+    }
+    return {
+      midpoint: min / 2 + max / 2,
+      halfWidth: max / 2 - min / 2,
+      threshold,
+      min,
+      max
+    };
+  }
+  function normalizedOrientation(weight, midpoint, width, threshold) {
+    if (!Number.isFinite(weight))
+      return Math.sign(weight);
+    const center = weight + midpoint;
+    const radius = width + threshold;
+    if (Number.isFinite(center) && Number.isFinite(radius))
+      return clamp(center / radius);
+    const scale = Math.max(Math.abs(weight), Math.abs(midpoint), width, threshold);
+    const numerator = Number.isFinite(center) ? center / scale : weight / scale + midpoint / scale;
+    return clamp(numerator / (width / scale + threshold / scale));
+  }
+  function directionalSaturation(orientation, width, threshold) {
+    if (orientation === 1)
+      return 1;
+    const radius = width + threshold;
+    const saturation = Number.isFinite(radius) ? (orientation * radius - width) / threshold : orientation - (1 - orientation) * width / threshold;
+    const tolerance2 = 8 * Number.EPSILON * Math.max(1, width / threshold);
+    return saturation <= tolerance2 ? 0 : Math.min(saturation, 1);
+  }
+  function clamp(value) {
+    return Math.max(-1, Math.min(value, 1));
+  }
+  function parseAnchor(name, value) {
+    const hex = value ?? DEFAULT_COLOR_OPTIONS.anchors[name];
+    if (typeof hex !== "string" || !/^#[0-9a-f]{6}$/iu.test(hex)) {
+      throw new RangeError(`The ${name} anchor must be a #RRGGBB hexadecimal CSS color.`);
+    }
+    return [
+      Number.parseInt(hex.slice(1, 3), 16),
+      Number.parseInt(hex.slice(3, 5), 16),
+      Number.parseInt(hex.slice(5, 7), 16)
+    ];
+  }
+
+  // dist/jeffreys.js
+  function jeffreysBand(weight) {
+    const weightDecibans = weight?.weightDecibans;
+    if (typeof weightDecibans !== "number" || Number.isNaN(weightDecibans)) {
+      throw new RangeError("Weight in decibans must be defined.");
+    }
+    const absoluteWeight = Math.abs(weightDecibans);
+    if (absoluteWeight === 0)
+      return "none";
+    let band;
+    if (absoluteWeight < 5)
+      band = "anecdotal";
+    else if (absoluteWeight < 10)
+      band = "moderate";
+    else if (absoluteWeight < 15)
+      band = "strong";
+    else if (absoluteWeight < 20)
+      band = "very strong";
+    else
+      band = "decisive";
+    return weightDecibans < 0 ? `${band} against` : band;
+  }
+
+  // dist/conversions.js
+  function decibansToProbability(weight) {
+    const weightDecibans = weight?.weightDecibans;
+    if (typeof weightDecibans !== "number" || Number.isNaN(weightDecibans)) {
+      throw new RangeError("Weight in decibans must be defined.");
+    }
+    if (weightDecibans >= 0) {
+      return { probability: 1 / (1 + 10 ** (-weightDecibans / 10)) };
+    }
+    const odds = 10 ** (weightDecibans / 10);
+    return { probability: odds / (1 + odds) };
+  }
+
+  // dist/probability-bounds.js
+  function boundProbability(summary, options) {
+    const netWeightDecibans = summary?.netWeightDecibans;
+    if (typeof netWeightDecibans !== "number" || Number.isNaN(netWeightDecibans)) {
+      throw new RangeError("The summary must contain a defined netWeightDecibans value.");
+    }
+    const { minPriorDecibans: minPriorDecibans2, maxPriorDecibans: maxPriorDecibans2 } = validatePriors(options);
+    if (minPriorDecibans2 === maxPriorDecibans2) {
+      const probability2 = probabilityFor(netWeightDecibans, minPriorDecibans2);
+      const displayPercentage = Math.round(probability2 * 100);
+      return {
+        direction: "exact",
+        probability: probability2,
+        displayPercentage,
+        text: `Probability = ${displayPercentage} %`
+      };
+    }
+    if (netWeightDecibans > 0) {
+      const probability2 = probabilityFor(netWeightDecibans, minPriorDecibans2);
+      const displayPercentage = lowerDisplayPercentage(probability2, netWeightDecibans, minPriorDecibans2);
+      return {
+        direction: "lower",
+        probability: probability2,
+        displayPercentage,
+        text: `Probability ≥ ${displayPercentage} %`
+      };
+    }
+    if (netWeightDecibans < 0) {
+      const probability2 = probabilityFor(netWeightDecibans, maxPriorDecibans2);
+      const displayPercentage = upperDisplayPercentage(probability2, netWeightDecibans, maxPriorDecibans2);
+      return {
+        direction: "upper",
+        probability: probability2,
+        displayPercentage,
+        text: `Probability ≤ ${displayPercentage} %`
+      };
+    }
+    const absoluteWeightDecibans = summary?.absoluteWeightDecibans;
+    if (typeof absoluteWeightDecibans !== "number" || Number.isNaN(absoluteWeightDecibans) || absoluteWeightDecibans < 0) {
+      throw new RangeError("A zero-net-weight summary must contain a valid absoluteWeightDecibans value.");
+    }
+    if (absoluteWeightDecibans === 0) {
+      return {
+        direction: "indeterminate",
+        reason: "no-evidence",
+        text: "No evidence"
+      };
+    }
+    return {
+      direction: "indeterminate",
+      reason: "dissonant-evidence",
+      text: "Dissonant evidence"
+    };
+  }
+  function probabilityFor(netWeightDecibans, priorDecibans) {
+    return decibansToProbability({
+      weightDecibans: netWeightDecibans + priorDecibans
+    }).probability;
+  }
+  function lowerDisplayPercentage(probability2, weight, prior) {
+    const percentage = Math.floor(probability2 * 100);
+    return Number.isFinite(weight) && Number.isFinite(prior) ? Math.min(percentage, 99) : percentage;
+  }
+  function upperDisplayPercentage(probability2, weight, prior) {
+    const percentage = Math.ceil(probability2 * 100);
+    return Number.isFinite(weight) && Number.isFinite(prior) ? Math.max(percentage, 1) : percentage;
+  }
+
+  // dist/evidence-diagram.js
+  function buildEvidenceDiagram(contributions, options = {}) {
+    if (!Array.isArray(contributions)) {
+      throw new RangeError("Contributions must be an array.");
+    }
+    const summary = aggregateEvidence(contributions);
+    const ids = /* @__PURE__ */ new Set();
+    const steps = [];
+    let currentPoint = { netWeightDecibans: 0, absoluteWeightDecibans: 0 };
+    let netWeightDecibans = 0;
+    let absoluteWeightDecibans = 0;
+    for (let index = 0; index < contributions.length; index += 1) {
+      const contribution = contributions[index];
+      const id = readId(contribution);
+      if (ids.has(id)) {
+        throw new RangeError(`Contribution id ${String(id)} is duplicated.`);
+      }
+      ids.add(id);
+      const weightDecibans = contribution.weightDecibans;
+      const start = currentPoint;
+      netWeightDecibans += weightDecibans;
+      absoluteWeightDecibans += Math.abs(weightDecibans);
+      const cumulative = Number.isFinite(netWeightDecibans) && Number.isFinite(absoluteWeightDecibans) ? { netWeightDecibans, absoluteWeightDecibans } : aggregateEvidence(contributions.slice(0, index + 1));
+      const end = {
+        netWeightDecibans: cumulative.netWeightDecibans,
+        absoluteWeightDecibans: cumulative.absoluteWeightDecibans
+      };
+      steps.push({ id, weightDecibans, start, end });
+      currentPoint = end;
+    }
+    const resultantColor = color(summary, options);
+    return {
+      summary,
+      steps,
+      resultant: {
+        start: {
+          netWeightDecibans: 0,
+          absoluteWeightDecibans: summary.absoluteWeightDecibans
+        },
+        end: {
+          netWeightDecibans: summary.netWeightDecibans,
+          absoluteWeightDecibans: summary.absoluteWeightDecibans
+        },
+        jeffreysBand: jeffreysBand({ weightDecibans: summary.netWeightDecibans }),
+        color: resultantColor
+      },
+      probability: boundProbability(summary, options)
+    };
+  }
+  function readId(contribution) {
+    const id = contribution?.id;
+    if (typeof id === "string")
+      return id;
+    if (typeof id === "number" && Number.isFinite(id))
+      return id;
+    throw new RangeError("Each contribution must contain a string or finite numeric id.");
+  }
+
+  // demo/geometry.js
+  var TOLERANCE_FACTOR = 8;
+  function tolerance(...values) {
+    return TOLERANCE_FACTOR * Number.EPSILON * Math.max(
+      1,
+      ...values.map((value) => Math.abs(value))
+    );
+  }
+  function clampAlmost(value, minimum, maximum) {
+    if (value < minimum && minimum - value <= tolerance(value, minimum)) return minimum;
+    if (value > maximum && value - maximum <= tolerance(value, maximum)) return maximum;
+    return Math.min(maximum, Math.max(minimum, value));
+  }
+  function assertFiniteNumber(value, name) {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new RangeError(`${name} must be a finite number.`);
+    }
+  }
+  function sideOutsideBounds(weight, minimum, maximum) {
+    if (weight < minimum - tolerance(weight, minimum)) return "left";
+    if (weight > maximum + tolerance(weight, maximum)) return "right";
+    return null;
+  }
+  function visibleInterval(step, minimum, maximum, offset = 0) {
+    const { weightDecibans } = step;
+    if (weightDecibans === 0) {
+      return sideOutsideBounds(step.start.weight + offset, minimum, maximum) === null ? { tStart: 0, tEnd: 0 } : null;
+    }
+    const startWeight = step.start.weight + offset;
+    const tMinimum = (minimum - startWeight) / weightDecibans;
+    const tMaximum = (maximum - startWeight) / weightDecibans;
+    const entry = Math.min(tMinimum, tMaximum);
+    const exit = Math.max(tMinimum, tMaximum);
+    const margin = tolerance(entry, exit);
+    if (exit < -margin || entry > 1 + margin) return null;
+    const tStart = clampAlmost(Math.max(0, entry), 0, 1);
+    const tEnd = clampAlmost(Math.min(1, exit), 0, 1);
+    if (tStart > tEnd + tolerance(tStart, tEnd)) return null;
+    return { tStart, tEnd: Math.max(tStart, tEnd) };
+  }
+  function stepPoint(step, t) {
+    return {
+      weight: step.start.weight + step.weightDecibans * t,
+      absolute: step.start.absolute + Math.abs(step.weightDecibans) * t
+    };
+  }
+  function mergeIntervals(intervals) {
+    if (intervals.length === 0) return [];
+    const sorted = [...intervals].sort((a, b) => a.start - b.start || a.end - b.end);
+    const merged = [{ ...sorted[0] }];
+    for (const interval of sorted.slice(1)) {
+      const previous = merged.at(-1);
+      if (interval.start <= previous.end + tolerance(interval.start, previous.end)) {
+        previous.end = Math.max(previous.end, interval.end);
+      } else {
+        merged.push({ ...interval });
+      }
+    }
+    return merged;
+  }
+  function createOffscreenIntervals(visibleIntervals, totalAbsolute) {
+    const offscreen = [];
+    let cursor = 0;
+    for (const visible of visibleIntervals) {
+      if (visible.start > cursor + tolerance(visible.start, cursor)) {
+        offscreen.push({ startAbsolute: cursor, endAbsolute: visible.start });
+      }
+      cursor = Math.max(cursor, visible.end);
+    }
+    if (totalAbsolute > cursor + tolerance(totalAbsolute, cursor)) {
+      offscreen.push({ startAbsolute: cursor, endAbsolute: totalAbsolute });
+    }
+    return offscreen;
+  }
+  function weightAt(steps, absolute, totalWeight) {
+    for (const step of steps) {
+      const length = step.end.absolute - step.start.absolute;
+      if (length <= 0) continue;
+      if (absolute <= step.end.absolute + tolerance(absolute, step.end.absolute)) {
+        const t = clampAlmost((absolute - step.start.absolute) / length, 0, 1);
+        return step.start.weight + step.weightDecibans * t;
+      }
+    }
+    return totalWeight;
+  }
+  function distanceFromOldest(absolute, breaks, pixelsPerDeciban2, breakHeight) {
+    let distance = 0;
+    let cursor = 0;
+    for (const breakItem of breaks) {
+      if (absolute <= breakItem.startAbsolute) {
+        return distance + (absolute - cursor) * pixelsPerDeciban2;
+      }
+      distance += (breakItem.startAbsolute - cursor) * pixelsPerDeciban2;
+      if (absolute <= breakItem.endAbsolute) {
+        const proportion = (absolute - breakItem.startAbsolute) / breakItem.absoluteGap;
+        return distance + proportion * breakHeight;
+      }
+      distance += breakHeight;
+      cursor = breakItem.endAbsolute;
+    }
+    return distance + (absolute - cursor) * pixelsPerDeciban2;
+  }
+  function createSections(breaks, totalAbsolute, mapAbsolute) {
+    const sections = [];
+    let cursor = 0;
+    for (const breakItem of breaks) {
+      if (breakItem.startAbsolute > cursor + tolerance(breakItem.startAbsolute, cursor)) {
+        sections.push({
+          startAbsolute: cursor,
+          endAbsolute: breakItem.startAbsolute,
+          yStart: mapAbsolute(cursor),
+          yEnd: mapAbsolute(breakItem.startAbsolute)
+        });
+      }
+      cursor = breakItem.endAbsolute;
+    }
+    if (totalAbsolute > cursor + tolerance(totalAbsolute, cursor)) {
+      sections.push({
+        startAbsolute: cursor,
+        endAbsolute: totalAbsolute,
+        yStart: mapAbsolute(cursor),
+        yEnd: mapAbsolute(totalAbsolute)
+      });
+    } else if (breaks.length === 0 && totalAbsolute === 0) {
+      sections.push({ startAbsolute: 0, endAbsolute: 0, yStart: 0, yEnd: 0 });
+    }
+    return sections;
+  }
+  function buildGeometry(diagram, options) {
+    const {
+      pixelsPerDeciban: pixelsPerDeciban2,
+      breakHeight = 32,
+      minPriorDecibans: minPriorDecibans2,
+      maxPriorDecibans: maxPriorDecibans2
+    } = options ?? {};
+    if (diagram === null || typeof diagram !== "object") {
+      throw new TypeError("A valid evidence diagram is required.");
+    }
+    if (!Array.isArray(diagram.steps)) {
+      throw new TypeError("The diagram must contain a steps array.");
+    }
+    const minimum = diagram.domain?.minimumDecibans;
+    const maximum = diagram.domain?.maximumDecibans;
+    const totalWeight = diagram.summary?.netWeightDecibans;
+    const totalAbsolute = diagram.summary?.absoluteWeightDecibans;
+    assertFiniteNumber(minimum, "minimum");
+    assertFiniteNumber(maximum, "maximum");
+    assertFiniteNumber(totalWeight, "netWeightDecibans");
+    assertFiniteNumber(totalAbsolute, "absoluteWeightDecibans");
+    assertFiniteNumber(minPriorDecibans2, "minPriorDecibans");
+    assertFiniteNumber(maxPriorDecibans2, "maxPriorDecibans");
+    assertFiniteNumber(pixelsPerDeciban2, "pixelsPerDeciban");
+    assertFiniteNumber(breakHeight, "breakHeight");
+    if (minimum >= maximum) throw new RangeError("minimum must be strictly less than maximum.");
+    if (minPriorDecibans2 > maxPriorDecibans2) {
+      throw new RangeError("minPriorDecibans must be less than or equal to maxPriorDecibans.");
+    }
+    if (totalAbsolute < 0) throw new RangeError("absoluteWeightDecibans must be non-negative.");
+    if (pixelsPerDeciban2 <= 0) throw new RangeError("pixelsPerDeciban must be strictly positive.");
+    if (breakHeight <= 0) throw new RangeError("breakHeight must be strictly positive.");
+    const steps = diagram.steps.map((step) => {
+      const weightDecibans = step?.weightDecibans;
+      const startWeight = step?.start?.netWeightDecibans;
+      const startAbsolute = step?.start?.absoluteWeightDecibans;
+      const endWeight = step?.end?.netWeightDecibans;
+      const endAbsolute = step?.end?.absoluteWeightDecibans;
+      assertFiniteNumber(weightDecibans, "weightDecibans");
+      assertFiniteNumber(startWeight, "start.netWeightDecibans");
+      assertFiniteNumber(startAbsolute, "start.absoluteWeightDecibans");
+      assertFiniteNumber(endWeight, "end.netWeightDecibans");
+      assertFiniteNumber(endAbsolute, "end.absoluteWeightDecibans");
+      if (startAbsolute < 0 || endAbsolute < startAbsolute) {
+        throw new RangeError("Step absolute weights must be non-negative and increasing.");
+      }
+      return {
+        id: step.id,
+        weightDecibans,
+        start: { weight: startWeight, absolute: startAbsolute },
+        end: { weight: endWeight, absolute: endAbsolute },
+        visibleRibbon: null,
+        edgeSegments: []
+      };
+    });
+    const rawVisibleMinimum = minimum - maxPriorDecibans2;
+    const rawVisibleMaximum = maximum - minPriorDecibans2;
+    const visibleIntervals = [];
+    const clips = [];
+    for (const step of steps) {
+      const clip = visibleInterval(step, rawVisibleMinimum, rawVisibleMaximum);
+      clips.push(clip);
+      if (clip === null || step.weightDecibans === 0) continue;
+      const start = stepPoint(step, clip.tStart).absolute;
+      const end = stepPoint(step, clip.tEnd).absolute;
+      if (end > start + tolerance(start, end)) visibleIntervals.push({ start, end });
+    }
+    const mergedVisible = mergeIntervals(visibleIntervals);
+    const rawBreaks = createOffscreenIntervals(mergedVisible, totalAbsolute).map((breakItem) => {
+      const middle = breakItem.startAbsolute + (breakItem.endAbsolute - breakItem.startAbsolute) / 2;
+      const middleWeight = weightAt(steps, middle, totalWeight);
+      return {
+        ...breakItem,
+        absoluteGap: breakItem.endAbsolute - breakItem.startAbsolute,
+        side: middleWeight < rawVisibleMinimum ? "left" : "right",
+        hiddenEvidenceIds: []
+      };
+    });
+    for (let index = 0; index < steps.length; index += 1) {
+      const step = steps[index];
+      const length = step.end.absolute - step.start.absolute;
+      if (step.weightDecibans === 0) {
+        const side = sideOutsideBounds(
+          step.start.weight,
+          rawVisibleMinimum,
+          rawVisibleMaximum
+        );
+        if (side === null) continue;
+        const breakItem2 = rawBreaks.find(({ startAbsolute, endAbsolute, side: breakSide }) => breakSide === side && step.start.absolute >= startAbsolute - tolerance(step.start.absolute, startAbsolute) && step.start.absolute <= endAbsolute + tolerance(step.start.absolute, endAbsolute));
+        if (breakItem2) breakItem2.hiddenEvidenceIds.push(step.id);
+        continue;
+      }
+      if (length <= 0) continue;
+      const clip = clips[index];
+      const visibleLength = clip === null ? 0 : length * Math.max(0, clip.tEnd - clip.tStart);
+      if (visibleLength > tolerance(length, visibleLength)) continue;
+      const middle = step.start.absolute + length / 2;
+      const breakItem = rawBreaks.find(({ startAbsolute, endAbsolute }) => middle > startAbsolute - tolerance(middle, startAbsolute) && middle < endAbsolute + tolerance(middle, endAbsolute));
+      if (breakItem) breakItem.hiddenEvidenceIds.push(step.id);
+    }
+    const totalDistance = distanceFromOldest(
+      totalAbsolute,
+      rawBreaks,
+      pixelsPerDeciban2,
+      breakHeight
+    );
+    if (!Number.isFinite(totalDistance)) {
+      throw new RangeError("The calculated height must remain finite.");
+    }
+    const mapAbsolute = (absolute) => {
+      const y = totalDistance - distanceFromOldest(
+        absolute,
+        rawBreaks,
+        pixelsPerDeciban2,
+        breakHeight
+      );
+      return Math.abs(y) <= tolerance(y, totalDistance) ? 0 : y;
+    };
+    const breaks = rawBreaks.map((breakItem) => ({
+      side: breakItem.side,
+      y: mapAbsolute(breakItem.endAbsolute),
+      height: breakHeight,
+      startAbsolute: breakItem.startAbsolute,
+      endAbsolute: breakItem.endAbsolute,
+      absoluteGap: breakItem.absoluteGap,
+      hiddenEvidenceIds: breakItem.hiddenEvidenceIds
+    }));
+    const edges = minPriorDecibans2 === maxPriorDecibans2 ? [minPriorDecibans2] : [minPriorDecibans2, maxPriorDecibans2];
+    for (let index = 0; index < steps.length; index += 1) {
+      const step = steps[index];
+      const ribbonClip = clips[index];
+      if (ribbonClip !== null && (step.weightDecibans === 0 || ribbonClip.tEnd - ribbonClip.tStart > tolerance(ribbonClip.tStart, ribbonClip.tEnd))) {
+        const start = stepPoint(step, ribbonClip.tStart);
+        const end = stepPoint(step, ribbonClip.tEnd);
+        step.visibleRibbon = {
+          startAbsolute: start.absolute,
+          endAbsolute: end.absolute,
+          y1: mapAbsolute(start.absolute),
+          y2: mapAbsolute(end.absolute),
+          startWeight: start.weight,
+          endWeight: end.weight,
+          xMinimum1: (start.weight + minPriorDecibans2 - minimum) * pixelsPerDeciban2,
+          xMaximum1: (start.weight + maxPriorDecibans2 - minimum) * pixelsPerDeciban2,
+          xMinimum2: (end.weight + minPriorDecibans2 - minimum) * pixelsPerDeciban2,
+          xMaximum2: (end.weight + maxPriorDecibans2 - minimum) * pixelsPerDeciban2
+        };
+      }
+      for (const prior of edges) {
+        const edgeClip = visibleInterval(step, minimum, maximum, prior);
+        if (edgeClip === null || step.weightDecibans !== 0 && edgeClip.tEnd - edgeClip.tStart <= tolerance(edgeClip.tStart, edgeClip.tEnd)) continue;
+        const start = stepPoint(step, edgeClip.tStart);
+        const end = stepPoint(step, edgeClip.tEnd);
+        step.edgeSegments.push({
+          x1: (start.weight + prior - minimum) * pixelsPerDeciban2,
+          y1: mapAbsolute(start.absolute),
+          x2: (end.weight + prior - minimum) * pixelsPerDeciban2,
+          y2: mapAbsolute(end.absolute),
+          trueEnd: Math.abs(edgeClip.tEnd - 1) <= tolerance(edgeClip.tEnd, 1)
+        });
+      }
+    }
+    const intervalMinimum = totalWeight + minPriorDecibans2;
+    const intervalMaximum = totalWeight + maxPriorDecibans2;
+    const currentVisible = intervalMaximum >= minimum - tolerance(intervalMaximum, minimum) && intervalMinimum <= maximum + tolerance(intervalMinimum, maximum);
+    let activeEndpoint = null;
+    if (totalWeight !== 0) {
+      const side = totalWeight > 0 ? "minimum" : "maximum";
+      const weight = totalWeight + (totalWeight > 0 ? minPriorDecibans2 : maxPriorDecibans2);
+      activeEndpoint = {
+        side,
+        visible: sideOutsideBounds(weight, minimum, maximum) === null
+      };
+    }
+    return {
+      minimum,
+      maximum,
+      pixelsPerDeciban: pixelsPerDeciban2,
+      totalWeight,
+      totalAbsolute,
+      minPriorDecibans: minPriorDecibans2,
+      maxPriorDecibans: maxPriorDecibans2,
+      currentInterval: {
+        minimum: intervalMinimum,
+        maximum: intervalMaximum,
+        visible: currentVisible
+      },
+      activeEndpoint,
+      steps,
+      breaks,
+      sections: createSections(rawBreaks, totalAbsolute, mapAbsolute),
+      totalHeight: totalDistance
+    };
+  }
+  function assertGeometryValue(geometry2, value, name, maximum) {
+    if (geometry2 === null || typeof geometry2 !== "object") {
+      throw new TypeError("A valid geometry is required.");
+    }
+    assertFiniteNumber(value, name);
+    const margin = tolerance(value, maximum);
+    if (value < -margin || value > maximum + margin) {
+      throw new RangeError(`${name} is outside the geometry.`);
+    }
+    return clampAlmost(value, 0, maximum);
+  }
+  function positionAbsolute(geometry2, absolute) {
+    const value = assertGeometryValue(geometry2, absolute, "absolute", geometry2?.totalAbsolute);
+    for (const breakItem of geometry2.breaks) {
+      if (value >= breakItem.startAbsolute - tolerance(value, breakItem.startAbsolute) && value <= breakItem.endAbsolute + tolerance(value, breakItem.endAbsolute)) {
+        const proportion = (breakItem.endAbsolute - value) / breakItem.absoluteGap;
+        return breakItem.y + clampAlmost(proportion, 0, 1) * breakItem.height;
+      }
+    }
+    const section = geometry2.sections.find(({ startAbsolute, endAbsolute }) => value >= startAbsolute - tolerance(value, startAbsolute) && value <= endAbsolute + tolerance(value, endAbsolute));
+    if (section) {
+      return section.yStart - (value - section.startAbsolute) * geometry2.pixelsPerDeciban;
+    }
+    return value === geometry2.totalAbsolute ? 0 : geometry2.totalHeight;
+  }
+  function absoluteFromY(geometry2, y) {
+    const value = assertGeometryValue(geometry2, y, "y", geometry2?.totalHeight);
+    for (const breakItem of geometry2.breaks) {
+      const bottom = breakItem.y + breakItem.height;
+      if (value > breakItem.y + tolerance(value, breakItem.y) && value < bottom - tolerance(value, bottom)) return null;
+      if (Math.abs(value - breakItem.y) <= tolerance(value, breakItem.y)) {
+        return breakItem.endAbsolute;
+      }
+      if (Math.abs(value - bottom) <= tolerance(value, bottom)) {
+        return breakItem.startAbsolute;
+      }
+    }
+    const section = geometry2.sections.find(({ yStart, yEnd }) => value <= yStart + tolerance(value, yStart) && value >= yEnd - tolerance(value, yEnd));
+    if (section) {
+      return clampAlmost(
+        section.startAbsolute + (section.yStart - value) / geometry2.pixelsPerDeciban,
+        section.startAbsolute,
+        section.endAbsolute
+      );
+    }
+    return value === 0 ? geometry2.totalAbsolute : 0;
+  }
+
+  // demo/diagram-renderer.js
+  var NEUTRAL_RGB = [248, 250, 252];
+  var backgroundCanvas;
+  var backgroundContext;
+  var backgroundImage;
+  var lastBackground;
+  function resizeCanvas(element, context2, width, height) {
+    const ratio = window.devicePixelRatio || 1;
+    element.width = Math.max(1, Math.round(width * ratio));
+    element.height = Math.max(1, Math.round(height * ratio));
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    context2.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+  function numberText(value, i18n2) {
+    return i18n2.number(Number(value.toFixed(1)), { maximumFractionDigits: 1 });
+  }
+  function signedText(value, i18n2) {
+    return `${value > 0 ? "+" : value < 0 ? "−" : ""}${numberText(Math.abs(value), i18n2)}`;
+  }
+  function percentageText(weight, i18n2) {
+    const value = decibansToProbability({ weightDecibans: weight }).probability * 100;
+    if (value >= 99.5) return `>${i18n2.percent(0.99, { maximumFractionDigits: 0 })}`;
+    if (value <= 0.5) return `<${i18n2.percent(0.01, { maximumFractionDigits: 0 })}`;
+    if (Math.abs(value - 50) < 0.05) return i18n2.percent(0.5, { maximumFractionDigits: 0 });
+    return `~${i18n2.percent(Math.round(value) / 100, { maximumFractionDigits: 0 })}`;
+  }
+  function drawArrowhead(context2, segment, tint, selected) {
+    const dx = segment.x2 - segment.x1;
+    const dy = segment.y2 - segment.y1;
+    const length = Math.hypot(dx, dy);
+    if (length < 0.01 || !segment.trueEnd) return;
+    const size = Math.min(selected ? 14 : 11, length * 0.45);
+    const angle = Math.atan2(dy, dx);
+    context2.beginPath();
+    context2.moveTo(segment.x2, segment.y2);
+    context2.lineTo(segment.x2 - size * Math.cos(angle - Math.PI / 6), segment.y2 - size * Math.sin(angle - Math.PI / 6));
+    context2.lineTo(segment.x2 - size * Math.cos(angle + Math.PI / 6), segment.y2 - size * Math.sin(angle + Math.PI / 6));
+    context2.closePath();
+    context2.fillStyle = tint;
+    context2.fill();
+  }
+  function drawArrow(context2, segment, tint, selected) {
+    const length = Math.hypot(segment.x2 - segment.x1, segment.y2 - segment.y1);
+    if (length < 0.01) return;
+    const width = selected ? 5 : 3;
+    context2.save();
+    context2.lineCap = "round";
+    context2.strokeStyle = "#fff";
+    context2.lineWidth = width + 3;
+    context2.beginPath();
+    context2.moveTo(segment.x1, segment.y1);
+    context2.lineTo(segment.x2, segment.y2);
+    context2.stroke();
+    context2.strokeStyle = tint;
+    context2.lineWidth = width;
+    context2.beginPath();
+    context2.moveTo(segment.x1, segment.y1);
+    context2.lineTo(segment.x2, segment.y2);
+    context2.stroke();
+    drawArrowhead(context2, segment, tint, selected);
+    context2.restore();
+  }
+  function summaryColor(rawWeight, absolute, colorOptions2) {
+    const weight = Math.max(-absolute, Math.min(absolute, rawWeight));
+    const dissonance = absolute === 0 ? 0 : Math.max(0, Math.min(1, 1 - Math.abs(weight) / absolute));
+    return color({
+      netWeightDecibans: weight,
+      absoluteWeightDecibans: absolute,
+      dissonance
+    }, colorOptions2);
+  }
+  function rgbFromHex(tint, cache) {
+    const existing = cache.get(tint);
+    if (existing) return existing;
+    const rgb = [1, 3, 5].map((index) => Number.parseInt(tint.slice(index, index + 2), 16));
+    cache.set(tint, rgb);
+    return rgb;
+  }
+  function maskReferences(geometry2) {
+    if (geometry2.totalWeight > 0) return [{ prior: geometry2.minPriorDecibans, blendWeight: 1 }];
+    if (geometry2.totalWeight < 0) return [{ prior: geometry2.maxPriorDecibans, blendWeight: 1 }];
+    if (geometry2.minPriorDecibans === geometry2.maxPriorDecibans) {
+      return [{ prior: geometry2.minPriorDecibans, blendWeight: 1 }];
+    }
+    return [
+      { prior: geometry2.minPriorDecibans, blendWeight: 0.5 },
+      { prior: geometry2.maxPriorDecibans, blendWeight: 0.5 }
+    ];
+  }
+  function prepareBackground(width, height) {
+    if (!backgroundCanvas) {
+      backgroundCanvas = document.createElement("canvas");
+      backgroundContext = backgroundCanvas.getContext("2d");
+    }
+    if (!backgroundImage || backgroundCanvas.width !== width || backgroundCanvas.height !== height) {
+      backgroundCanvas.width = width;
+      backgroundCanvas.height = height;
+      backgroundImage = backgroundContext.createImageData(width, height);
+    }
+    return { canvas: backgroundCanvas, context: backgroundContext, image: backgroundImage };
+  }
+  function colorSignature(options) {
+    return [
+      options.minPriorDecibans,
+      options.maxPriorDecibans,
+      options.saturationThresholdDecibans,
+      options.anchors?.gray,
+      options.anchors?.yellow,
+      options.anchors?.red,
+      options.anchors?.green
+    ].join("|");
+  }
+  function drawBackground(context2, data, yOffset) {
+    const { geometry: geometry2, viewportHeight: viewportHeight2, viewportWidth: viewportWidth2, pixelsPerDeciban: pixelsPerDeciban2, colorOptions: colorOptions2, priors } = data;
+    const amplitude = geometry2.maximum - geometry2.minimum;
+    const tickStep = geometry2.totalAbsolute > amplitude ? 4 : 2;
+    const backgroundWidth = Math.max(1, Math.ceil(viewportWidth2 / tickStep));
+    const backgroundHeight = Math.max(1, Math.ceil(viewportHeight2 / tickStep));
+    const background = prepareBackground(backgroundWidth, backgroundHeight);
+    const backgroundKey = {
+      geometry: geometry2,
+      yOffset,
+      viewportWidth: viewportWidth2,
+      viewportHeight: viewportHeight2,
+      tickStep,
+      color: colorSignature(colorOptions2)
+    };
+    const reusable = lastBackground && Object.keys(backgroundKey).every((key) => lastBackground[key] === backgroundKey[key]);
+    if (!reusable) {
+      const references = maskReferences(geometry2);
+      const rgbCache = /* @__PURE__ */ new Map();
+      const columns = Array.from({ length: backgroundWidth }, (_, column) => {
+        const x = Math.min(viewportWidth2, (column + 0.5) * tickStep);
+        const posterior = geometry2.minimum + x / pixelsPerDeciban2;
+        return {
+          posterior,
+          references: references.map(({ prior, blendWeight }) => ({
+            weight: posterior - prior,
+            blendWeight
+          }))
+        };
+      });
+      for (let row = 0; row < backgroundHeight; row += 1) {
+        const y = Math.min(viewportHeight2, (row + 0.5) * tickStep);
+        const geometryY = y + yOffset;
+        const absolute = geometryY > geometry2.totalHeight ? null : absoluteFromY(geometry2, geometryY);
+        for (let column = 0; column < backgroundWidth; column += 1) {
+          const index = (row * backgroundWidth + column) * 4;
+          const rgb = [...NEUTRAL_RGB];
+          const currentColumn = columns[column];
+          const insideEnvelope = absolute !== null && currentColumn.posterior >= geometry2.minPriorDecibans - absolute && currentColumn.posterior <= geometry2.maxPriorDecibans + absolute;
+          if (insideEnvelope) {
+            const sum = [0, 0, 0];
+            for (const { weight, blendWeight } of currentColumn.references) {
+              const tint = summaryColor(weight, absolute, colorOptions2);
+              const components = rgbFromHex(tint, rgbCache);
+              for (let channel = 0; channel < 3; channel += 1) sum[channel] += components[channel] * blendWeight;
+            }
+            for (let channel = 0; channel < 3; channel += 1) rgb[channel] = Math.round(sum[channel]);
+          }
+          background.image.data[index] = rgb[0];
+          background.image.data[index + 1] = rgb[1];
+          background.image.data[index + 2] = rgb[2];
+          background.image.data[index + 3] = 255;
+        }
+      }
+      background.context.putImageData(background.image, 0, 0);
+      lastBackground = backgroundKey;
+    }
+    context2.save();
+    context2.imageSmoothingEnabled = false;
+    context2.drawImage(background.canvas, 0, 0, backgroundWidth, backgroundHeight, 0, 0, viewportWidth2, viewportHeight2);
+    context2.restore();
+    const visibleHeight = Math.max(0, Math.min(viewportHeight2, geometry2.totalHeight - yOffset));
+    context2.save();
+    context2.strokeStyle = "rgb(15 23 42 / 55%)";
+    context2.lineWidth = 1;
+    context2.setLineDash([3, 3]);
+    for (const prior of /* @__PURE__ */ new Set([priors.minPriorDecibans, priors.maxPriorDecibans])) {
+      const x = (prior - geometry2.minimum) * pixelsPerDeciban2;
+      if (x >= 0 && x <= viewportWidth2) {
+        context2.beginPath();
+        context2.moveTo(x, 0);
+        context2.lineTo(x, visibleHeight);
+        context2.stroke();
+      }
+    }
+    context2.restore();
+  }
+  function drawBreak(context2, breakItem, yOffset, viewportWidth2, selectedEvidenceId2, i18n2) {
+    const y = breakItem.y - yOffset;
+    if (y + breakItem.height < 0) return;
+    const selection = breakItem.hiddenEvidenceIds.includes(selectedEvidenceId2);
+    context2.fillStyle = selection ? "#dbeafe" : "#e2e8f0";
+    context2.fillRect(0, y, viewportWidth2, breakItem.height);
+    const line1 = i18n2.t("canvas.breakLine", {
+      side: i18n2.t(`side.${breakItem.side}`),
+      gap: numberText(breakItem.absoluteGap, i18n2)
+    });
+    const line2 = i18n2.t("canvas.breakEvidence", {
+      end: numberText(breakItem.endAbsolute, i18n2),
+      start: numberText(breakItem.startAbsolute, i18n2),
+      count: breakItem.hiddenEvidenceIds.length
+    });
+    context2.font = "800 13px system-ui";
+    const large = Math.min(viewportWidth2 - 12, Math.max(context2.measureText(line1).width, context2.measureText(line2).width) + 16);
+    context2.fillStyle = selection ? "#dbeafe" : "#f8fafc";
+    context2.fillRect(6, y + 3, large, breakItem.height - 6);
+    context2.fillStyle = selection ? "#1e3a8a" : "#334155";
+    context2.fillText(line1, 10, y + 17);
+    context2.font = "700 12px system-ui";
+    context2.fillText(line2, 10, y + 32);
+  }
+  function drawAxis(context2, data, showLabels) {
+    const { geometry: geometry2, viewportWidth: viewportWidth2, pixelsPerDeciban: pixelsPerDeciban2, latestColor: latestColor2, i18n: i18n2 } = data;
+    const active = geometry2.totalWeight === 0 ? null : geometry2.totalWeight > 0 ? geometry2.minPriorDecibans : geometry2.maxPriorDecibans;
+    const first = Math.ceil(geometry2.minimum / 5);
+    const last = Math.floor(geometry2.maximum / 5);
+    const tickCount = Math.max(0, last - first + 1);
+    const maxTicks = Math.max(1, Math.ceil(viewportWidth2 / 3) + 4);
+    const tickStep = Math.max(1, Math.ceil(tickCount / maxTicks));
+    const ticks = /* @__PURE__ */ new Set([geometry2.minimum, geometry2.maximum, 0]);
+    if (active !== null) ticks.add(active);
+    for (let index = 0; index < tickCount; index += tickStep) {
+      const value = (first + index) * 5;
+      if (!Number.isFinite(value)) break;
+      ticks.add(value);
+    }
+    if (tickCount) ticks.add(last * 5);
+    const values = [...ticks].filter((x) => Number.isFinite(x) && x >= geometry2.minimum && x <= geometry2.maximum).sort((a, b) => a - b);
+    const y = showLabels ? 48 : 0;
+    context2.save();
+    context2.strokeStyle = "#64748b";
+    context2.lineWidth = 1;
+    context2.beginPath();
+    context2.moveTo(0, y);
+    context2.lineTo(viewportWidth2, y);
+    context2.stroke();
+    context2.font = "700 12px system-ui";
+    const placements = [];
+    const priorities = active === null ? [0, geometry2.minimum, geometry2.maximum] : [active, 0, geometry2.minimum, geometry2.maximum];
+    const ordered = [.../* @__PURE__ */ new Set([...priorities, ...values])];
+    for (const posterior of ordered) {
+      const x = (posterior - geometry2.minimum) * pixelsPerDeciban2;
+      context2.beginPath();
+      context2.moveTo(x, y - (showLabels ? 3 : 0));
+      context2.lineTo(x, y + (showLabels ? 0 : 6));
+      context2.stroke();
+      if (!showLabels) continue;
+      const topText = percentageText(posterior, i18n2);
+      const bottomText = active === null ? null : signedText(posterior - active, i18n2);
+      const width = Math.max(context2.measureText(topText).width, bottomText === null ? 0 : context2.measureText(bottomText).width);
+      const left = Math.max(1, Math.min(viewportWidth2 - width - 1, x - width / 2));
+      if (placements.some(([a, b]) => left <= b + 5 && left + width >= a - 5)) continue;
+      context2.fillStyle = "rgb(248 250 252 / 92%)";
+      context2.fillRect(left - 2, 3, width + 4, 31);
+      context2.fillStyle = "#526478";
+      context2.fillText(topText, left + (width - context2.measureText(topText).width) / 2, 15);
+      if (bottomText !== null) {
+        context2.fillStyle = posterior === active ? latestColor2 : "#334155";
+        context2.fillText(bottomText, left + (width - context2.measureText(bottomText).width) / 2, 30);
+      }
+      placements.push([left, left + width]);
+    }
+    context2.restore();
+  }
+  function drawResultant(context2, data, y) {
+    const { geometry: geometry2, viewportWidth: viewportWidth2, pixelsPerDeciban: pixelsPerDeciban2, latestColor: latestColor2 } = data;
+    if (geometry2.totalWeight === 0) return;
+    const prior = geometry2.totalWeight > 0 ? geometry2.minPriorDecibans : geometry2.maxPriorDecibans;
+    const rawStart = (prior - geometry2.minimum) * pixelsPerDeciban2;
+    const rawEnd = (prior + geometry2.totalWeight - geometry2.minimum) * pixelsPerDeciban2;
+    if (rawStart < 0 && rawEnd < 0 || rawStart > viewportWidth2 && rawEnd > viewportWidth2) return;
+    const start = Math.max(0, Math.min(viewportWidth2, rawStart));
+    const end = Math.max(0, Math.min(viewportWidth2, rawEnd));
+    const direction = Math.sign(end - start);
+    const length = Math.abs(end - start);
+    if (!direction || length < 0.01) return;
+    const arrowheadVisible = rawEnd >= 0 && rawEnd <= viewportWidth2;
+    const arrowhead = Math.min(18, length, Math.max(5, length * 0.55));
+    const lineEnd = arrowheadVisible ? end - direction * arrowhead * 0.82 : end;
+    context2.save();
+    context2.fillStyle = latestColor2;
+    context2.fillRect(Math.min(start, lineEnd), y - 4, Math.abs(lineEnd - start), 8);
+    if (arrowheadVisible) {
+      context2.beginPath();
+      context2.moveTo(end, y);
+      context2.lineTo(end - direction * arrowhead, y - arrowhead / 2);
+      context2.lineTo(end - direction * arrowhead, y + arrowhead / 2);
+      context2.closePath();
+      context2.fill();
+    }
+    context2.restore();
+  }
+  function ribbonPath(context2, ribbon, yOffset) {
+    context2.beginPath();
+    context2.moveTo(ribbon.xMinimum1, ribbon.y1 - yOffset);
+    context2.lineTo(ribbon.xMaximum1, ribbon.y1 - yOffset);
+    context2.lineTo(ribbon.xMaximum2, ribbon.y2 - yOffset);
+    context2.lineTo(ribbon.xMinimum2, ribbon.y2 - yOffset);
+    context2.closePath();
+  }
+  function strokeRibbon(context2, ribbon, yOffset, exactPrior, selected) {
+    context2.save();
+    context2.lineJoin = "round";
+    if (exactPrior) {
+      if (!selected) {
+        context2.restore();
+        return;
+      }
+      context2.lineCap = "round";
+      context2.strokeStyle = "#0f172a";
+      context2.lineWidth = 7;
+      context2.beginPath();
+      context2.moveTo(ribbon.xMinimum1, ribbon.y1 - yOffset);
+      context2.lineTo(ribbon.xMinimum2, ribbon.y2 - yOffset);
+      context2.stroke();
+    } else {
+      ribbonPath(context2, ribbon, yOffset);
+      context2.strokeStyle = selected ? "#0f172a" : "rgb(15 23 42 / 35%)";
+      context2.lineWidth = selected ? 3 : 1;
+      context2.stroke();
+    }
+    context2.restore();
+  }
+  function drawZeroPoint(context2, ribbon, yOffset, tint, selected, viewportWidth2, viewportHeight2) {
+    const y = ribbon.y1 - yOffset;
+    if (y < -8 || y > viewportHeight2 + 8) return;
+    const radius = selected ? 6 : 4;
+    const left = Math.max(0, Math.min(ribbon.xMinimum1, ribbon.xMaximum1));
+    const right = Math.min(viewportWidth2, Math.max(ribbon.xMinimum1, ribbon.xMaximum1));
+    if (left > right) return;
+    const x = Math.max(0, Math.min(viewportWidth2, (left + right) / 2));
+    context2.save();
+    context2.beginPath();
+    context2.arc(x, y, radius + 2, 0, Math.PI * 2);
+    context2.fillStyle = "#fff";
+    context2.fill();
+    context2.beginPath();
+    context2.arc(x, y, radius, 0, Math.PI * 2);
+    context2.fillStyle = tint;
+    context2.fill();
+    context2.strokeStyle = "#0f172a";
+    context2.lineWidth = selected ? 2.5 : 1.5;
+    context2.stroke();
+    context2.restore();
+  }
+  function drawExactPrior(context2, ribbon, data, yOffset) {
+    const { viewportHeight: viewportHeight2, colorOptions: colorOptions2 } = data;
+    const yDelta = ribbon.y2 - ribbon.y1;
+    const minimumY = Math.max(0, Math.ceil(Math.min(ribbon.y1, ribbon.y2) - yOffset - 1));
+    const maximumY = Math.min(
+      Math.ceil(viewportHeight2),
+      Math.floor(Math.max(ribbon.y1, ribbon.y2) - yOffset + 1)
+    );
+    if (minimumY > maximumY) return;
+    for (let y = minimumY; y <= maximumY; y += 1) {
+      const t = yDelta === 0 ? 0.5 : Math.max(0, Math.min(1, (y + yOffset - ribbon.y1) / yDelta));
+      const weight = ribbon.startWeight + (ribbon.endWeight - ribbon.startWeight) * t;
+      const absolute = ribbon.startAbsolute + (ribbon.endAbsolute - ribbon.startAbsolute) * t;
+      const left = ribbon.xMinimum1 + (ribbon.xMinimum2 - ribbon.xMinimum1) * t;
+      context2.fillStyle = summaryColor(weight, absolute, colorOptions2);
+      context2.fillRect(left - 1.5, y - 0.75, 3, 1.5);
+    }
+  }
+  function drawRibbons(context2, data, yOffset) {
+    const {
+      geometry: geometry2,
+      evidence: evidence2,
+      selectedEvidenceId: selectedEvidenceId2,
+      colorOptions: colorOptions2,
+      viewportWidth: viewportWidth2,
+      viewportHeight: viewportHeight2
+    } = data;
+    const byId = new Map(geometry2.steps.map((step) => [step.id, step]));
+    const exactPrior = geometry2.minPriorDecibans === geometry2.maxPriorDecibans;
+    for (const item of evidence2) {
+      const step = byId.get(item.id);
+      const ribbon = step?.visibleRibbon;
+      if (!ribbon) continue;
+      const selected = item.id === selectedEvidenceId2;
+      if (step.weightDecibans !== 0) {
+        strokeRibbon(context2, ribbon, yOffset, exactPrior, selected);
+        if (exactPrior) drawExactPrior(context2, ribbon, data, yOffset);
+      }
+      if (step.weightDecibans === 0) {
+        drawZeroPoint(
+          context2,
+          ribbon,
+          yOffset,
+          summaryColor(ribbon.endWeight, ribbon.endAbsolute, colorOptions2),
+          selected,
+          viewportWidth2,
+          viewportHeight2
+        );
+      }
+      for (const edge of step.edgeSegments) {
+        const segment = { ...edge, y1: edge.y1 - yOffset, y2: edge.y2 - yOffset };
+        if (segment.y1 < -30 && segment.y2 < -30 || segment.y1 > viewportHeight2 + 30 && segment.y2 > viewportHeight2 + 30) continue;
+        if (exactPrior) {
+          context2.save();
+          drawArrowhead(
+            context2,
+            segment,
+            summaryColor(step.end.weight, step.end.absolute, colorOptions2),
+            selected
+          );
+          context2.restore();
+        } else {
+          const tint = item.direction === "for" ? "#15803d" : "#dc2626";
+          drawArrow(context2, segment, tint, selected);
+        }
+      }
+    }
+  }
+  function drawAbsoluteScale(context2, geometry2, yOffset, viewportHeight2, i18n2) {
+    const tickStep = geometry2.totalAbsolute <= 20 ? 5 : geometry2.totalAbsolute <= 60 ? 10 : 25;
+    context2.save();
+    context2.font = "700 12px system-ui";
+    context2.textBaseline = "alphabetic";
+    for (let absolute = 0; absolute <= geometry2.totalAbsolute + 1e-3; absolute += tickStep) {
+      if (geometry2.breaks.some((breakItem) => absolute > breakItem.startAbsolute && absolute < breakItem.endAbsolute)) continue;
+      const y = positionAbsolute(geometry2, absolute) - yOffset;
+      if (y < 0 || y > viewportHeight2) continue;
+      const text = numberText(absolute, i18n2);
+      const width = context2.measureText(text).width;
+      const row = Math.max(13, Math.min(viewportHeight2 - 2, y - 4));
+      context2.fillStyle = "rgb(248 250 252 / 88%)";
+      context2.fillRect(5, row - 12, width + 6, 15);
+      context2.fillStyle = "#334155";
+      context2.fillText(text, 8, row);
+    }
+    context2.restore();
+  }
+  function drawDiagram(data) {
+    const { canvas: canvas2, context: context2, rulerCanvas: rulerCanvas2, rulerContext: rulerContext2, priorResultantCanvas: priorResultantCanvas2, priorResultantContext: priorResultantContext2, viewportWidth: viewportWidth2, viewportHeight: viewportHeight2, yOffset, geometry: geometry2, selectedEvidenceId: selectedEvidenceId2 } = data;
+    resizeCanvas(canvas2, context2, viewportWidth2, viewportHeight2);
+    context2.clearRect(0, 0, viewportWidth2, viewportHeight2);
+    drawBackground(context2, data, yOffset);
+    for (const breakItem of geometry2.breaks) drawBreak(context2, breakItem, yOffset, viewportWidth2, selectedEvidenceId2, data.i18n);
+    drawRibbons(context2, data, yOffset);
+    drawAbsoluteScale(context2, geometry2, yOffset, viewportHeight2, data.i18n);
+    const interval = geometry2.currentInterval;
+    if (interval.visible) {
+      context2.save();
+      context2.strokeStyle = "#0f172a";
+      context2.lineWidth = 3;
+      context2.beginPath();
+      context2.moveTo(Math.max(0, Math.min(viewportWidth2, (interval.minimum - geometry2.minimum) * data.pixelsPerDeciban)), 0);
+      context2.lineTo(Math.max(0, Math.min(viewportWidth2, (interval.maximum - geometry2.minimum) * data.pixelsPerDeciban)), 0);
+      context2.stroke();
+      context2.restore();
+    }
+    drawAxis(context2, data, false);
+    drawResultant(context2, data, 0);
+    resizeCanvas(rulerCanvas2, rulerContext2, viewportWidth2, 48);
+    rulerContext2.clearRect(0, 0, viewportWidth2, 48);
+    drawAxis(rulerContext2, data, true);
+    drawResultant(rulerContext2, data, 48);
+    resizeCanvas(priorResultantCanvas2, priorResultantContext2, viewportWidth2, 30);
+    priorResultantContext2.clearRect(0, 0, viewportWidth2, 30);
+    drawResultant(priorResultantContext2, data, 15);
+  }
+
+  // demo/category-state.js
+  var categoryDefinition = (id, labelKey, descriptionKey) => Object.freeze({
+    id,
+    labelKey,
+    descriptionKey,
+    initialWeights: Object.freeze({ for: 10, against: 10 })
+  });
+  var CATEGORY_CATALOG = Object.freeze([
+    categoryDefinition("testimony", "category.testimony", "category.testimonyDescription"),
+    categoryDefinition("news-report", "category.newsReport", "category.newsReportDescription"),
+    categoryDefinition("fact-check", "category.factCheck", "category.factCheckDescription"),
+    categoryDefinition("encyclopedia", "category.encyclopedia", "category.encyclopediaDescription"),
+    categoryDefinition("official-document", "category.officialDocument", "category.officialDocumentDescription"),
+    categoryDefinition("official-data", "category.officialData", "category.officialDataDescription"),
+    categoryDefinition("scientific-study", "category.scientificStudy", "category.scientificStudyDescription"),
+    categoryDefinition("news-aggregator", "category.newsAggregator", "category.newsAggregatorDescription"),
+    categoryDefinition("observational-study", "category.observationalStudy", "category.observationalStudyDescription"),
+    categoryDefinition("controlled-experiment", "category.controlledExperiment", "category.controlledExperimentDescription"),
+    categoryDefinition("randomized-controlled-study", "category.randomizedControlledStudy", "category.randomizedControlledStudyDescription"),
+    categoryDefinition("double-blind-randomized-study", "category.doubleBlindStudy", "category.doubleBlindStudyDescription"),
+    categoryDefinition("independent-replication", "category.independentReplication", "category.independentReplicationDescription"),
+    categoryDefinition("systematic-review", "category.systematicReview", "category.systematicReviewDescription"),
+    categoryDefinition("meta-analysis", "category.metaAnalysis", "category.metaAnalysisDescription")
+  ]);
+  var DEFAULT_CATEGORY_DEFINITION_IDS = Object.freeze([
+    "testimony",
+    "news-report",
+    "fact-check",
+    "encyclopedia",
+    "official-document",
+    "official-data",
+    "scientific-study"
+  ]);
+  function categoryDefinitionById(definitionId) {
+    return CATEGORY_CATALOG.find(({ id }) => id === definitionId);
+  }
+  function instantiateCategory(definition, id) {
+    return {
+      id,
+      definitionId: definition.id,
+      labelKey: definition.labelKey,
+      descriptionKey: definition.descriptionKey,
+      customLabel: null,
+      weights: { ...definition.initialWeights }
+    };
+  }
+  function createDefaultCategories() {
+    return DEFAULT_CATEGORY_DEFINITION_IDS.map((definitionId) => instantiateCategory(categoryDefinitionById(definitionId), `default-${definitionId}`));
+  }
+  function createPresetCategory(definitionId, uniqueId) {
+    const definition = categoryDefinitionById(definitionId);
+    if (!definition) return null;
+    return instantiateCategory(definition, `preset-${definitionId}-${uniqueId}`);
+  }
+  function categoryLabel(category, translate) {
+    return category.customLabel ?? translate(category.labelKey);
+  }
+  function categoryDescription(category, translate) {
+    return category.descriptionKey ? translate(category.descriptionKey) : "";
+  }
+  function validateCategoryName(name, categories2, translate) {
+    const normalized = name.trim().toLocaleLowerCase();
+    if (normalized === "") return "blank";
+    return categories2.some((category) => categoryLabel(category, translate).trim().toLocaleLowerCase() === normalized) ? "duplicate" : null;
+  }
+  function createCustomCategory(name, categories2) {
+    const stem = name.trim().toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "category";
+    const used = new Set(categories2.map(({ id: id2 }) => id2));
+    let id = `custom-${stem}`;
+    let suffix = 2;
+    while (used.has(id)) {
+      id = `custom-${stem}-${suffix}`;
+      suffix += 1;
+    }
+    return {
+      id,
+      definitionId: null,
+      labelKey: null,
+      descriptionKey: null,
+      customLabel: name.trim(),
+      weights: { for: 10, against: 10 }
+    };
+  }
+  function addEvidence(evidence2, category, direction, id) {
+    return [...evidence2, {
+      id,
+      categoryId: category.id,
+      direction,
+      snapshotLabelKey: category.labelKey,
+      snapshotCustomLabel: category.customLabel,
+      snapshotWeight: category.weights[direction]
+    }];
+  }
+  function removeCategory(categories2, evidence2, categoryId) {
+    const category = categories2.find(({ id }) => id === categoryId);
+    if (!category) return { categories: categories2, evidence: evidence2 };
+    return {
+      categories: categories2.filter(({ id }) => id !== categoryId),
+      evidence: evidence2.map((item) => item.categoryId === categoryId ? {
+        ...item,
+        categoryId: null,
+        snapshotLabelKey: category.labelKey,
+        snapshotCustomLabel: category.customLabel,
+        snapshotWeight: category.weights[item.direction]
+      } : item)
+    };
+  }
+  function evidencePresentation(item, categories2, translate) {
+    const category = categories2.find(({ id }) => id === item.categoryId);
+    if (category) {
+      return {
+        label: categoryLabel(category, translate),
+        weight: category.weights[item.direction]
+      };
+    }
+    return {
+      label: item.snapshotCustomLabel ?? translate(item.snapshotLabelKey),
+      weight: item.snapshotWeight
+    };
+  }
+
+  // demo/locales/en.js
+  var en = {
+    meta: { id: "en", label: "English", htmlLang: "en", numberLocale: "en" },
+    messages: {
+      "app.title": "Weight of evidence trapezoid diagram",
+      "app.heading": "Weight of evidence diagram",
+      "app.intro": "Add evidence, adjust its illustrative weight, and explore combined weight, dissonance, and color.",
+      "language.label": "Language",
+      "diagram.label": "Weight of evidence trapezoid diagram",
+      "diagram.canvasFallback": "The diagram shows the posterior interval horizontally and absolute weight vertically.",
+      "diagram.historyLabel": "Graphical evidence history, from the current summary to older evidence",
+      "diagram.caption": "Height measures absolute weight. Arrows follow each item of evidence at plus or minus 45 degrees.",
+      "diagram.resultNone": "Combined weight of evidence: None (0 dBan)",
+      "diagram.result": "Combined weight of evidence: {band} ({weight} dBan)",
+      "diagram.summaryAria": { one: "Summary of {count} evidence item", other: "Summary of {count} evidence items" },
+      "diagram.summaryDetails": "{summary}: {net} net decibans, {absolute} absolute decibans, {dissonance} dissonance, {band} band, color {color}.",
+      "diagram.description": "Current net weight {net} dBan and absolute weight {absolute} dBan. The posterior axis runs from {minimum} to {maximum} dBan. The current posterior interval runs from {currentMinimum} to {currentMaximum} dBan. Its envelope runs from {envelopeMinimum} to {envelopeMaximum} dBan. The active prior is {activePrior}. The resultant runs from {resultantStart} to {resultantEnd} dBan. {position} {breaks}",
+      "diagram.noBreaks": "There are no compacted breaks.",
+      "diagram.break": {
+        one: "A {side} break runs from absolute weight {start} to {end}, skips {gap} dBan, and contains {count} fully offscreen evidence item with identifier {ids}.",
+        other: "A {side} break runs from absolute weight {start} to {end}, skips {gap} dBan, and contains {count} fully offscreen evidence items with identifiers {ids}."
+      },
+      "diagram.positionZero": "The resultant is zero, so no arrow is drawn.",
+      "diagram.positionVisible": "The resultant arrowhead is visible.",
+      "diagram.positionClipped": "The resultant arrow is clipped by the viewport and its arrowhead is offscreen.",
+      "diagram.invalidProbability": "The probability bound is hidden while the prior bounds are invalid.",
+      "diagram.invalidGeometry": "These bounds and saturation threshold cannot produce a trapezoid.",
+      "measure.dissonance": "Dissonance",
+      "measure.noEvidence": "No evidence",
+      "evidence.heading": "Evidence",
+      "evidence.editorLabel": "Evidence editor",
+      "evidence.category": "Category",
+      "evidence.for": "For",
+      "evidence.against": "Against",
+      "evidence.addFor": "+ For",
+      "evidence.addAgainst": "+ Against",
+      "evidence.addAria": "Add {direction} evidence from {category}",
+      "evidence.weightAria": "{direction} illustrative weight for {category}",
+      "evidence.illustrative": "Illustrative weights only; adjust them for the evidence and context.",
+      "evidence.independence": "Several reports can repeat the same source. Check whether evidence is independent before combining its weight.",
+      "evidence.addedLabel": "Added evidence",
+      "evidence.empty": "Add an item of evidence.",
+      "evidence.count": { one: "{count} evidence item", other: "{count} evidence items" },
+      "evidence.selectAria": "Select evidence {number}, {category}, {direction}, {weight} decibans",
+      "evidence.remove": "Remove",
+      "evidence.removeAria": "Remove evidence {number}",
+      "category.heading": "Categories",
+      "category.name": "Category name",
+      "category.placeholder": "New category",
+      "category.add": "Add category",
+      "category.preset": "Category preset",
+      "category.choosePreset": "Choose an additional category",
+      "category.addPreset": "Add preset",
+      "category.remove": "Remove category",
+      "category.removeAria": "Remove category {category}",
+      "category.blankError": "Enter a category name.",
+      "category.duplicateError": "A category with this name already exists.",
+      "category.testimony": "Testimony",
+      "category.testimonyDescription": "Someone reports what they experienced.",
+      "category.newsReport": "News report",
+      "category.newsReportDescription": "A journalistic report about an event or claim.",
+      "category.factCheck": "Fact-check",
+      "category.factCheckDescription": "A published verification of a specific claim.",
+      "category.encyclopedia": "Encyclopedia",
+      "category.encyclopediaDescription": "A general reference summary with cited sources.",
+      "category.officialDocument": "Official document",
+      "category.officialDocumentDescription": "A document issued by a public institution or organization.",
+      "category.officialData": "Official data",
+      "category.officialDataDescription": "Data published by an official source.",
+      "category.scientificStudy": "Scientific study",
+      "category.scientificStudyDescription": "A research study that reports methods and results.",
+      "category.newsAggregator": "News aggregator",
+      "category.newsAggregatorDescription": "A service that collects reports from other sources.",
+      "category.observationalStudy": "Observational study",
+      "category.observationalStudyDescription": "Researchers observe patterns without intervening.",
+      "category.controlledExperiment": "Controlled experiment",
+      "category.controlledExperimentDescription": "Compare an intervention with a control.",
+      "category.randomizedControlledStudy": "Randomized controlled study",
+      "category.randomizedControlledStudyDescription": "Assign groups by chance.",
+      "category.doubleBlindStudy": "Double-blind randomized study",
+      "category.doubleBlindStudyDescription": "Randomization plus blinding of participants and assessors.",
+      "category.independentReplication": "Independent replication",
+      "category.independentReplicationDescription": "Another team tests whether a result recurs.",
+      "category.systematicReview": "Systematic review",
+      "category.systematicReviewDescription": "Assess studies selected through an explicit method.",
+      "category.metaAnalysis": "Meta-analysis",
+      "category.metaAnalysisDescription": "Combine numerical results from comparable studies.",
+      "prior.heading": "Prior opinion",
+      "prior.minimum": "Min",
+      "prior.maximum": "Max",
+      "prior.presetsLabel": "Prior-bound presets",
+      "prior.fixedHelp": "Equal bounds represent a fixed prior.",
+      "prior.slightNegative": "Slightly negative: −5 / 0",
+      "prior.veryPositive": "Very positive: +20 / +30",
+      "prior.exactFifty": "Exact 50% prior",
+      "prior.handlesLabel": "Adjustable prior bounds on the posterior axis",
+      "prior.minHandle": "Adjust the minimum prior bound",
+      "prior.maxHandle": "Adjust the maximum prior bound",
+      "prior.value": "{bound} bound: {decibans} dBan, {percentage}",
+      "prior.low": "low",
+      "prior.high": "high",
+      "prior.fixed": "Prior before evidence: {minimum}",
+      "prior.range": "Prior before evidence: between {minimum} and {maximum}",
+      "prior.exactDescription": "Calculated with a prior fixed at {prior} dBan.",
+      "prior.rangeDescription": "Valid for a prior between {minimum} and {maximum} dBan.",
+      "prior.finiteError": "Enter two finite bounds in decibans.",
+      "prior.orderError": "The minimum bound must be less than or equal to the maximum bound.",
+      "scenario.heading": "Example scenarios",
+      "scenario.none": "No evidence",
+      "scenario.newsFor": "1 news report for",
+      "scenario.convergingFor": "3 source categories for",
+      "scenario.convergingAgainst": "3 source categories against",
+      "scenario.mixed": "2 items for + 1 against",
+      "scenario.equalOpposing": "1 item for + 1 against",
+      "palette.heading": "Color legend",
+      "palette.description": "The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.",
+      "palette.canvasAria": "Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.",
+      "palette.canvasFallback": "Triangular color legend.",
+      "palette.currentAria": "Current summary color",
+      "palette.saturation": "Saturation threshold",
+      "palette.noEvidence": "No evidence",
+      "palette.dissonance": "Dissonance",
+      "palette.against": "Against",
+      "palette.for": "For",
+      "palette.help": "The threshold controls the color transition beyond the gray region defined by the prior bounds.",
+      "action.reset": "Reset",
+      "direction.for": "for",
+      "direction.against": "against",
+      "side.left": "left",
+      "side.right": "right",
+      "side.none": "none",
+      "side.minimum": "minimum",
+      "side.maximum": "maximum",
+      "band.none": "None",
+      "band.anecdotal": "Anecdotal",
+      "band.moderate": "Moderate",
+      "band.strong": "Strong",
+      "band.very strong": "Very strong",
+      "band.decisive": "Decisive",
+      "band.anecdotal against": "Anecdotal against",
+      "band.moderate against": "Moderate against",
+      "band.strong against": "Strong against",
+      "band.very strong against": "Very strong against",
+      "band.decisive against": "Decisive against",
+      "probability.lower": "Probability ≥ {percentage}%",
+      "probability.upper": "Probability ≤ {percentage}%",
+      "probability.exact": "Probability = {percentage}%",
+      "probability.no-evidence": "No evidence",
+      "probability.dissonant-evidence": "Dissonant evidence",
+      "canvas.breakLine": "// {side} · {gap} dBan",
+      "canvas.breakEvidence": {
+        one: "{end} → {start} · {count} hidden evidence item",
+        other: "{end} → {start} · {count} hidden evidence items"
+      }
+    }
+  };
+
+  // demo/locales/fr.js
+  var fr = {
+    meta: { id: "fr", label: "Français", htmlLang: "fr", numberLocale: "fr-FR" },
+    messages: {
+      "app.title": "Diagramme en trapèze du poids des preuves",
+      "app.heading": "Diagramme du poids des preuves",
+      "app.intro": "Ajoutez des preuves, réglez leur poids illustratif et explorez le poids combiné, la dissonance et la couleur.",
+      "language.label": "Langue",
+      "diagram.label": "Diagramme en trapèze du poids des preuves",
+      "diagram.canvasFallback": "Le diagramme montre l’intervalle postérieur horizontalement et le poids absolu verticalement.",
+      "diagram.historyLabel": "Historique graphique des preuves, de la synthèse actuelle vers les preuves plus anciennes",
+      "diagram.caption": "La hauteur mesure le poids absolu. Les flèches suivent chaque preuve, à plus ou moins 45 degrés.",
+      "diagram.resultNone": "Poids des preuves combiné : Nul (0 dBan)",
+      "diagram.result": "Poids des preuves combiné : {band} ({weight} dBan)",
+      "diagram.summaryAria": { one: "Synthèse de {count} preuve", other: "Synthèse de {count} preuves" },
+      "diagram.summaryDetails": "{summary} : {net} décibans nets, {absolute} décibans absolus, {dissonance} de dissonance, bande {band}, couleur {color}.",
+      "diagram.description": "Poids net actuel {net} dBan et poids absolu {absolute} dBan. L’axe postérieur va de {minimum} à {maximum} dBan. L’intervalle postérieur courant va de {currentMinimum} à {currentMaximum} dBan. Son enveloppe va de {envelopeMinimum} à {envelopeMaximum} dBan. L’a priori actif est {activePrior}. La résultante va de {resultantStart} à {resultantEnd} dBan. {position} {breaks}",
+      "diagram.noBreaks": "Aucune rupture compacte.",
+      "diagram.break": {
+        one: "Une rupture {side} va du poids absolu {start} à {end}, saute {gap} dBan et contient {count} preuve entièrement hors champ, identifiant {ids}.",
+        other: "Une rupture {side} va du poids absolu {start} à {end}, saute {gap} dBan et contient {count} preuves entièrement hors champ, identifiants {ids}."
+      },
+      "diagram.positionZero": "La résultante est nulle ; aucune flèche n’est tracée.",
+      "diagram.positionVisible": "La tête de la flèche résultante est visible.",
+      "diagram.positionClipped": "La flèche résultante est tronquée par la fenêtre ; sa tête est hors champ.",
+      "diagram.invalidProbability": "La borne de probabilité est masquée tant que les bornes de l’a priori sont invalides.",
+      "diagram.invalidGeometry": "Ces bornes et ce seuil ne permettent pas de tracer le trapèze.",
+      "measure.dissonance": "Dissonance",
+      "measure.noEvidence": "Aucune preuve",
+      "evidence.heading": "Preuves",
+      "evidence.editorLabel": "Éditeur de preuves",
+      "evidence.category": "Catégorie",
+      "evidence.for": "Pour",
+      "evidence.against": "Contre",
+      "evidence.addFor": "+ Pour",
+      "evidence.addAgainst": "+ Contre",
+      "evidence.addAria": "Ajouter une preuve {direction} de catégorie {category}",
+      "evidence.weightAria": "Poids illustratif {direction} pour {category}",
+      "evidence.illustrative": "Poids donnés à titre illustratif ; réglez-les selon la preuve et le contexte.",
+      "evidence.independence": "Plusieurs articles peuvent reprendre la même source. Vérifiez l’indépendance des preuves avant de combiner leur poids.",
+      "evidence.addedLabel": "Preuves ajoutées",
+      "evidence.empty": "Ajoutez une preuve.",
+      "evidence.count": { one: "{count} preuve", other: "{count} preuves" },
+      "evidence.selectAria": "Sélectionner la preuve {number}, {category}, {direction}, {weight} décibans",
+      "evidence.remove": "Retirer",
+      "evidence.removeAria": "Retirer la preuve {number}",
+      "category.heading": "Catégories",
+      "category.name": "Nom de la catégorie",
+      "category.placeholder": "Nouvelle catégorie",
+      "category.add": "Ajouter la catégorie",
+      "category.preset": "Catégorie prédéfinie",
+      "category.choosePreset": "Choisir une catégorie supplémentaire",
+      "category.addPreset": "Ajouter le préréglage",
+      "category.remove": "Retirer la catégorie",
+      "category.removeAria": "Retirer la catégorie {category}",
+      "category.blankError": "Saisissez un nom de catégorie.",
+      "category.duplicateError": "Une catégorie porte déjà ce nom.",
+      "category.testimony": "Témoignage",
+      "category.testimonyDescription": "Une personne rapporte ce qu’elle a vécu.",
+      "category.newsReport": "Article de presse",
+      "category.newsReportDescription": "Un compte rendu journalistique portant sur un événement ou une affirmation.",
+      "category.factCheck": "Vérification des faits",
+      "category.factCheckDescription": "Une vérification publiée portant sur une affirmation précise.",
+      "category.encyclopedia": "Encyclopédie",
+      "category.encyclopediaDescription": "Une synthèse de référence générale qui cite ses sources.",
+      "category.officialDocument": "Document officiel",
+      "category.officialDocumentDescription": "Un document émis par une institution publique ou une organisation.",
+      "category.officialData": "Données officielles",
+      "category.officialDataDescription": "Des données publiées par une source officielle.",
+      "category.scientificStudy": "Étude scientifique",
+      "category.scientificStudyDescription": "Une étude de recherche qui présente ses méthodes et ses résultats.",
+      "category.newsAggregator": "Agrégateur d’actualités",
+      "category.newsAggregatorDescription": "Un service qui rassemble des articles provenant d’autres sources.",
+      "category.observationalStudy": "Étude observationnelle",
+      "category.observationalStudyDescription": "Les chercheurs observent des tendances sans intervenir.",
+      "category.controlledExperiment": "Expérience contrôlée",
+      "category.controlledExperimentDescription": "Une intervention est comparée à un groupe témoin.",
+      "category.randomizedControlledStudy": "Essai contrôlé randomisé",
+      "category.randomizedControlledStudyDescription": "Les groupes sont attribués au hasard.",
+      "category.doubleBlindStudy": "Essai randomisé en double aveugle",
+      "category.doubleBlindStudyDescription": "La randomisation est complétée par l’aveugle des participants et des évaluateurs.",
+      "category.independentReplication": "Réplication indépendante",
+      "category.independentReplicationDescription": "Une autre équipe teste si le résultat se reproduit.",
+      "category.systematicReview": "Revue systématique",
+      "category.systematicReviewDescription": "Des études sélectionnées selon une méthode explicite sont évaluées.",
+      "category.metaAnalysis": "Méta-analyse",
+      "category.metaAnalysisDescription": "Les résultats chiffrés d’études comparables sont combinés.",
+      "prior.heading": "Avis a priori",
+      "prior.minimum": "Min.",
+      "prior.maximum": "Max.",
+      "prior.presetsLabel": "Préréglages des bornes de l’a priori",
+      "prior.fixedHelp": "Des bornes égales représentent un a priori fixé.",
+      "prior.slightNegative": "Légèrement négatif : −5 / 0",
+      "prior.veryPositive": "Très positif : +20 / +30",
+      "prior.exactFifty": "A priori exact de 50 %",
+      "prior.handlesLabel": "Bornes d’a priori réglables sur l’axe postérieur",
+      "prior.minHandle": "Ajuster la borne minimale de l’a priori",
+      "prior.maxHandle": "Ajuster la borne maximale de l’a priori",
+      "prior.value": "Borne {bound} : {decibans} dBan, {percentage}",
+      "prior.low": "basse",
+      "prior.high": "haute",
+      "prior.fixed": "A priori avant les preuves : {minimum}",
+      "prior.range": "A priori avant les preuves : entre {minimum} et {maximum}",
+      "prior.exactDescription": "Calculée avec un a priori fixé à {prior} dBan.",
+      "prior.rangeDescription": "Valable pour un a priori compris entre {minimum} et {maximum} dBan.",
+      "prior.finiteError": "Saisissez deux bornes finies en décibans.",
+      "prior.orderError": "La borne minimale doit être inférieure ou égale à la borne maximale.",
+      "scenario.heading": "Scénarios d’exemple",
+      "scenario.none": "Aucune preuve",
+      "scenario.newsFor": "1 article de presse pour",
+      "scenario.convergingFor": "3 catégories de sources pour",
+      "scenario.convergingAgainst": "3 catégories de sources contre",
+      "scenario.mixed": "2 éléments pour + 1 contre",
+      "scenario.equalOpposing": "1 élément pour + 1 contre",
+      "palette.heading": "Légende des couleurs",
+      "palette.description": "Le triangle résume la couleur des preuves et de la résultante. La dissonance reste visible lorsque les preuves pointent dans des directions opposées.",
+      "palette.canvasAria": "Triangle de légende des couleurs : Dissonance en haut, Contre à gauche, Aucune preuve au centre et Pour à droite. Le point indique la synthèse actuelle.",
+      "palette.canvasFallback": "Légende triangulaire des couleurs.",
+      "palette.currentAria": "Couleur de la synthèse actuelle",
+      "palette.saturation": "Seuil de saturation",
+      "palette.noEvidence": "Aucune preuve",
+      "palette.dissonance": "Dissonance",
+      "palette.against": "Contre",
+      "palette.for": "Pour",
+      "palette.help": "Le seuil règle la transition de couleur au-delà de la zone grise définie par les bornes de l’a priori.",
+      "action.reset": "Réinitialiser",
+      "direction.for": "pour",
+      "direction.against": "contre",
+      "side.left": "gauche",
+      "side.right": "droite",
+      "side.none": "aucun",
+      "side.minimum": "minimal",
+      "side.maximum": "maximal",
+      "band.none": "Nul",
+      "band.anecdotal": "Anecdotique",
+      "band.moderate": "Modéré",
+      "band.strong": "Fort",
+      "band.very strong": "Très fort",
+      "band.decisive": "Décisif",
+      "band.anecdotal against": "Anecdotique contre",
+      "band.moderate against": "Modéré contre",
+      "band.strong against": "Fort contre",
+      "band.very strong against": "Très fort contre",
+      "band.decisive against": "Décisif contre",
+      "probability.lower": "Probabilité ≥ {percentage} %",
+      "probability.upper": "Probabilité ≤ {percentage} %",
+      "probability.exact": "Probabilité = {percentage} %",
+      "probability.no-evidence": "Aucune preuve",
+      "probability.dissonant-evidence": "Preuves dissonantes",
+      "canvas.breakLine": "// {side} · {gap} dBan",
+      "canvas.breakEvidence": {
+        one: "{end} → {start} · {count} preuve masquée",
+        other: "{end} → {start} · {count} preuves masquées"
+      }
+    }
+  };
+
+  // demo/i18n.js
+  var localeRegistry = Object.freeze({ en, fr });
+  var supportedLocales = Object.freeze(Object.values(localeRegistry).map(({ meta }) => meta));
+  var DEFAULT_LOCALE = "en";
+  function templateFor(entry, count, locale) {
+    if (typeof entry === "string") return entry;
+    if (!entry || typeof entry !== "object" || count === void 0) return void 0;
+    const category = new Intl.PluralRules(localeRegistry[locale].meta.numberLocale).select(Number(count));
+    return entry[category] ?? entry.other;
+  }
+  function interpolate(template, values) {
+    return template.replace(/\{([a-zA-Z][\w]*)\}/g, (match, key) => Object.hasOwn(values, key) ? String(values[key]) : match);
+  }
+  function resolveLocale(locale) {
+    return Object.hasOwn(localeRegistry, locale) ? locale : DEFAULT_LOCALE;
+  }
+  function createI18n(initialLocale = DEFAULT_LOCALE) {
+    let locale = resolveLocale(initialLocale);
+    return {
+      get locale() {
+        return locale;
+      },
+      get meta() {
+        return localeRegistry[locale].meta;
+      },
+      setLocale(nextLocale) {
+        locale = resolveLocale(nextLocale);
+        return locale;
+      },
+      t(key, values = {}) {
+        const localizedEntry = localeRegistry[locale].messages[key];
+        const entry = localizedEntry ?? localeRegistry[DEFAULT_LOCALE].messages[key];
+        const messageLocale = localizedEntry === void 0 ? DEFAULT_LOCALE : locale;
+        return interpolate(templateFor(entry, values.count, messageLocale) ?? key, values);
+      },
+      number(value, options = {}) {
+        return new Intl.NumberFormat(localeRegistry[locale].meta.numberLocale, options).format(value);
+      },
+      percent(value, options = {}) {
+        return new Intl.NumberFormat(localeRegistry[locale].meta.numberLocale, {
+          style: "percent",
+          maximumFractionDigits: 1,
+          ...options
+        }).format(value);
+      }
+    };
+  }
+
+  // demo/main.js
+  var SCENARIOS = [
+    ["none", "scenario.none", []],
+    ["news-for", "scenario.newsFor", [["news-report", "for"]]],
+    ["converging-for", "scenario.convergingFor", [
+      ["testimony", "for"],
+      ["fact-check", "for"],
+      ["official-data", "for"]
+    ]],
+    ["converging-against", "scenario.convergingAgainst", [
+      ["news-report", "against"],
+      ["official-document", "against"],
+      ["scientific-study", "against"]
+    ]],
+    ["mixed", "scenario.mixed", [
+      ["testimony", "for"],
+      ["fact-check", "for"],
+      ["news-report", "against"]
+    ]],
+    ["equal-opposing", "scenario.equalOpposing", [
+      ["official-data", "for"],
+      ["testimony", "against"]
+    ]]
+  ];
+  var viewportHeight = 300;
+  var BREAK_HEIGHT = 40;
+  function storedLocale() {
+    try {
+      return localStorage.getItem("evidences-diagrams.locale") ?? DEFAULT_LOCALE;
+    } catch {
+      return DEFAULT_LOCALE;
+    }
+  }
+  var i18n = createI18n(storedLocale());
+  var categories = createDefaultCategories();
+  var categoryRows = document.querySelector("#category-rows");
+  var evidenceHistory = document.querySelector("#evidence-history");
+  var trajectorySummary = document.querySelector("#trajectory-summary");
+  var trajectoryEmpty = document.querySelector("#trajectory-empty");
+  var canvas = document.querySelector("#cone");
+  var context = canvas.getContext("2d", { alpha: true });
+  var rulerCanvas = document.querySelector("#cone-ruler");
+  var rulerContext = rulerCanvas.getContext("2d", { alpha: true });
+  var coneScroll = document.querySelector("#cone-scroll");
+  var coneSpacer = document.querySelector("#cone-spacer");
+  var coneDescription = document.querySelector("#cone-description");
+  var resultantLabel = document.querySelector("#resultant-label");
+  var colorLegend = document.querySelector("#color-legend");
+  var legendCanvas = document.querySelector("#legend-triangle");
+  var legendContext = legendCanvas.getContext("2d", { alpha: true });
+  var saturationThreshold = document.querySelector("#saturation-threshold");
+  var saturationThresholdValue = document.querySelector("#saturation-threshold-value");
+  var minPriorDecibans = document.querySelector("#prior-min-decibans");
+  var maxPriorDecibans = document.querySelector("#prior-max-decibans");
+  var probability = document.querySelector("#probability");
+  var probabilityText = document.querySelector("#probability-text");
+  var probabilityDescription = document.querySelector("#probability-description");
+  var priorBoundsError = document.querySelector("#prior-bounds-error");
+  var visualization = document.querySelector("#visualization");
+  var colorSummary = document.querySelector(".color");
+  var priorPresets = document.querySelector("#prior-presets");
+  var priorHandles = [...document.querySelectorAll("[data-prior-handle]")];
+  var priorBand = document.querySelector("#prior-band");
+  var priorTrack = priorBand.parentElement;
+  var priorBandText = document.querySelector("#prior-band-text");
+  var priorResultantCanvas = document.querySelector("#prior-resultant");
+  var priorResultantContext = priorResultantCanvas.getContext("2d", { alpha: true });
+  var anchorInputs = Object.fromEntries(
+    ["gray", "yellow", "red", "green"].map((name) => [
+      name,
+      document.querySelector(`#${name}-anchor`)
+    ])
+  );
+  var colorOptions = {
+    saturationThresholdDecibans: DEFAULT_COLOR_OPTIONS.saturationThresholdDecibans,
+    anchors: { ...DEFAULT_COLOR_OPTIONS.anchors },
+    minPriorDecibans: DEFAULT_COLOR_OPTIONS.minPriorDecibans,
+    maxPriorDecibans: DEFAULT_COLOR_OPTIONS.maxPriorDecibans
+  };
+  var DEFAULT_PRIOR_BOUNDS = Object.freeze({
+    minPriorDecibans: -15,
+    maxPriorDecibans: 15
+  });
+  var evidence = [];
+  var nextEvidenceId = 1;
+  var nextPresetCategoryId = 1;
+  var selectedEvidenceId = null;
+  var latestColor = color(aggregateEvidence([]), colorOptions);
+  var geometry;
+  var currentDiagram;
+  var diagramPriors;
+  var viewportWidth = 1;
+  var pixelsPerDeciban = 4;
+  var drawPending = false;
+  var priorDrag = null;
+  function scheduleDraw() {
+    if (drawPending) return;
+    drawPending = true;
+    requestAnimationFrame(() => {
+      drawPending = false;
+      drawVisualization();
+    });
+  }
+  function evidenceWeight(item) {
+    const magnitude = evidencePresentation(item, categories, i18n.t).weight;
+    return item.direction === "for" ? magnitude : -magnitude;
+  }
+  function formatDeciban(value) {
+    return i18n.number(Number(value.toFixed(1)), { maximumFractionDigits: 1 });
+  }
+  function formatSigned(value) {
+    return `${value > 0 ? "+" : value < 0 ? "−" : ""}${formatDeciban(Math.abs(value))}`;
+  }
+  function formatPriorPercentage(prior) {
+    const percentage = decibansToProbability({ weightDecibans: prior }).probability;
+    if (percentage >= 0.995) return `>${i18n.percent(0.99, { maximumFractionDigits: 0 })}`;
+    if (percentage <= 5e-3) return `<${i18n.percent(0.01, { maximumFractionDigits: 0 })}`;
+    return i18n.percent(percentage, { maximumFractionDigits: 0 });
+  }
+  function priorColor(prior) {
+    return color({
+      netWeightDecibans: prior,
+      absoluteWeightDecibans: Math.abs(prior),
+      dissonance: 0
+    }, { ...colorOptions, minPriorDecibans: 0, maxPriorDecibans: 0 });
+  }
+  function syncPriorHandles() {
+    if (!geometry || !currentDiagram) return;
+    const bounds = {
+      min: Number(minPriorDecibans.value),
+      max: Number(maxPriorDecibans.value)
+    };
+    const clampToDomain = (value) => Math.max(
+      geometry.minimum,
+      Math.min(geometry.maximum, value)
+    );
+    const visibleMinimum = clampToDomain(bounds.min);
+    const visibleMaximum = clampToDomain(bounds.max);
+    const visibleRange = visibleMaximum - visibleMinimum;
+    const gradientValues = [.../* @__PURE__ */ new Set([
+      visibleMinimum,
+      visibleMaximum,
+      Math.max(visibleMinimum, Math.min(visibleMaximum, -colorOptions.saturationThresholdDecibans)),
+      Math.max(visibleMinimum, Math.min(visibleMaximum, 0)),
+      Math.max(visibleMinimum, Math.min(visibleMaximum, colorOptions.saturationThresholdDecibans))
+    ])].sort((a, b) => a - b);
+    const stops = gradientValues.map((value) => {
+      const position = visibleRange === 0 ? 50 : (value - visibleMinimum) / visibleRange * 100;
+      return `${priorColor(value)} ${position}%`;
+    });
+    priorBand.style.background = visibleRange === 0 ? priorColor(visibleMinimum) : `linear-gradient(90deg, ${stops.join(", ")})`;
+    const minimumColor = priorColor(bounds.min);
+    const maximumColor = priorColor(bounds.max);
+    const minimumText = `<span style="color:${minimumColor}">${formatPriorPercentage(bounds.min)}</span>`;
+    const maximumText = `<span style="color:${maximumColor}">${formatPriorPercentage(bounds.max)}</span>`;
+    priorBandText.innerHTML = i18n.t(bounds.min === bounds.max ? "prior.fixed" : "prior.range", {
+      minimum: minimumText,
+      maximum: maximumText
+    });
+    const xMin = (visibleMinimum - geometry.minimum) * pixelsPerDeciban;
+    const xMax = (visibleMaximum - geometry.minimum) * pixelsPerDeciban;
+    const bandLeft = Math.max(0, Math.min(viewportWidth, xMin));
+    const bandRight = Math.max(0, Math.min(viewportWidth, xMax));
+    const bandStart = Math.min(bandLeft, bandRight);
+    const priorExact = bounds.min === bounds.max;
+    const bandWidth = Math.max(2, Math.abs(bandRight - bandLeft));
+    priorBand.style.left = `${bandStart}px`;
+    priorBand.style.width = `${bandWidth}px`;
+    priorBand.hidden = priorExact;
+    priorTrack.classList.toggle("is-exact", priorExact);
+    priorTrack.style.setProperty("--caret-x", `${bandStart}px`);
+    priorTrack.style.setProperty("--prior-color", minimumColor);
+    const handleWidth = priorHandles[0].getBoundingClientRect().width;
+    const extraGap = priorExact ? 0 : Math.max(0, (handleWidth + 2 - (xMax - xMin)) / 2);
+    let rawMinimumLeft = xMin - handleWidth / 2 - extraGap;
+    let rawMaximumLeft = xMax - handleWidth / 2 + extraGap;
+    let pairFits = rawMaximumLeft + handleWidth - rawMinimumLeft <= viewportWidth;
+    let pairOffset = pairFits && rawMinimumLeft < 0 ? -rawMinimumLeft : pairFits ? Math.min(0, viewportWidth - (rawMaximumLeft + handleWidth)) : 0;
+    if (priorExact) {
+      rawMinimumLeft = Math.max(0, Math.min(viewportWidth - handleWidth * 2, xMin - handleWidth));
+      rawMaximumLeft = rawMinimumLeft + handleWidth;
+      pairFits = true;
+      pairOffset = 0;
+    }
+    const bracketSeparation = Math.max(0, (18 - (xMax - xMin)) / 2);
+    const rawMinimumBracket = xMin - bracketSeparation;
+    const rawMaximumBracket = xMax + bracketSeparation;
+    const bracketOffset = rawMinimumBracket < 0 ? -rawMinimumBracket : Math.min(0, viewportWidth - rawMaximumBracket);
+    const minimumBracketX = rawMinimumBracket + bracketOffset;
+    const maximumBracketX = rawMaximumBracket + bracketOffset;
+    for (const handle of priorHandles) {
+      const key = handle.dataset.priorHandle;
+      const x = (clampToDomain(bounds[key]) - geometry.minimum) * pixelsPerDeciban;
+      const prior = bounds[key];
+      handle.hidden = false;
+      handle.textContent = "";
+      const rawLeft = (key === "min" ? rawMinimumLeft : rawMaximumLeft) + pairOffset;
+      const left = pairFits ? rawLeft : Math.max(0, Math.min(viewportWidth - handleWidth, rawLeft));
+      handle.style.left = `${left}px`;
+      handle.style.setProperty("--prior-anchor", `${x - left}px`);
+      handle.style.setProperty("--bracket-x", `${(key === "min" ? minimumBracketX : maximumBracketX) - left}px`);
+      handle.style.setProperty("--prior-color", priorColor(prior));
+      handle.dataset.prior = key;
+      const active = geometry.activeEndpoint?.side === (key === "min" ? "minimum" : "maximum");
+      handle.classList.toggle("is-active", active);
+      handle.setAttribute("aria-current", String(active));
+      handle.setAttribute("aria-valuenow", String(prior));
+      handle.setAttribute("aria-valuetext", i18n.t("prior.value", {
+        bound: i18n.t(key === "min" ? "prior.low" : "prior.high"),
+        decibans: formatSigned(prior),
+        percentage: formatPriorPercentage(prior)
+      }));
+      handle.setAttribute("aria-valuemin", String(Math.min(geometry.minimum, bounds.min)));
+      handle.setAttribute("aria-valuemax", String(Math.max(geometry.maximum, bounds.max)));
+    }
+  }
+  function setPriorFromHandle(key, prior) {
+    const minimum = Number(minPriorDecibans.value);
+    const maximum = Number(maxPriorDecibans.value);
+    const integer = Math.round(prior);
+    if (key === "max") maxPriorDecibans.value = String(Math.max(minimum, integer));
+    else minPriorDecibans.value = String(Math.min(maximum, integer));
+    update();
+  }
+  function resizeCanvas2(element, contextLocal, width, height) {
+    const ratio = window.devicePixelRatio || 1;
+    element.width = Math.max(1, Math.round(width * ratio));
+    element.height = Math.max(1, Math.round(height * ratio));
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    contextLocal.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+  function drawColorLegend() {
+    const width = Math.max(1, Math.min(260, Math.round(colorLegend.clientWidth - 32)));
+    const height = Math.round(width * 0.66);
+    resizeCanvas2(legendCanvas, legendContext, width, height);
+    const top = { x: width / 2, y: 25 };
+    const left = { x: 14, y: height - 25 };
+    const right = { x: width - 14, y: height - 25 };
+    const halfBase = right.x - top.x;
+    const triangleHeight = left.y - top.y;
+    for (let y2 = Math.ceil(top.y); y2 <= left.y; y2 += 1) {
+      const proportion = (left.y - y2) / triangleHeight;
+      const halfWidth = halfBase * (1 - proportion);
+      for (let x2 = Math.ceil(top.x - halfWidth); x2 <= Math.floor(top.x + halfWidth); x2 += 1) {
+        legendContext.fillStyle = triangleColor({
+          x: (x2 - top.x) / halfBase,
+          height: proportion
+        }, colorOptions);
+        legendContext.fillRect(x2, y2, 1, 1);
+      }
+    }
+    legendContext.strokeStyle = "#334155";
+    legendContext.lineWidth = 1.5;
+    legendContext.beginPath();
+    legendContext.moveTo(top.x, top.y);
+    legendContext.lineTo(left.x, left.y);
+    legendContext.lineTo(right.x, right.y);
+    legendContext.closePath();
+    legendContext.stroke();
+    const position = trianglePosition(currentDiagram.summary, colorOptions);
+    const x = top.x + position.x * halfBase;
+    const y = left.y - position.height * triangleHeight;
+    legendContext.beginPath();
+    legendContext.arc(x, y, 5, 0, Math.PI * 2);
+    legendContext.fillStyle = currentDiagram.resultant.color;
+    legendContext.fill();
+    legendContext.strokeStyle = "#0f172a";
+    legendContext.lineWidth = 2;
+    legendContext.stroke();
+    legendContext.fillStyle = "#334155";
+    legendContext.font = "700 10px system-ui";
+    legendContext.textAlign = "center";
+    legendContext.fillText(i18n.t("palette.dissonance"), top.x, 10);
+    legendContext.textAlign = "left";
+    legendContext.fillText(i18n.t("palette.against"), 0, height - 5);
+    legendContext.textAlign = "center";
+    legendContext.fillText(i18n.t("palette.noEvidence"), width / 2, height - 5);
+    legendContext.textAlign = "right";
+    legendContext.fillText(i18n.t("palette.for"), width, height - 5);
+    legendContext.textAlign = "start";
+  }
+  function drawVisualization() {
+    if (!geometry) return;
+    drawDiagram({
+      canvas,
+      context,
+      rulerCanvas,
+      rulerContext,
+      priorResultantCanvas,
+      priorResultantContext,
+      geometry,
+      evidence,
+      selectedEvidenceId,
+      viewportWidth,
+      viewportHeight,
+      pixelsPerDeciban,
+      colorOptions,
+      priors: diagramPriors,
+      latestColor,
+      yOffset: coneScroll.scrollTop,
+      i18n
+    });
+    canvas.dataset.stepCount = String(geometry.steps.length);
+    canvas.dataset.moveCount = String(geometry.steps.filter(({ weightDecibans }) => weightDecibans !== 0).length);
+    if (selectedEvidenceId === null) delete canvas.dataset.selectedEvidenceId;
+    else canvas.dataset.selectedEvidenceId = String(selectedEvidenceId);
+  }
+  function displaySignedWeight(weight, direction) {
+    const sign = direction === "for" ? "+" : "−";
+    return `${sign}${formatDeciban(Math.abs(weight))}`;
+  }
+  function createHistoryElement(item) {
+    const element = document.createElement("li");
+    const selectionButton = document.createElement("button");
+    const name = document.createElement("span");
+    const measurement = document.createElement("strong");
+    const removeButton = document.createElement("button");
+    element.className = "history-item";
+    element.dataset.evidenceId = String(item.id);
+    element.dataset.direction = item.direction;
+    selectionButton.type = "button";
+    selectionButton.className = "evidence-step";
+    name.className = "step-name";
+    measurement.className = "step-measure";
+    removeButton.type = "button";
+    removeButton.className = "remove-evidence";
+    removeButton.textContent = i18n.t("evidence.remove");
+    removeButton.setAttribute("aria-label", i18n.t("evidence.removeAria", { number: item.id }));
+    selectionButton.append(name, measurement);
+    element.append(selectionButton, removeButton);
+    selectionButton.addEventListener("click", () => {
+      selectedEvidenceId = item.id;
+      update();
+      if (!geometry || visualization.hidden) return;
+      const step = geometry.steps.find(({ id }) => id === item.id);
+      const breakItem = geometry.breaks.find(({ hiddenEvidenceIds }) => hiddenEvidenceIds.includes(item.id));
+      const y = step?.visibleRibbon?.y2 ?? breakItem?.y ?? 0;
+      coneScroll.scrollTop = Math.max(0, y - viewportHeight / 3);
+      drawVisualization();
+    });
+    removeButton.addEventListener("click", () => {
+      const index = evidence.findIndex(({ id }) => id === item.id);
+      evidence = evidence.filter(({ id }) => id !== item.id);
+      const adjacentEvidence = evidence[Math.min(index, evidence.length - 1)];
+      if (selectedEvidenceId === item.id) {
+        selectedEvidenceId = adjacentEvidence?.id ?? null;
+      }
+      update();
+      if (adjacentEvidence) {
+        evidenceHistory.querySelector(`[data-evidence-id="${adjacentEvidence.id}"] .evidence-step`).focus();
+      }
+    });
+    return element;
+  }
+  function renderHistory() {
+    const existingElements = new Map(
+      [...evidenceHistory.children].map((element) => [Number(element.dataset.evidenceId), element])
+    );
+    const reversedEvidence = [...evidence].reverse();
+    for (let index = 0; index < reversedEvidence.length; index += 1) {
+      const item = reversedEvidence[index];
+      const element = existingElements.get(item.id) ?? createHistoryElement(item);
+      const presentation = evidencePresentation(item, categories, i18n.t);
+      const weight = evidenceWeight(item);
+      const selectionButton = element.querySelector(".evidence-step");
+      element.dataset.direction = item.direction;
+      element.classList.toggle("selected", item.id === selectedEvidenceId);
+      const number = evidence.findIndex(({ id }) => id === item.id) + 1;
+      const removeButton = element.querySelector(".remove-evidence");
+      removeButton.textContent = i18n.t("evidence.remove");
+      removeButton.setAttribute("aria-label", i18n.t("evidence.removeAria", { number }));
+      element.querySelector(".step-name").textContent = `${number}. ${presentation.label}`;
+      element.querySelector(".step-measure").textContent = `${displaySignedWeight(
+        weight,
+        item.direction
+      )} dBan`;
+      selectionButton.setAttribute(
+        "aria-label",
+        i18n.t("evidence.selectAria", {
+          number,
+          category: presentation.label,
+          direction: i18n.t(`direction.${item.direction}`),
+          weight: formatDeciban(weight)
+        })
+      );
+      selectionButton.setAttribute("aria-pressed", String(item.id === selectedEvidenceId));
+      if (evidenceHistory.children[index] !== element) {
+        evidenceHistory.insertBefore(element, evidenceHistory.children[index] ?? null);
+      }
+    }
+    for (const element of existingElements.values()) {
+      if (!evidence.some(({ id }) => id === Number(element.dataset.evidenceId))) element.remove();
+    }
+    trajectorySummary.textContent = evidence.length === 0 ? i18n.t("measure.noEvidence") : i18n.t("evidence.count", { count: evidence.length });
+    trajectoryEmpty.hidden = evidence.length > 0;
+    evidenceHistory.hidden = evidence.length === 0;
+  }
+  function readPriorBounds() {
+    let minimum = Number(minPriorDecibans.value);
+    let maximum = Number(maxPriorDecibans.value);
+    let error = "";
+    if (Number.isFinite(minimum)) {
+      minimum = Math.round(minimum);
+      minPriorDecibans.value = String(minimum);
+    }
+    if (Number.isFinite(maximum)) {
+      maximum = Math.round(maximum);
+      maxPriorDecibans.value = String(maximum);
+    }
+    if (minPriorDecibans.value.trim() === "" || maxPriorDecibans.value.trim() === "" || !Number.isFinite(minimum) || !Number.isFinite(maximum)) {
+      error = i18n.t("prior.finiteError");
+    } else if (minimum > maximum) {
+      error = i18n.t("prior.orderError");
+    }
+    const invalid = error !== "";
+    for (const field of [minPriorDecibans, maxPriorDecibans]) {
+      field.setAttribute("aria-invalid", String(invalid));
+    }
+    priorBoundsError.textContent = error;
+    priorBoundsError.hidden = !invalid;
+    if (invalid) return null;
+    return { minPriorDecibans: minimum, maxPriorDecibans: maximum };
+  }
+  function localizedProbability(bound) {
+    if (bound.direction === "indeterminate") return i18n.t(`probability.${bound.reason}`);
+    return i18n.t(`probability.${bound.direction}`, {
+      percentage: i18n.number(bound.displayPercentage)
+    });
+  }
+  function update() {
+    const evidenceContributions = evidence.map((item) => ({
+      id: item.id,
+      weightDecibans: evidenceWeight(item)
+    }));
+    const priorBounds = readPriorBounds();
+    if (priorBounds !== null) {
+      colorOptions.minPriorDecibans = priorBounds.minPriorDecibans;
+      colorOptions.maxPriorDecibans = priorBounds.maxPriorDecibans;
+    }
+    const invalidSummary = priorBounds === null ? aggregateEvidence(evidenceContributions) : null;
+    if (priorBounds === null) {
+      geometry = void 0;
+      currentDiagram = void 0;
+      colorLegend.hidden = true;
+      renderHistory();
+      document.querySelector("#dissonance").textContent = i18n.percent(invalidSummary.dissonance);
+      probability.hidden = true;
+      probabilityDescription.textContent = i18n.t("diagram.invalidProbability");
+      visualization.hidden = true;
+      colorSummary.hidden = true;
+      for (const handle of priorHandles) handle.hidden = true;
+      return;
+    }
+    const diagram = buildEvidenceDiagram(evidenceContributions, colorOptions);
+    currentDiagram = diagram;
+    const threshold = colorOptions.saturationThresholdDecibans;
+    const localDomain = {
+      minimumDecibans: -threshold,
+      maximumDecibans: threshold
+    };
+    const displayDiagram = {
+      ...diagram,
+      domain: priorDrag?.domain ?? localDomain
+    };
+    const summary = diagram.summary;
+    renderHistory();
+    document.querySelector("#dissonance").textContent = i18n.percent(summary.dissonance);
+    const resultantBand = diagram.resultant.jeffreysBand;
+    const bandLabel = i18n.t(`band.${resultantBand}`);
+    const resultantWeight = summary.netWeightDecibans;
+    const resultantText = resultantWeight === 0 ? i18n.t("diagram.resultNone") : i18n.t("diagram.result", { band: bandLabel, weight: formatSigned(resultantWeight) });
+    resultantLabel.textContent = resultantText;
+    probability.hidden = false;
+    probabilityText.textContent = localizedProbability(diagram.probability);
+    probabilityDescription.textContent = priorBounds.minPriorDecibans === priorBounds.maxPriorDecibans ? i18n.t("prior.exactDescription", { prior: formatDeciban(priorBounds.minPriorDecibans) }) : i18n.t("prior.rangeDescription", {
+      minimum: formatDeciban(priorBounds.minPriorDecibans),
+      maximum: formatDeciban(priorBounds.maxPriorDecibans)
+    });
+    visualization.hidden = false;
+    colorSummary.hidden = false;
+    colorLegend.hidden = false;
+    latestColor = diagram.resultant.color;
+    resultantLabel.style.color = latestColor;
+    drawColorLegend();
+    const minimum = displayDiagram.domain.minimumDecibans;
+    const maximum = displayDiagram.domain.maximumDecibans;
+    const amplitude = maximum - minimum;
+    viewportWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+    if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || !Number.isFinite(amplitude) || amplitude <= 0) {
+      priorBoundsError.textContent = i18n.t("diagram.invalidGeometry");
+      priorBoundsError.hidden = false;
+      visualization.hidden = true;
+      geometry = void 0;
+      return;
+    }
+    pixelsPerDeciban = viewportWidth / amplitude;
+    diagramPriors = { minPriorDecibans: priorBounds.minPriorDecibans, maxPriorDecibans: priorBounds.maxPriorDecibans };
+    geometry = buildGeometry(displayDiagram, {
+      pixelsPerDeciban,
+      breakHeight: BREAK_HEIGHT,
+      minPriorDecibans: priorBounds.minPriorDecibans,
+      maxPriorDecibans: priorBounds.maxPriorDecibans
+    });
+    viewportHeight = Math.max(100, Math.min(300, Math.min(window.innerHeight * 0.35, geometry.totalHeight + 20)));
+    coneScroll.style.height = `${viewportHeight}px`;
+    coneScroll.style.setProperty("--cone-height", `${viewportHeight}px`);
+    const scrollable = geometry.totalHeight > coneScroll.clientHeight + 0.5;
+    coneScroll.classList.toggle("is-scrollable", scrollable);
+    const adjustedWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+    if (adjustedWidth !== viewportWidth) {
+      viewportWidth = adjustedWidth;
+      pixelsPerDeciban = viewportWidth / amplitude;
+      geometry = buildGeometry(displayDiagram, {
+        pixelsPerDeciban,
+        breakHeight: BREAK_HEIGHT,
+        minPriorDecibans: priorBounds.minPriorDecibans,
+        maxPriorDecibans: priorBounds.maxPriorDecibans
+      });
+    }
+    coneSpacer.style.height = `${scrollable ? geometry.totalHeight : coneScroll.clientHeight}px`;
+    if (!scrollable) coneScroll.scrollTop = 0;
+    canvas.dataset.minimum = String(geometry.minimum);
+    canvas.dataset.maximum = String(geometry.maximum);
+    canvas.dataset.posteriorMinimum = String(geometry.currentInterval.minimum);
+    canvas.dataset.posteriorMaximum = String(geometry.currentInterval.maximum);
+    canvas.dataset.envelopeMinimum = String(priorBounds.minPriorDecibans - summary.absoluteWeightDecibans);
+    canvas.dataset.envelopeMaximum = String(priorBounds.maxPriorDecibans + summary.absoluteWeightDecibans);
+    canvas.dataset.activePrior = geometry.activeEndpoint?.side ?? "none";
+    canvas.dataset.resultantStart = String(resultantWeight >= 0 ? priorBounds.minPriorDecibans : priorBounds.maxPriorDecibans);
+    canvas.dataset.resultantEnd = String(resultantWeight >= 0 ? priorBounds.minPriorDecibans + resultantWeight : priorBounds.maxPriorDecibans + resultantWeight);
+    canvas.dataset.breakCount = String(geometry.breaks.length);
+    canvas.dataset.breaks = JSON.stringify(geometry.breaks.map((breakItem) => ({
+      side: breakItem.side,
+      absoluteStart: breakItem.startAbsolute,
+      absoluteEnd: breakItem.endAbsolute,
+      gap: breakItem.absoluteGap,
+      hiddenEvidenceIds: breakItem.hiddenEvidenceIds
+    })));
+    document.querySelector("#hex").textContent = latestColor;
+    document.querySelector("#swatch").style.backgroundColor = latestColor;
+    const summaryLabel = i18n.t("diagram.summaryAria", { count: evidence.length });
+    canvas.setAttribute(
+      "aria-label",
+      i18n.t("diagram.summaryDetails", {
+        summary: summaryLabel,
+        net: formatDeciban(summary.netWeightDecibans),
+        absolute: formatDeciban(summary.absoluteWeightDecibans),
+        dissonance: i18n.percent(summary.dissonance),
+        band: bandLabel,
+        color: latestColor
+      })
+    );
+    const breakText = geometry.breaks.length === 0 ? i18n.t("diagram.noBreaks") : geometry.breaks.map((breakItem) => i18n.t("diagram.break", {
+      side: i18n.t(`side.${breakItem.side}`),
+      start: formatDeciban(breakItem.startAbsolute),
+      end: formatDeciban(breakItem.endAbsolute),
+      gap: formatDeciban(breakItem.absoluteGap),
+      count: breakItem.hiddenEvidenceIds.length,
+      ids: breakItem.hiddenEvidenceIds.join(", ") || "—"
+    })).join(" ");
+    const currentPosition = summary.netWeightDecibans === 0 ? i18n.t("diagram.positionZero") : geometry.activeEndpoint?.visible ? i18n.t("diagram.positionVisible") : i18n.t("diagram.positionClipped");
+    coneDescription.textContent = i18n.t("diagram.description", {
+      net: formatDeciban(summary.netWeightDecibans),
+      absolute: formatDeciban(summary.absoluteWeightDecibans),
+      minimum: formatDeciban(minimum),
+      maximum: formatDeciban(maximum),
+      currentMinimum: formatDeciban(geometry.currentInterval.minimum),
+      currentMaximum: formatDeciban(geometry.currentInterval.maximum),
+      envelopeMinimum: formatDeciban(priorBounds.minPriorDecibans - summary.absoluteWeightDecibans),
+      envelopeMaximum: formatDeciban(priorBounds.maxPriorDecibans + summary.absoluteWeightDecibans),
+      activePrior: i18n.t(`side.${geometry.activeEndpoint?.side ?? "none"}`),
+      resultantStart: formatDeciban(Number(canvas.dataset.resultantStart)),
+      resultantEnd: formatDeciban(Number(canvas.dataset.resultantEnd)),
+      position: currentPosition,
+      breaks: breakText
+    });
+    drawVisualization();
+    syncPriorHandles();
+  }
+  function addEvidenceItem(categoryId, direction) {
+    const category = categories.find(({ id }) => id === categoryId);
+    if (!category) return;
+    evidence = addEvidence(evidence, category, direction, nextEvidenceId);
+    const item = evidence.at(-1);
+    nextEvidenceId += 1;
+    selectedEvidenceId = item.id;
+    update();
+    coneScroll.scrollTop = 0;
+  }
+  function createWeightCell(category, label, direction) {
+    const weight = category.weights[direction];
+    const signedWeight = direction === "for" ? weight : -weight;
+    const directionLabel = i18n.t(`direction.${direction}`);
+    const weightAria = i18n.t("evidence.weightAria", { direction: directionLabel, category: label });
+    const addAria = i18n.t("evidence.addAria", { direction: directionLabel, category: label });
+    const cell = document.createElement("td");
+    cell.className = "weight";
+    cell.dataset.direction = direction;
+    const setting = document.createElement("label");
+    setting.className = "weight-setting";
+    const hiddenLabel = document.createElement("span");
+    hiddenLabel.className = "visually-hidden";
+    hiddenLabel.textContent = weightAria;
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = "0";
+    slider.max = "30";
+    slider.step = "0.5";
+    slider.value = String(weight);
+    slider.dataset.direction = direction;
+    const measurement = document.createElement("strong");
+    const output = document.createElement("output");
+    output.className = "weight-output";
+    output.textContent = displaySignedWeight(weight, direction);
+    measurement.append(output, " dBan");
+    setting.append(hiddenLabel, slider, measurement);
+    const actions = document.createElement("div");
+    actions.className = "weight-actions";
+    const band = document.createElement("small");
+    band.className = "weight-band";
+    band.textContent = i18n.t(`band.${jeffreysBand({ weightDecibans: signedWeight })}`);
+    const addButton = document.createElement("button");
+    addButton.type = "button";
+    addButton.className = "add-evidence";
+    addButton.dataset.direction = direction;
+    addButton.setAttribute("aria-label", addAria);
+    addButton.textContent = i18n.t(direction === "for" ? "evidence.addFor" : "evidence.addAgainst");
+    actions.append(band, addButton);
+    cell.append(setting, actions);
+    return cell;
+  }
+  function renderCategoryRows() {
+    categoryRows.replaceChildren();
+    for (const category of categories) {
+      const label = categoryLabel(category, i18n.t);
+      const description = categoryDescription(category, i18n.t);
+      const removeLabel = i18n.t("category.removeAria", { category: label });
+      const row = document.createElement("tr");
+      row.dataset.categoryId = category.id;
+      const heading = document.createElement("th");
+      heading.scope = "row";
+      const categoryNameCell = document.createElement("div");
+      categoryNameCell.className = "category-name-cell";
+      const categoryText = document.createElement("span");
+      const categoryName2 = document.createElement("strong");
+      categoryName2.textContent = label;
+      categoryText.append(categoryName2);
+      if (description) {
+        const categoryHelp = document.createElement("small");
+        categoryHelp.textContent = description;
+        categoryText.append(categoryHelp);
+      }
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "remove-category";
+      removeButton.setAttribute("aria-label", removeLabel);
+      removeButton.title = removeLabel;
+      removeButton.textContent = "×";
+      categoryNameCell.append(categoryText, removeButton);
+      heading.append(categoryNameCell);
+      row.append(
+        heading,
+        createWeightCell(category, label, "for"),
+        createWeightCell(category, label, "against")
+      );
+      for (const slider of row.querySelectorAll('input[type="range"][data-direction]')) {
+        slider.addEventListener("input", () => {
+          const direction = slider.dataset.direction;
+          const weight = Number(slider.value);
+          const cell = slider.closest(".weight");
+          category.weights[direction] = weight;
+          cell.querySelector(".weight-output").textContent = displaySignedWeight(
+            weight,
+            direction
+          );
+          cell.querySelector(".weight-band").textContent = i18n.t(`band.${jeffreysBand({
+            weightDecibans: direction === "for" ? weight : -weight
+          })}`);
+          update();
+        });
+      }
+      row.addEventListener("click", (event) => {
+        const addButton = event.target.closest(".add-evidence[data-direction]");
+        if (addButton) addEvidenceItem(category.id, addButton.dataset.direction);
+        if (event.target.closest(".remove-category")) {
+          ({ categories, evidence } = removeCategory(categories, evidence, category.id));
+          renderCategoryRows();
+          renderPresetOptions();
+          update();
+        }
+      });
+      categoryRows.append(row);
+    }
+  }
+  function applyScenario(id) {
+    const scenario = SCENARIOS.find(([scenarioId]) => scenarioId === id);
+    if (!scenario) return;
+    evidence = [];
+    selectedEvidenceId = null;
+    let restoredCategory = false;
+    for (const [categoryDefinitionId, direction] of scenario[2]) {
+      let category = categories.find(({ definitionId }) => definitionId === categoryDefinitionId);
+      if (!category) {
+        category = createPresetCategory(categoryDefinitionId, nextPresetCategoryId);
+        nextPresetCategoryId += 1;
+        categories.push(category);
+        restoredCategory = true;
+      }
+      evidence = addEvidence(evidence, category, direction, nextEvidenceId);
+      const item = evidence.at(-1);
+      nextEvidenceId += 1;
+      selectedEvidenceId = item.id;
+    }
+    if (restoredCategory) {
+      renderCategoryRows();
+      renderPresetOptions();
+    }
+    update();
+    coneScroll.scrollTop = 0;
+  }
+  function writeColorOptions(options) {
+    saturationThreshold.value = String(options.saturationThresholdDecibans);
+    saturationThresholdValue.textContent = i18n.number(options.saturationThresholdDecibans);
+    for (const [name, input] of Object.entries(anchorInputs)) {
+      input.value = options.anchors[name];
+    }
+  }
+  function readColorOptions() {
+    colorOptions.saturationThresholdDecibans = Number(saturationThreshold.value);
+    saturationThresholdValue.textContent = i18n.number(Number(saturationThreshold.value));
+    for (const [name, input] of Object.entries(anchorInputs)) {
+      colorOptions.anchors[name] = input.value;
+    }
+  }
+  function reset() {
+    evidence = [];
+    selectedEvidenceId = null;
+    categories = createDefaultCategories();
+    categoryName.value = "";
+    categoryName.setAttribute("aria-invalid", "false");
+    categoryError.hidden = true;
+    categoryError.textContent = "";
+    delete categoryError.dataset.error;
+    renderCategoryRows();
+    renderPresetOptions();
+    writeColorOptions(DEFAULT_COLOR_OPTIONS);
+    readColorOptions();
+    minPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.minPriorDecibans);
+    maxPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.maxPriorDecibans);
+    update();
+    coneScroll.scrollTop = 0;
+  }
+  var scenarioList = document.querySelector("#scenario-list");
+  var presetCategoryForm = document.querySelector("#preset-category-form");
+  var categoryPreset = document.querySelector("#category-preset");
+  function renderPresetOptions() {
+    const previousValue = categoryPreset.value;
+    categoryPreset.replaceChildren();
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = i18n.t("category.choosePreset");
+    categoryPreset.append(placeholder);
+    const activeDefinitions = new Set(categories.map(({ definitionId }) => definitionId));
+    for (const definition of CATEGORY_CATALOG) {
+      const definitionId = definition.id;
+      if (activeDefinitions.has(definitionId)) continue;
+      const option = document.createElement("option");
+      option.value = definitionId;
+      option.textContent = i18n.t(definition.labelKey);
+      categoryPreset.append(option);
+    }
+    const preferred = [...categoryPreset.options].find((option) => option.value === previousValue && !option.disabled);
+    categoryPreset.value = preferred?.value ?? "";
+  }
+  function renderScenarios() {
+    scenarioList.replaceChildren();
+    for (const [id, labelKey] of SCENARIOS) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.scenario = id;
+      button.textContent = i18n.t(labelKey);
+      scenarioList.append(button);
+    }
+  }
+  function translateStaticUi() {
+    document.documentElement.lang = i18n.meta.htmlLang;
+    document.title = i18n.t("app.title");
+    for (const element of document.querySelectorAll("[data-i18n]")) {
+      element.textContent = i18n.t(element.dataset.i18n);
+    }
+    for (const element of document.querySelectorAll("[data-i18n-aria-label]")) {
+      element.setAttribute("aria-label", i18n.t(element.dataset.i18nAriaLabel));
+    }
+    for (const element of document.querySelectorAll("[data-i18n-placeholder]")) {
+      element.setAttribute("placeholder", i18n.t(element.dataset.i18nPlaceholder));
+    }
+  }
+  var languageSelect = document.querySelector("#language");
+  for (const locale of supportedLocales) {
+    const option = document.createElement("option");
+    option.value = locale.id;
+    option.textContent = locale.label;
+    languageSelect.append(option);
+  }
+  languageSelect.value = i18n.locale;
+  languageSelect.addEventListener("change", () => {
+    const scrollTop = coneScroll.scrollTop;
+    i18n.setLocale(languageSelect.value);
+    languageSelect.value = i18n.locale;
+    try {
+      localStorage.setItem("evidences-diagrams.locale", i18n.locale);
+    } catch {
+    }
+    translateStaticUi();
+    if (categoryError.dataset.error) {
+      categoryError.textContent = i18n.t(`category.${categoryError.dataset.error}Error`);
+    }
+    renderCategoryRows();
+    renderPresetOptions();
+    renderScenarios();
+    update();
+    requestAnimationFrame(() => {
+      coneScroll.scrollTop = scrollTop;
+      drawVisualization();
+    });
+  });
+  var categoryForm = document.querySelector("#category-form");
+  var categoryName = document.querySelector("#category-name");
+  var categoryError = document.querySelector("#category-error");
+  presetCategoryForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!categoryPreset.value) return;
+    const category = createPresetCategory(categoryPreset.value, nextPresetCategoryId);
+    if (!category) return;
+    nextPresetCategoryId += 1;
+    categories.push(category);
+    renderCategoryRows();
+    renderPresetOptions();
+    categoryRows.querySelector("tr:last-child input")?.focus();
+  });
+  categoryForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const validation = validateCategoryName(categoryName.value, categories, i18n.t);
+    if (validation) {
+      categoryError.dataset.error = validation;
+      categoryError.textContent = i18n.t(`category.${validation}Error`);
+      categoryError.hidden = false;
+      categoryName.setAttribute("aria-invalid", "true");
+      return;
+    }
+    categories.push(createCustomCategory(categoryName.value, categories));
+    categoryName.value = "";
+    categoryName.setAttribute("aria-invalid", "false");
+    categoryError.hidden = true;
+    delete categoryError.dataset.error;
+    renderCategoryRows();
+    categoryRows.querySelector("tr:last-child input")?.focus();
+  });
+  scenarioList.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-scenario]");
+    if (button) applyScenario(button.dataset.scenario);
+  });
+  document.querySelector(".palette").addEventListener("input", () => {
+    readColorOptions();
+    update();
+  });
+  document.querySelector("#reset").addEventListener("click", reset);
+  for (const field of [minPriorDecibans, maxPriorDecibans]) {
+    field.addEventListener("input", () => {
+      const value = Number(field.value);
+      if (Number.isFinite(value)) field.value = String(Math.round(value));
+      update();
+    });
+  }
+  priorPresets.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-prior-min]");
+    if (!button) return;
+    minPriorDecibans.value = button.dataset.priorMin;
+    maxPriorDecibans.value = button.dataset.priorMax;
+    update();
+  });
+  for (const handle of priorHandles) {
+    handle.addEventListener("pointerdown", (event) => {
+      if (!geometry || !event.isPrimary || event.button !== 0) return;
+      const prior = Number(
+        handle.dataset.prior === "min" ? minPriorDecibans.value : maxPriorDecibans.value
+      );
+      priorDrag = {
+        domain: { minimumDecibans: geometry.minimum, maximumDecibans: geometry.maximum },
+        clientX: event.clientX,
+        prior,
+        pixelsPerDeciban,
+        key: Number(minPriorDecibans.value) === Number(maxPriorDecibans.value) ? null : handle.dataset.priorHandle
+      };
+      handle.setPointerCapture(event.pointerId);
+    });
+    handle.addEventListener("pointermove", (event) => {
+      if (!priorDrag || !handle.hasPointerCapture(event.pointerId)) return;
+      const delta = (event.clientX - priorDrag.clientX) / priorDrag.pixelsPerDeciban;
+      if (priorDrag.key === null) {
+        const next = Math.round(priorDrag.prior + delta);
+        if (next === priorDrag.prior) return;
+        priorDrag.key = next < priorDrag.prior ? "min" : "max";
+      }
+      setPriorFromHandle(priorDrag.key, priorDrag.prior + delta);
+    });
+    const finishDrag = (event) => {
+      if (priorDrag === null) return;
+      if (event?.pointerId !== void 0 && handle.hasPointerCapture(event.pointerId)) {
+        handle.releasePointerCapture(event.pointerId);
+      }
+      priorDrag = null;
+      update();
+    };
+    handle.addEventListener("pointerup", finishDrag);
+    handle.addEventListener("pointercancel", finishDrag);
+    handle.addEventListener("lostpointercapture", finishDrag);
+    handle.addEventListener("keydown", (event) => {
+      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+      event.preventDefault();
+      const key = handle.dataset.priorHandle;
+      const stepSize = event.shiftKey ? 5 : 1;
+      if (event.key === "Home") setPriorFromHandle(key, geometry.minimum);
+      else if (event.key === "End") setPriorFromHandle(key, geometry.maximum);
+      else {
+        const prior = key === "max" ? Number(maxPriorDecibans.value) : Number(minPriorDecibans.value);
+        setPriorFromHandle(key, prior + (event.key === "ArrowRight" ? stepSize : -stepSize));
+      }
+    });
+  }
+  coneScroll.addEventListener("scroll", scheduleDraw, { passive: true });
+  window.addEventListener("resize", () => requestAnimationFrame(update));
+  translateStaticUi();
+  renderCategoryRows();
+  renderPresetOptions();
+  renderScenarios();
+  writeColorOptions(DEFAULT_COLOR_OPTIONS);
+  update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+{
+  "name": "@bycelium/evidences-diagrams",
+  "version": "1.0.0",
+  "description": "Evidence-weight aggregation and visualization in decibans.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Bycelium/EvidencesDiagrams.git"
+  },
+  "homepage": "https://github.com/Bycelium/EvidencesDiagrams#readme",
+  "bugs": {
+    "url": "https://github.com/Bycelium/EvidencesDiagrams/issues"
+  },
+  "keywords": [
+    "evidence",
+    "probability",
+    "bayes",
+    "deciban",
+    "visualization"
+  ],
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=24.3.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:demo": "pnpm run build && node scripts/build-demo.mjs",
+    "check:demo": "pnpm run build && node scripts/build-demo.mjs --check",
+    "test": "pnpm run build && node --test src/*.test.ts demo/*.test.js",
+    "typecheck": "pnpm run build && tsc --noEmit && pnpm run check:demo",
+    "test:package": "pnpm run build && node scripts/test-package.mjs",
+    "check": "pnpm run test && pnpm run typecheck && pnpm run test:package",
+    "prepare": "npm run build",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3"
+  }
+}

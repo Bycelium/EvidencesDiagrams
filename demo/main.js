@@ -1,0 +1,990 @@
+import {
+  DEFAULT_COLOR_OPTIONS,
+  aggregateEvidence,
+  jeffreysBand,
+  buildEvidenceDiagram,
+  color,
+  triangleColor,
+  decibansToProbability,
+  trianglePosition,
+} from '../dist/index.js';
+import { buildGeometry } from './geometry.js';
+import { drawDiagram } from './diagram-renderer.js';
+import {
+  addEvidence,
+  CATEGORY_CATALOG,
+  categoryDescription,
+  categoryLabel,
+  createCustomCategory,
+  createDefaultCategories,
+  createPresetCategory,
+  evidencePresentation,
+  removeCategory,
+  validateCategoryName,
+} from './category-state.js';
+import { createI18n, DEFAULT_LOCALE, supportedLocales } from './i18n.js';
+
+const SCENARIOS = [
+  ['none', 'scenario.none', []],
+  ['news-for', 'scenario.newsFor', [['news-report', 'for']]],
+  ['converging-for', 'scenario.convergingFor', [
+    ['testimony', 'for'], ['fact-check', 'for'], ['official-data', 'for'],
+  ]],
+  ['converging-against', 'scenario.convergingAgainst', [
+    ['news-report', 'against'], ['official-document', 'against'], ['scientific-study', 'against'],
+  ]],
+  ['mixed', 'scenario.mixed', [
+    ['testimony', 'for'], ['fact-check', 'for'], ['news-report', 'against'],
+  ]],
+  ['equal-opposing', 'scenario.equalOpposing', [
+    ['official-data', 'for'], ['testimony', 'against'],
+  ]],
+];
+
+let viewportHeight = 300;
+const BREAK_HEIGHT = 40;
+
+function storedLocale() {
+  try { return localStorage.getItem('evidences-diagrams.locale') ?? DEFAULT_LOCALE; } catch { return DEFAULT_LOCALE; }
+}
+
+const i18n = createI18n(storedLocale());
+let categories = createDefaultCategories();
+const categoryRows = document.querySelector('#category-rows');
+const evidenceHistory = document.querySelector('#evidence-history');
+const trajectorySummary = document.querySelector('#trajectory-summary');
+const trajectoryEmpty = document.querySelector('#trajectory-empty');
+const canvas = document.querySelector('#cone');
+const context = canvas.getContext('2d', { alpha: true });
+const rulerCanvas = document.querySelector('#cone-ruler');
+const rulerContext = rulerCanvas.getContext('2d', { alpha: true });
+const coneScroll = document.querySelector('#cone-scroll');
+const coneSpacer = document.querySelector('#cone-spacer');
+const coneDescription = document.querySelector('#cone-description');
+const resultantLabel = document.querySelector('#resultant-label');
+const colorLegend = document.querySelector('#color-legend');
+const legendCanvas = document.querySelector('#legend-triangle');
+const legendContext = legendCanvas.getContext('2d', { alpha: true });
+const saturationThreshold = document.querySelector('#saturation-threshold');
+const saturationThresholdValue = document.querySelector('#saturation-threshold-value');
+const minPriorDecibans = document.querySelector('#prior-min-decibans');
+const maxPriorDecibans = document.querySelector('#prior-max-decibans');
+const probability = document.querySelector('#probability');
+const probabilityText = document.querySelector('#probability-text');
+const probabilityDescription = document.querySelector('#probability-description');
+const priorBoundsError = document.querySelector('#prior-bounds-error');
+const visualization = document.querySelector('#visualization');
+const colorSummary = document.querySelector('.color');
+const priorPresets = document.querySelector('#prior-presets');
+const priorHandles = [...document.querySelectorAll('[data-prior-handle]')];
+const priorBand = document.querySelector('#prior-band');
+const priorTrack = priorBand.parentElement;
+const priorBandText = document.querySelector('#prior-band-text');
+const priorResultantCanvas = document.querySelector('#prior-resultant');
+const priorResultantContext = priorResultantCanvas.getContext('2d', { alpha: true });
+const anchorInputs = Object.fromEntries(
+  ['gray', 'yellow', 'red', 'green'].map((name) => [
+    name,
+    document.querySelector(`#${name}-anchor`),
+  ]),
+);
+const colorOptions = {
+  saturationThresholdDecibans: DEFAULT_COLOR_OPTIONS.saturationThresholdDecibans,
+  anchors: { ...DEFAULT_COLOR_OPTIONS.anchors },
+  minPriorDecibans: DEFAULT_COLOR_OPTIONS.minPriorDecibans,
+  maxPriorDecibans: DEFAULT_COLOR_OPTIONS.maxPriorDecibans,
+};
+const DEFAULT_PRIOR_BOUNDS = Object.freeze({
+  minPriorDecibans: -15,
+  maxPriorDecibans: 15,
+});
+
+let evidence = [];
+let nextEvidenceId = 1;
+let nextPresetCategoryId = 1;
+let selectedEvidenceId = null;
+let latestColor = color(aggregateEvidence([]), colorOptions);
+let geometry;
+let currentDiagram;
+let diagramPriors;
+let viewportWidth = 1;
+let pixelsPerDeciban = 4;
+let drawPending = false;
+let priorDrag = null;
+
+function scheduleDraw() {
+  if (drawPending) return;
+  drawPending = true;
+  requestAnimationFrame(() => { drawPending = false; drawVisualization(); });
+}
+
+function evidenceWeight(item) {
+  const magnitude = evidencePresentation(item, categories, i18n.t).weight;
+  return item.direction === 'for' ? magnitude : -magnitude;
+}
+
+function formatDeciban(value) {
+  return i18n.number(Number(value.toFixed(1)), { maximumFractionDigits: 1 });
+}
+
+function formatSigned(value) {
+  return `${value > 0 ? '+' : value < 0 ? '−' : ''}${formatDeciban(Math.abs(value))}`;
+}
+
+function formatPriorPercentage(prior) {
+  const percentage = decibansToProbability({ weightDecibans: prior }).probability;
+  if (percentage >= .995) return `>${i18n.percent(.99, { maximumFractionDigits: 0 })}`;
+  if (percentage <= .005) return `<${i18n.percent(.01, { maximumFractionDigits: 0 })}`;
+  return i18n.percent(percentage, { maximumFractionDigits: 0 });
+}
+
+function priorColor(prior) {
+  return color({
+    netWeightDecibans: prior,
+    absoluteWeightDecibans: Math.abs(prior),
+    dissonance: 0,
+  }, { ...colorOptions, minPriorDecibans: 0, maxPriorDecibans: 0 });
+}
+
+function syncPriorHandles() {
+  if (!geometry || !currentDiagram) return;
+  const bounds = {
+    min: Number(minPriorDecibans.value),
+    max: Number(maxPriorDecibans.value),
+  };
+  const clampToDomain = (value) => Math.max(
+    geometry.minimum,
+    Math.min(geometry.maximum, value),
+  );
+  const visibleMinimum = clampToDomain(bounds.min);
+  const visibleMaximum = clampToDomain(bounds.max);
+  const visibleRange = visibleMaximum - visibleMinimum;
+  const gradientValues = [...new Set([
+    visibleMinimum,
+    visibleMaximum,
+    Math.max(visibleMinimum, Math.min(visibleMaximum, -colorOptions.saturationThresholdDecibans)),
+    Math.max(visibleMinimum, Math.min(visibleMaximum, 0)),
+    Math.max(visibleMinimum, Math.min(visibleMaximum, colorOptions.saturationThresholdDecibans)),
+  ])].sort((a, b) => a - b);
+  const stops = gradientValues.map((value) => {
+    const position = visibleRange === 0 ? 50 : (value - visibleMinimum) / visibleRange * 100;
+    return `${priorColor(value)} ${position}%`;
+  });
+  priorBand.style.background = visibleRange === 0
+    ? priorColor(visibleMinimum)
+    : `linear-gradient(90deg, ${stops.join(', ')})`;
+  const minimumColor = priorColor(bounds.min);
+  const maximumColor = priorColor(bounds.max);
+  const minimumText = `<span style="color:${minimumColor}">${formatPriorPercentage(bounds.min)}</span>`;
+  const maximumText = `<span style="color:${maximumColor}">${formatPriorPercentage(bounds.max)}</span>`;
+  priorBandText.innerHTML = i18n.t(bounds.min === bounds.max ? 'prior.fixed' : 'prior.range', {
+    minimum: minimumText,
+    maximum: maximumText,
+  });
+  const xMin = (visibleMinimum - geometry.minimum) * pixelsPerDeciban;
+  const xMax = (visibleMaximum - geometry.minimum) * pixelsPerDeciban;
+  const bandLeft = Math.max(0, Math.min(viewportWidth, xMin));
+  const bandRight = Math.max(0, Math.min(viewportWidth, xMax));
+  const bandStart = Math.min(bandLeft, bandRight);
+  const priorExact = bounds.min === bounds.max;
+  const bandWidth = Math.max(2, Math.abs(bandRight - bandLeft));
+  priorBand.style.left = `${bandStart}px`;
+  priorBand.style.width = `${bandWidth}px`;
+  priorBand.hidden = priorExact;
+  priorTrack.classList.toggle('is-exact', priorExact);
+  priorTrack.style.setProperty('--caret-x', `${bandStart}px`);
+  priorTrack.style.setProperty('--prior-color', minimumColor);
+  const handleWidth = priorHandles[0].getBoundingClientRect().width;
+  const extraGap = priorExact ? 0 : Math.max(0, (handleWidth + 2 - (xMax - xMin)) / 2);
+  let rawMinimumLeft = xMin - handleWidth / 2 - extraGap;
+  let rawMaximumLeft = xMax - handleWidth / 2 + extraGap;
+  let pairFits = rawMaximumLeft + handleWidth - rawMinimumLeft <= viewportWidth;
+  let pairOffset = pairFits && rawMinimumLeft < 0
+    ? -rawMinimumLeft
+    : pairFits ? Math.min(0, viewportWidth - (rawMaximumLeft + handleWidth)) : 0;
+  if (priorExact) {
+    rawMinimumLeft = Math.max(0, Math.min(viewportWidth - handleWidth * 2, xMin - handleWidth));
+    rawMaximumLeft = rawMinimumLeft + handleWidth;
+    pairFits = true;
+    pairOffset = 0;
+  }
+  const bracketSeparation = Math.max(0, (18 - (xMax - xMin)) / 2);
+  const rawMinimumBracket = xMin - bracketSeparation;
+  const rawMaximumBracket = xMax + bracketSeparation;
+  const bracketOffset = rawMinimumBracket < 0
+    ? -rawMinimumBracket
+    : Math.min(0, viewportWidth - rawMaximumBracket);
+  const minimumBracketX = rawMinimumBracket + bracketOffset;
+  const maximumBracketX = rawMaximumBracket + bracketOffset;
+  for (const handle of priorHandles) {
+    const key = handle.dataset.priorHandle;
+    const x = (clampToDomain(bounds[key]) - geometry.minimum) * pixelsPerDeciban;
+    const prior = bounds[key];
+    handle.hidden = false;
+    handle.textContent = '';
+    const rawLeft = (key === 'min' ? rawMinimumLeft : rawMaximumLeft) + pairOffset;
+    const left = pairFits
+      ? rawLeft
+      : Math.max(0, Math.min(viewportWidth - handleWidth, rawLeft));
+    handle.style.left = `${left}px`;
+    handle.style.setProperty('--prior-anchor', `${x - left}px`);
+    handle.style.setProperty('--bracket-x', `${(key === 'min' ? minimumBracketX : maximumBracketX) - left}px`);
+    handle.style.setProperty('--prior-color', priorColor(prior));
+    handle.dataset.prior = key;
+    const active = geometry.activeEndpoint?.side === (key === 'min' ? 'minimum' : 'maximum');
+    handle.classList.toggle('is-active', active);
+    handle.setAttribute('aria-current', String(active));
+    handle.setAttribute('aria-valuenow', String(prior));
+    handle.setAttribute('aria-valuetext', i18n.t('prior.value', {
+      bound: i18n.t(key === 'min' ? 'prior.low' : 'prior.high'),
+      decibans: formatSigned(prior),
+      percentage: formatPriorPercentage(prior),
+    }));
+    handle.setAttribute('aria-valuemin', String(Math.min(geometry.minimum, bounds.min)));
+    handle.setAttribute('aria-valuemax', String(Math.max(geometry.maximum, bounds.max)));
+  }
+}
+
+function setPriorFromHandle(key, prior) {
+  const minimum = Number(minPriorDecibans.value);
+  const maximum = Number(maxPriorDecibans.value);
+  const integer = Math.round(prior);
+  if (key === 'max') maxPriorDecibans.value = String(Math.max(minimum, integer));
+  else minPriorDecibans.value = String(Math.min(maximum, integer));
+  update();
+}
+
+function resizeCanvas(element, contextLocal, width, height) {
+  const ratio = window.devicePixelRatio || 1;
+  element.width = Math.max(1, Math.round(width * ratio));
+  element.height = Math.max(1, Math.round(height * ratio));
+  element.style.width = `${width}px`;
+  element.style.height = `${height}px`;
+  contextLocal.setTransform(ratio, 0, 0, ratio, 0, 0);
+}
+
+function drawColorLegend() {
+  const width = Math.max(1, Math.min(260, Math.round(colorLegend.clientWidth - 32)));
+  const height = Math.round(width * .66);
+  resizeCanvas(legendCanvas, legendContext, width, height);
+  const top = { x: width / 2, y: 25 };
+  const left = { x: 14, y: height - 25 };
+  const right = { x: width - 14, y: height - 25 };
+  const halfBase = right.x - top.x;
+  const triangleHeight = left.y - top.y;
+  for (let y = Math.ceil(top.y); y <= left.y; y += 1) {
+    const proportion = (left.y - y) / triangleHeight;
+    const halfWidth = halfBase * (1 - proportion);
+    for (let x = Math.ceil(top.x - halfWidth); x <= Math.floor(top.x + halfWidth); x += 1) {
+      legendContext.fillStyle = triangleColor({
+        x: (x - top.x) / halfBase,
+        height: proportion,
+      }, colorOptions);
+      legendContext.fillRect(x, y, 1, 1);
+    }
+  }
+  legendContext.strokeStyle = '#334155'; legendContext.lineWidth = 1.5;
+  legendContext.beginPath(); legendContext.moveTo(top.x, top.y); legendContext.lineTo(left.x, left.y); legendContext.lineTo(right.x, right.y); legendContext.closePath(); legendContext.stroke();
+  const position = trianglePosition(currentDiagram.summary, colorOptions);
+  const x = top.x + position.x * halfBase;
+  const y = left.y - position.height * triangleHeight;
+  legendContext.beginPath(); legendContext.arc(x, y, 5, 0, Math.PI * 2);
+  legendContext.fillStyle = currentDiagram.resultant.color; legendContext.fill();
+  legendContext.strokeStyle = '#0f172a'; legendContext.lineWidth = 2; legendContext.stroke();
+  legendContext.fillStyle = '#334155'; legendContext.font = '700 10px system-ui';
+  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.dissonance'), top.x, 10);
+  legendContext.textAlign = 'left'; legendContext.fillText(i18n.t('palette.against'), 0, height - 5);
+  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.noEvidence'), width / 2, height - 5);
+  legendContext.textAlign = 'right'; legendContext.fillText(i18n.t('palette.for'), width, height - 5);
+  legendContext.textAlign = 'start';
+}
+
+function drawVisualization() {
+  if (!geometry) return;
+  drawDiagram({
+    canvas, context, rulerCanvas, rulerContext, priorResultantCanvas, priorResultantContext, geometry, evidence,
+    selectedEvidenceId, viewportWidth, viewportHeight, pixelsPerDeciban,
+    colorOptions, priors: diagramPriors, latestColor,
+    yOffset: coneScroll.scrollTop,
+    i18n,
+  });
+  canvas.dataset.stepCount = String(geometry.steps.length);
+  canvas.dataset.moveCount = String(geometry.steps.filter(({ weightDecibans }) => weightDecibans !== 0).length);
+  if (selectedEvidenceId === null) delete canvas.dataset.selectedEvidenceId;
+  else canvas.dataset.selectedEvidenceId = String(selectedEvidenceId);
+}
+
+function displaySignedWeight(weight, direction) {
+  const sign = direction === 'for' ? '+' : '−';
+  return `${sign}${formatDeciban(Math.abs(weight))}`;
+}
+
+function createHistoryElement(item) {
+  const element = document.createElement('li');
+  const selectionButton = document.createElement('button');
+  const name = document.createElement('span');
+  const measurement = document.createElement('strong');
+  const removeButton = document.createElement('button');
+
+  element.className = 'history-item';
+  element.dataset.evidenceId = String(item.id);
+  element.dataset.direction = item.direction;
+  selectionButton.type = 'button';
+  selectionButton.className = 'evidence-step';
+  name.className = 'step-name';
+  measurement.className = 'step-measure';
+  removeButton.type = 'button';
+  removeButton.className = 'remove-evidence';
+  removeButton.textContent = i18n.t('evidence.remove');
+  removeButton.setAttribute('aria-label', i18n.t('evidence.removeAria', { number: item.id }));
+  selectionButton.append(name, measurement);
+  element.append(selectionButton, removeButton);
+
+  selectionButton.addEventListener('click', () => {
+    selectedEvidenceId = item.id;
+    update();
+    if (!geometry || visualization.hidden) return;
+    const step = geometry.steps.find(({ id }) => id === item.id);
+    const breakItem = geometry.breaks.find(({ hiddenEvidenceIds }) => hiddenEvidenceIds.includes(item.id));
+    const y = step?.visibleRibbon?.y2 ?? breakItem?.y ?? 0;
+    coneScroll.scrollTop = Math.max(0, y - viewportHeight / 3);
+    drawVisualization();
+  });
+  removeButton.addEventListener('click', () => {
+    const index = evidence.findIndex(({ id }) => id === item.id);
+    evidence = evidence.filter(({ id }) => id !== item.id);
+    const adjacentEvidence = evidence[Math.min(index, evidence.length - 1)];
+    if (selectedEvidenceId === item.id) {
+      selectedEvidenceId = adjacentEvidence?.id ?? null;
+    }
+    update();
+    if (adjacentEvidence) {
+      evidenceHistory
+        .querySelector(`[data-evidence-id="${adjacentEvidence.id}"] .evidence-step`)
+        .focus();
+    }
+  });
+
+  return element;
+}
+
+function renderHistory() {
+  const existingElements = new Map(
+    [...evidenceHistory.children].map((element) => [Number(element.dataset.evidenceId), element]),
+  );
+  const reversedEvidence = [...evidence].reverse();
+  for (let index = 0; index < reversedEvidence.length; index += 1) {
+    const item = reversedEvidence[index];
+    const element = existingElements.get(item.id)
+      ?? createHistoryElement(item);
+    const presentation = evidencePresentation(item, categories, i18n.t);
+    const weight = evidenceWeight(item);
+    const selectionButton = element.querySelector('.evidence-step');
+
+    element.dataset.direction = item.direction;
+    element.classList.toggle('selected', item.id === selectedEvidenceId);
+    const number = evidence.findIndex(({ id }) => id === item.id) + 1;
+    const removeButton = element.querySelector('.remove-evidence');
+    removeButton.textContent = i18n.t('evidence.remove');
+    removeButton.setAttribute('aria-label', i18n.t('evidence.removeAria', { number }));
+    element.querySelector('.step-name').textContent = `${number}. ${presentation.label}`;
+    element.querySelector('.step-measure').textContent = `${displaySignedWeight(
+      weight,
+      item.direction,
+    )} dBan`;
+    selectionButton.setAttribute(
+      'aria-label',
+      i18n.t('evidence.selectAria', {
+        number,
+        category: presentation.label,
+        direction: i18n.t(`direction.${item.direction}`),
+        weight: formatDeciban(weight),
+      }),
+    );
+    selectionButton.setAttribute('aria-pressed', String(item.id === selectedEvidenceId));
+    if (evidenceHistory.children[index] !== element) {
+      evidenceHistory.insertBefore(element, evidenceHistory.children[index] ?? null);
+    }
+  }
+  for (const element of existingElements.values()) {
+    if (!evidence.some(({ id }) => id === Number(element.dataset.evidenceId))) element.remove();
+  }
+  trajectorySummary.textContent = evidence.length === 0
+    ? i18n.t('measure.noEvidence')
+    : i18n.t('evidence.count', { count: evidence.length });
+  trajectoryEmpty.hidden = evidence.length > 0;
+  evidenceHistory.hidden = evidence.length === 0;
+}
+
+function readPriorBounds() {
+  let minimum = Number(minPriorDecibans.value);
+  let maximum = Number(maxPriorDecibans.value);
+  let error = '';
+
+  if (Number.isFinite(minimum)) {
+    minimum = Math.round(minimum);
+    minPriorDecibans.value = String(minimum);
+  }
+  if (Number.isFinite(maximum)) {
+    maximum = Math.round(maximum);
+    maxPriorDecibans.value = String(maximum);
+  }
+
+  if (minPriorDecibans.value.trim() === '' || maxPriorDecibans.value.trim() === ''
+    || !Number.isFinite(minimum) || !Number.isFinite(maximum)) {
+    error = i18n.t('prior.finiteError');
+  } else if (minimum > maximum) {
+    error = i18n.t('prior.orderError');
+  }
+
+  const invalid = error !== '';
+  for (const field of [minPriorDecibans, maxPriorDecibans]) {
+    field.setAttribute('aria-invalid', String(invalid));
+  }
+  priorBoundsError.textContent = error;
+  priorBoundsError.hidden = !invalid;
+  if (invalid) return null;
+
+  return { minPriorDecibans: minimum, maxPriorDecibans: maximum };
+}
+
+function localizedProbability(bound) {
+  if (bound.direction === 'indeterminate') return i18n.t(`probability.${bound.reason}`);
+  return i18n.t(`probability.${bound.direction}`, {
+    percentage: i18n.number(bound.displayPercentage),
+  });
+}
+
+function update() {
+  const evidenceContributions = evidence.map((item) => ({
+    id: item.id,
+    weightDecibans: evidenceWeight(item),
+  }));
+
+  const priorBounds = readPriorBounds();
+  if (priorBounds !== null) {
+    colorOptions.minPriorDecibans = priorBounds.minPriorDecibans;
+    colorOptions.maxPriorDecibans = priorBounds.maxPriorDecibans;
+  }
+
+  const invalidSummary = priorBounds === null ? aggregateEvidence(evidenceContributions) : null;
+  if (priorBounds === null) {
+    geometry = undefined;
+    currentDiagram = undefined;
+    colorLegend.hidden = true;
+    renderHistory();
+    document.querySelector('#dissonance').textContent = i18n.percent(invalidSummary.dissonance);
+    probability.hidden = true;
+    probabilityDescription.textContent = i18n.t('diagram.invalidProbability');
+    visualization.hidden = true;
+    colorSummary.hidden = true;
+    for (const handle of priorHandles) handle.hidden = true;
+    return;
+  }
+
+  const diagram = buildEvidenceDiagram(evidenceContributions, colorOptions);
+  currentDiagram = diagram;
+  const threshold = colorOptions.saturationThresholdDecibans;
+  const localDomain = {
+    minimumDecibans: -threshold,
+    maximumDecibans: threshold,
+  };
+  const displayDiagram = {
+    ...diagram,
+    domain: priorDrag?.domain ?? localDomain,
+  };
+  const summary = diagram.summary;
+  renderHistory();
+  document.querySelector('#dissonance').textContent = i18n.percent(summary.dissonance);
+  const resultantBand = diagram.resultant.jeffreysBand;
+  const bandLabel = i18n.t(`band.${resultantBand}`);
+  const resultantWeight = summary.netWeightDecibans;
+  const resultantText = resultantWeight === 0
+    ? i18n.t('diagram.resultNone')
+    : i18n.t('diagram.result', { band: bandLabel, weight: formatSigned(resultantWeight) });
+  resultantLabel.textContent = resultantText;
+  probability.hidden = false;
+  probabilityText.textContent = localizedProbability(diagram.probability);
+  probabilityDescription.textContent = priorBounds.minPriorDecibans === priorBounds.maxPriorDecibans
+    ? i18n.t('prior.exactDescription', { prior: formatDeciban(priorBounds.minPriorDecibans) })
+    : i18n.t('prior.rangeDescription', {
+      minimum: formatDeciban(priorBounds.minPriorDecibans),
+      maximum: formatDeciban(priorBounds.maxPriorDecibans),
+    });
+
+  visualization.hidden = false;
+  colorSummary.hidden = false;
+  colorLegend.hidden = false;
+  latestColor = diagram.resultant.color;
+  resultantLabel.style.color = latestColor;
+  drawColorLegend();
+  const minimum = displayDiagram.domain.minimumDecibans;
+  const maximum = displayDiagram.domain.maximumDecibans;
+  const amplitude = maximum - minimum;
+  viewportWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+  if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || !Number.isFinite(amplitude) || amplitude <= 0) {
+    priorBoundsError.textContent = i18n.t('diagram.invalidGeometry');
+    priorBoundsError.hidden = false;
+    visualization.hidden = true;
+    geometry = undefined;
+    return;
+  }
+  pixelsPerDeciban = viewportWidth / amplitude;
+  diagramPriors = { minPriorDecibans: priorBounds.minPriorDecibans, maxPriorDecibans: priorBounds.maxPriorDecibans };
+  geometry = buildGeometry(displayDiagram, {
+    pixelsPerDeciban,
+    breakHeight: BREAK_HEIGHT,
+    minPriorDecibans: priorBounds.minPriorDecibans,
+    maxPriorDecibans: priorBounds.maxPriorDecibans,
+  });
+  viewportHeight = Math.max(100, Math.min(300, Math.min(window.innerHeight * .35, geometry.totalHeight + 20)));
+  coneScroll.style.height = `${viewportHeight}px`;
+  coneScroll.style.setProperty('--cone-height', `${viewportHeight}px`);
+  const scrollable = geometry.totalHeight > coneScroll.clientHeight + .5;
+  coneScroll.classList.toggle('is-scrollable', scrollable);
+  const adjustedWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+  if (adjustedWidth !== viewportWidth) {
+    viewportWidth = adjustedWidth;
+    pixelsPerDeciban = viewportWidth / amplitude;
+    geometry = buildGeometry(displayDiagram, {
+      pixelsPerDeciban,
+      breakHeight: BREAK_HEIGHT,
+      minPriorDecibans: priorBounds.minPriorDecibans,
+      maxPriorDecibans: priorBounds.maxPriorDecibans,
+    });
+  }
+  coneSpacer.style.height = `${scrollable ? geometry.totalHeight : coneScroll.clientHeight}px`;
+  if (!scrollable) coneScroll.scrollTop = 0;
+  canvas.dataset.minimum = String(geometry.minimum);
+  canvas.dataset.maximum = String(geometry.maximum);
+  canvas.dataset.posteriorMinimum = String(geometry.currentInterval.minimum);
+  canvas.dataset.posteriorMaximum = String(geometry.currentInterval.maximum);
+  canvas.dataset.envelopeMinimum = String(priorBounds.minPriorDecibans - summary.absoluteWeightDecibans);
+  canvas.dataset.envelopeMaximum = String(priorBounds.maxPriorDecibans + summary.absoluteWeightDecibans);
+  canvas.dataset.activePrior = geometry.activeEndpoint?.side ?? 'none';
+  canvas.dataset.resultantStart = String(resultantWeight >= 0 ? priorBounds.minPriorDecibans : priorBounds.maxPriorDecibans);
+  canvas.dataset.resultantEnd = String(resultantWeight >= 0
+    ? priorBounds.minPriorDecibans + resultantWeight
+    : priorBounds.maxPriorDecibans + resultantWeight);
+  canvas.dataset.breakCount = String(geometry.breaks.length);
+  canvas.dataset.breaks = JSON.stringify(geometry.breaks.map((breakItem) => ({
+    side: breakItem.side,
+    absoluteStart: breakItem.startAbsolute,
+    absoluteEnd: breakItem.endAbsolute,
+    gap: breakItem.absoluteGap,
+    hiddenEvidenceIds: breakItem.hiddenEvidenceIds,
+  })));
+  document.querySelector('#hex').textContent = latestColor;
+  document.querySelector('#swatch').style.backgroundColor = latestColor;
+  const summaryLabel = i18n.t('diagram.summaryAria', { count: evidence.length });
+  canvas.setAttribute(
+    'aria-label',
+    i18n.t('diagram.summaryDetails', {
+      summary: summaryLabel,
+      net: formatDeciban(summary.netWeightDecibans),
+      absolute: formatDeciban(summary.absoluteWeightDecibans),
+      dissonance: i18n.percent(summary.dissonance),
+      band: bandLabel,
+      color: latestColor,
+    }),
+  );
+  const breakText = geometry.breaks.length === 0 ? i18n.t('diagram.noBreaks') : geometry.breaks.map((breakItem) => i18n.t('diagram.break', {
+    side: i18n.t(`side.${breakItem.side}`), start: formatDeciban(breakItem.startAbsolute),
+    end: formatDeciban(breakItem.endAbsolute), gap: formatDeciban(breakItem.absoluteGap),
+    count: breakItem.hiddenEvidenceIds.length, ids: breakItem.hiddenEvidenceIds.join(', ') || '—',
+  })).join(' ');
+  const currentPosition = summary.netWeightDecibans === 0
+    ? i18n.t('diagram.positionZero')
+    : geometry.activeEndpoint?.visible
+      ? i18n.t('diagram.positionVisible')
+      : i18n.t('diagram.positionClipped');
+  coneDescription.textContent = i18n.t('diagram.description', {
+    net: formatDeciban(summary.netWeightDecibans), absolute: formatDeciban(summary.absoluteWeightDecibans),
+    minimum: formatDeciban(minimum), maximum: formatDeciban(maximum),
+    currentMinimum: formatDeciban(geometry.currentInterval.minimum), currentMaximum: formatDeciban(geometry.currentInterval.maximum),
+    envelopeMinimum: formatDeciban(priorBounds.minPriorDecibans - summary.absoluteWeightDecibans),
+    envelopeMaximum: formatDeciban(priorBounds.maxPriorDecibans + summary.absoluteWeightDecibans),
+    activePrior: i18n.t(`side.${geometry.activeEndpoint?.side ?? 'none'}`),
+    resultantStart: formatDeciban(Number(canvas.dataset.resultantStart)), resultantEnd: formatDeciban(Number(canvas.dataset.resultantEnd)),
+    position: currentPosition, breaks: breakText,
+  });
+  drawVisualization();
+  syncPriorHandles();
+}
+
+function addEvidenceItem(categoryId, direction) {
+  const category = categories.find(({ id }) => id === categoryId);
+  if (!category) return;
+  evidence = addEvidence(evidence, category, direction, nextEvidenceId);
+  const item = evidence.at(-1);
+  nextEvidenceId += 1;
+  selectedEvidenceId = item.id;
+  update();
+  coneScroll.scrollTop = 0;
+}
+
+function createWeightCell(category, label, direction) {
+  const weight = category.weights[direction];
+  const signedWeight = direction === 'for' ? weight : -weight;
+  const directionLabel = i18n.t(`direction.${direction}`);
+  const weightAria = i18n.t('evidence.weightAria', { direction: directionLabel, category: label });
+  const addAria = i18n.t('evidence.addAria', { direction: directionLabel, category: label });
+  const cell = document.createElement('td');
+  cell.className = 'weight';
+  cell.dataset.direction = direction;
+  const setting = document.createElement('label');
+  setting.className = 'weight-setting';
+  const hiddenLabel = document.createElement('span');
+  hiddenLabel.className = 'visually-hidden';
+  hiddenLabel.textContent = weightAria;
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '30';
+  slider.step = '0.5';
+  slider.value = String(weight);
+  slider.dataset.direction = direction;
+  const measurement = document.createElement('strong');
+  const output = document.createElement('output');
+  output.className = 'weight-output';
+  output.textContent = displaySignedWeight(weight, direction);
+  measurement.append(output, ' dBan');
+  setting.append(hiddenLabel, slider, measurement);
+  const actions = document.createElement('div');
+  actions.className = 'weight-actions';
+  const band = document.createElement('small');
+  band.className = 'weight-band';
+  band.textContent = i18n.t(`band.${jeffreysBand({ weightDecibans: signedWeight })}`);
+  const addButton = document.createElement('button');
+  addButton.type = 'button';
+  addButton.className = 'add-evidence';
+  addButton.dataset.direction = direction;
+  addButton.setAttribute('aria-label', addAria);
+  addButton.textContent = i18n.t(direction === 'for' ? 'evidence.addFor' : 'evidence.addAgainst');
+  actions.append(band, addButton);
+  cell.append(setting, actions);
+  return cell;
+}
+
+function renderCategoryRows() {
+  categoryRows.replaceChildren();
+  for (const category of categories) {
+    const label = categoryLabel(category, i18n.t);
+    const description = categoryDescription(category, i18n.t);
+    const removeLabel = i18n.t('category.removeAria', { category: label });
+    const row = document.createElement('tr');
+    row.dataset.categoryId = category.id;
+    const heading = document.createElement('th');
+    heading.scope = 'row';
+    const categoryNameCell = document.createElement('div');
+    categoryNameCell.className = 'category-name-cell';
+    const categoryText = document.createElement('span');
+    const categoryName = document.createElement('strong');
+    categoryName.textContent = label;
+    categoryText.append(categoryName);
+    if (description) {
+      const categoryHelp = document.createElement('small');
+      categoryHelp.textContent = description;
+      categoryText.append(categoryHelp);
+    }
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'remove-category';
+    removeButton.setAttribute('aria-label', removeLabel);
+    removeButton.title = removeLabel;
+    removeButton.textContent = '×';
+    categoryNameCell.append(categoryText, removeButton);
+    heading.append(categoryNameCell);
+    row.append(
+      heading,
+      createWeightCell(category, label, 'for'),
+      createWeightCell(category, label, 'against'),
+    );
+
+    for (const slider of row.querySelectorAll('input[type="range"][data-direction]')) {
+      slider.addEventListener('input', () => {
+        const direction = slider.dataset.direction;
+        const weight = Number(slider.value);
+        const cell = slider.closest('.weight');
+        category.weights[direction] = weight;
+        cell.querySelector('.weight-output').textContent = displaySignedWeight(
+          weight,
+          direction,
+        );
+        cell.querySelector('.weight-band').textContent = i18n.t(`band.${jeffreysBand({
+          weightDecibans: direction === 'for' ? weight : -weight,
+        })}`);
+        update();
+      });
+    }
+    row.addEventListener('click', (event) => {
+      const addButton = event.target.closest('.add-evidence[data-direction]');
+      if (addButton) addEvidenceItem(category.id, addButton.dataset.direction);
+      if (event.target.closest('.remove-category')) {
+        ({ categories, evidence } = removeCategory(categories, evidence, category.id));
+        renderCategoryRows();
+        renderPresetOptions();
+        update();
+      }
+    });
+    categoryRows.append(row);
+  }
+}
+
+function applyScenario(id) {
+  const scenario = SCENARIOS.find(([scenarioId]) => scenarioId === id);
+  if (!scenario) return;
+
+  evidence = [];
+  selectedEvidenceId = null;
+  let restoredCategory = false;
+  for (const [categoryDefinitionId, direction] of scenario[2]) {
+    let category = categories.find(({ definitionId }) => definitionId === categoryDefinitionId);
+    if (!category) {
+      category = createPresetCategory(categoryDefinitionId, nextPresetCategoryId);
+      nextPresetCategoryId += 1;
+      categories.push(category);
+      restoredCategory = true;
+    }
+    evidence = addEvidence(evidence, category, direction, nextEvidenceId);
+    const item = evidence.at(-1);
+    nextEvidenceId += 1;
+    selectedEvidenceId = item.id;
+  }
+  if (restoredCategory) {
+    renderCategoryRows();
+    renderPresetOptions();
+  }
+  update();
+  coneScroll.scrollTop = 0;
+}
+
+function writeColorOptions(options) {
+  saturationThreshold.value = String(options.saturationThresholdDecibans);
+  saturationThresholdValue.textContent = i18n.number(options.saturationThresholdDecibans);
+  for (const [name, input] of Object.entries(anchorInputs)) {
+    input.value = options.anchors[name];
+  }
+}
+
+function readColorOptions() {
+  colorOptions.saturationThresholdDecibans = Number(saturationThreshold.value);
+  saturationThresholdValue.textContent = i18n.number(Number(saturationThreshold.value));
+  for (const [name, input] of Object.entries(anchorInputs)) {
+    colorOptions.anchors[name] = input.value;
+  }
+}
+
+function reset() {
+  evidence = [];
+  selectedEvidenceId = null;
+  categories = createDefaultCategories();
+  categoryName.value = '';
+  categoryName.setAttribute('aria-invalid', 'false');
+  categoryError.hidden = true;
+  categoryError.textContent = '';
+  delete categoryError.dataset.error;
+  renderCategoryRows();
+  renderPresetOptions();
+  writeColorOptions(DEFAULT_COLOR_OPTIONS);
+  readColorOptions();
+  minPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.minPriorDecibans);
+  maxPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.maxPriorDecibans);
+  update();
+  coneScroll.scrollTop = 0;
+}
+
+const scenarioList = document.querySelector('#scenario-list');
+const presetCategoryForm = document.querySelector('#preset-category-form');
+const categoryPreset = document.querySelector('#category-preset');
+
+function renderPresetOptions() {
+  const previousValue = categoryPreset.value;
+  categoryPreset.replaceChildren();
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = i18n.t('category.choosePreset');
+  categoryPreset.append(placeholder);
+  const activeDefinitions = new Set(categories.map(({ definitionId }) => definitionId));
+  for (const definition of CATEGORY_CATALOG) {
+    const definitionId = definition.id;
+    if (activeDefinitions.has(definitionId)) continue;
+    const option = document.createElement('option');
+    option.value = definitionId;
+    option.textContent = i18n.t(definition.labelKey);
+    categoryPreset.append(option);
+  }
+  const preferred = [...categoryPreset.options].find((option) => (
+    option.value === previousValue && !option.disabled
+  ));
+  categoryPreset.value = preferred?.value ?? '';
+}
+
+function renderScenarios() {
+  scenarioList.replaceChildren();
+  for (const [id, labelKey] of SCENARIOS) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.scenario = id;
+    button.textContent = i18n.t(labelKey);
+    scenarioList.append(button);
+  }
+}
+
+function translateStaticUi() {
+  document.documentElement.lang = i18n.meta.htmlLang;
+  document.title = i18n.t('app.title');
+  for (const element of document.querySelectorAll('[data-i18n]')) {
+    element.textContent = i18n.t(element.dataset.i18n);
+  }
+  for (const element of document.querySelectorAll('[data-i18n-aria-label]')) {
+    element.setAttribute('aria-label', i18n.t(element.dataset.i18nAriaLabel));
+  }
+  for (const element of document.querySelectorAll('[data-i18n-placeholder]')) {
+    element.setAttribute('placeholder', i18n.t(element.dataset.i18nPlaceholder));
+  }
+}
+
+const languageSelect = document.querySelector('#language');
+for (const locale of supportedLocales) {
+  const option = document.createElement('option');
+  option.value = locale.id;
+  option.textContent = locale.label;
+  languageSelect.append(option);
+}
+languageSelect.value = i18n.locale;
+languageSelect.addEventListener('change', () => {
+  const scrollTop = coneScroll.scrollTop;
+  i18n.setLocale(languageSelect.value);
+  languageSelect.value = i18n.locale;
+  try { localStorage.setItem('evidences-diagrams.locale', i18n.locale); } catch { /* file:// and privacy modes may disable storage. */ }
+  translateStaticUi();
+  if (categoryError.dataset.error) {
+    categoryError.textContent = i18n.t(`category.${categoryError.dataset.error}Error`);
+  }
+  renderCategoryRows();
+  renderPresetOptions();
+  renderScenarios();
+  update();
+  requestAnimationFrame(() => { coneScroll.scrollTop = scrollTop; drawVisualization(); });
+});
+
+const categoryForm = document.querySelector('#category-form');
+const categoryName = document.querySelector('#category-name');
+const categoryError = document.querySelector('#category-error');
+presetCategoryForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  if (!categoryPreset.value) return;
+  const category = createPresetCategory(categoryPreset.value, nextPresetCategoryId);
+  if (!category) return;
+  nextPresetCategoryId += 1;
+  categories.push(category);
+  renderCategoryRows();
+  renderPresetOptions();
+  categoryRows.querySelector('tr:last-child input')?.focus();
+});
+categoryForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  const validation = validateCategoryName(categoryName.value, categories, i18n.t);
+  if (validation) {
+    categoryError.dataset.error = validation;
+    categoryError.textContent = i18n.t(`category.${validation}Error`);
+    categoryError.hidden = false;
+    categoryName.setAttribute('aria-invalid', 'true');
+    return;
+  }
+  categories.push(createCustomCategory(categoryName.value, categories));
+  categoryName.value = '';
+  categoryName.setAttribute('aria-invalid', 'false');
+  categoryError.hidden = true;
+  delete categoryError.dataset.error;
+  renderCategoryRows();
+  categoryRows.querySelector('tr:last-child input')?.focus();
+});
+
+scenarioList.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-scenario]');
+  if (button) applyScenario(button.dataset.scenario);
+});
+document.querySelector('.palette').addEventListener('input', () => {
+  readColorOptions();
+  update();
+});
+document.querySelector('#reset').addEventListener('click', reset);
+for (const field of [minPriorDecibans, maxPriorDecibans]) {
+  field.addEventListener('input', () => {
+    const value = Number(field.value);
+    if (Number.isFinite(value)) field.value = String(Math.round(value));
+    update();
+  });
+}
+
+priorPresets.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-prior-min]');
+  if (!button) return;
+  minPriorDecibans.value = button.dataset.priorMin;
+  maxPriorDecibans.value = button.dataset.priorMax;
+  update();
+});
+
+for (const handle of priorHandles) {
+  handle.addEventListener('pointerdown', (event) => {
+    if (!geometry || !event.isPrimary || event.button !== 0) return;
+    const prior = Number(
+      handle.dataset.prior === 'min' ? minPriorDecibans.value : maxPriorDecibans.value,
+    );
+    priorDrag = {
+      domain: { minimumDecibans: geometry.minimum, maximumDecibans: geometry.maximum },
+      clientX: event.clientX,
+      prior,
+      pixelsPerDeciban,
+      key: Number(minPriorDecibans.value) === Number(maxPriorDecibans.value)
+        ? null
+        : handle.dataset.priorHandle,
+    };
+    handle.setPointerCapture(event.pointerId);
+  });
+  handle.addEventListener('pointermove', (event) => {
+    if (!priorDrag || !handle.hasPointerCapture(event.pointerId)) return;
+    const delta = (event.clientX - priorDrag.clientX) / priorDrag.pixelsPerDeciban;
+    if (priorDrag.key === null) {
+      const next = Math.round(priorDrag.prior + delta);
+      if (next === priorDrag.prior) return;
+      priorDrag.key = next < priorDrag.prior ? 'min' : 'max';
+    }
+    setPriorFromHandle(priorDrag.key, priorDrag.prior + delta);
+  });
+  const finishDrag = (event) => {
+    if (priorDrag === null) return;
+    if (event?.pointerId !== undefined && handle.hasPointerCapture(event.pointerId)) {
+      handle.releasePointerCapture(event.pointerId);
+    }
+    priorDrag = null;
+    update();
+  };
+  handle.addEventListener('pointerup', finishDrag);
+  handle.addEventListener('pointercancel', finishDrag);
+  handle.addEventListener('lostpointercapture', finishDrag);
+  handle.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const key = handle.dataset.priorHandle;
+    const stepSize = event.shiftKey ? 5 : 1;
+    if (event.key === 'Home') setPriorFromHandle(key, geometry.minimum);
+    else if (event.key === 'End') setPriorFromHandle(key, geometry.maximum);
+    else {
+      const prior = key === 'max' ? Number(maxPriorDecibans.value) : Number(minPriorDecibans.value);
+      setPriorFromHandle(key, prior + (event.key === 'ArrowRight' ? stepSize : -stepSize));
+    }
+  });
+}
+
+coneScroll.addEventListener('scroll', scheduleDraw, { passive: true });
+window.addEventListener('resize', () => requestAnimationFrame(update));
+
+translateStaticUi();
+renderCategoryRows();
+renderPresetOptions();
+renderScenarios();
+writeColorOptions(DEFAULT_COLOR_OPTIONS);
+update();
