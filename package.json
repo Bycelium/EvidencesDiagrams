@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Evidence-weight aggregation and visualization in decibans.",
   "type": "module",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Bycelium/EvidencesDiagrams.git"
@@ -33,7 +33,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "sideEffects": false,
   "publishConfig": {

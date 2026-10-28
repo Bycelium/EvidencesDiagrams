@@ -45,9 +45,10 @@ try {
   assert.ok(files.includes('dist/index.d.ts'), 'The archive must contain TypeScript declarations.');
   assert.ok(files.includes('README.md'), 'The archive must contain the README.');
   assert.ok(files.includes('LICENSE'), 'The archive must contain the license.');
+  assert.ok(files.includes('NOTICE'), 'The archive must contain attribution notices.');
   assert.ok(files.includes('package.json'), 'The archive must contain its metadata.');
   assert.deepEqual(
-    files.filter((file) => !/^(?:dist\/.+\.(?:js|d\.ts)|README\.md|LICENSE|package\.json)$/.test(file)),
+    files.filter((file) => !/^(?:dist\/.+\.(?:js|d\.ts)|README\.md|LICENSE|NOTICE|package\.json)$/.test(file)),
     [],
     'The archive contains a file outside the publication allowlist.',
   );
@@ -115,6 +116,14 @@ void expected;
   ));
   assert.equal(installedManifest.name, rootManifest.name);
   assert.equal(installedManifest.version, rootManifest.version);
+  assert.equal(installedManifest.license, 'Apache-2.0');
+  for (const name of ['LICENSE', 'NOTICE']) {
+    assert.equal(
+      await readFile(join(consumerDirectory, 'node_modules/@bycelium/evidences-diagrams', name), 'utf8'),
+      await readFile(join(packageRoot, name), 'utf8'),
+      `The installed ${name} must preserve the project notice.`,
+    );
+  }
   console.log(`Archive validated: ${archive.filename} (${files.length} files).`);
 } finally {
   await rm(temporaryDirectory, { recursive: true, force: true });

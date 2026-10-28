@@ -15,9 +15,11 @@ const cssTag = '<link rel="stylesheet" href="./style.css">';
 const javaScriptTag = '<script type="module" src="./main.js"></script>';
 const generatedComment = '<!-- Generated from demo/index.template.html, demo/style.css, demo/main.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->\n';
 
-const [htmlTemplate, css, result] = await Promise.all([
+const [htmlTemplate, css, license, notice, result] = await Promise.all([
   readFile(templatePath, 'utf8'),
   readFile(cssPath, 'utf8'),
+  readFile(new URL('LICENSE', packageDirectory), 'utf8'),
+  readFile(new URL('NOTICE', packageDirectory), 'utf8'),
   build({
     absWorkingDir: fileURLToPath(packageDirectory),
     entryPoints: [fileURLToPath(javaScriptPath)],
@@ -40,7 +42,8 @@ const embeddedJavaScript = result.outputFiles[0].text.replaceAll(/<\/script/giu,
 const standaloneHtml = htmlTemplate
   .replace(cssTag, () => `<style>\n${embeddedCss}</style>`)
   .replace(javaScriptTag, () => `<script>\n${embeddedJavaScript}</script>`);
-const generatedHtml = `${generatedComment}${standaloneHtml}`;
+const licenseComment = `<!--\n${notice.trim()}\n\n${license.trim()}\n-->\n`;
+const generatedHtml = `${generatedComment}${licenseComment}${standaloneHtml}`;
 
 if (checkOnly) {
   const committedHtml = await readFile(outputPath, 'utf8');
