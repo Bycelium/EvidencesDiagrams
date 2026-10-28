@@ -1,6 +1,6 @@
 {
   "name": "@bycelium/evidences-diagrams",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Evidence-weight aggregation and visualization in decibans.",
   "type": "module",
   "license": "Apache-2.0",
