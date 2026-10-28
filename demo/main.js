@@ -26,18 +26,31 @@ import { createI18n, DEFAULT_LOCALE, supportedLocales } from './i18n.js';
 
 const SCENARIOS = [
   ['none', 'scenario.none', []],
-  ['news-for', 'scenario.newsFor', [['news-report', 'for']]],
-  ['converging-for', 'scenario.convergingFor', [
-    ['testimony', 'for'], ['fact-check', 'for'], ['official-data', 'for'],
+  ['news-aggregator-for', 'scenario.newsAggregatorFor', [['news-aggregator', 'for']]],
+  ['encyclopedia-for', 'scenario.encyclopediaFor', [['encyclopedia', 'for']]],
+  ['news-report-for', 'scenario.newsReportFor', [['news-report', 'for']]],
+  ['two-news-reports-for', 'scenario.twoNewsReportsFor', [
+    ['news-report', 'for'], ['news-report', 'for'],
   ]],
-  ['converging-against', 'scenario.convergingAgainst', [
-    ['news-report', 'against'], ['official-document', 'against'], ['scientific-study', 'against'],
+  ['three-news-reports-for', 'scenario.threeNewsReportsFor', [
+    ['news-report', 'for'], ['news-report', 'for'], ['news-report', 'for'],
   ]],
-  ['mixed', 'scenario.mixed', [
-    ['testimony', 'for'], ['fact-check', 'for'], ['news-report', 'against'],
+  ['scientific-study-for', 'scenario.scientificStudyFor', [['scientific-study', 'for']]],
+  ['official-data-for', 'scenario.officialDataFor', [['official-data', 'for']]],
+  ['official-document-for', 'scenario.officialDocumentFor', [['official-document', 'for']]],
+  ['two-official-documents-for', 'scenario.twoOfficialDocumentsFor', [
+    ['official-document', 'for'], ['official-document', 'for'],
   ]],
-  ['equal-opposing', 'scenario.equalOpposing', [
-    ['official-data', 'for'], ['testimony', 'against'],
+  ['news-report-against', 'scenario.newsReportAgainst', [['news-report', 'against']]],
+  ['two-news-reports-against', 'scenario.twoNewsReportsAgainst', [
+    ['news-report', 'against'], ['news-report', 'against'],
+  ]],
+  ['official-data-against', 'scenario.officialDataAgainst', [['official-data', 'against']]],
+  ['news-report-for-against', 'scenario.newsReportForAgainst', [
+    ['news-report', 'for'], ['news-report', 'against'],
+  ]],
+  ['official-data-against-two-news-reports-for', 'scenario.officialDataAgainstTwoNewsReportsFor', [
+    ['official-data', 'against'], ['news-report', 'for'], ['news-report', 'for'],
   ]],
 ];
 

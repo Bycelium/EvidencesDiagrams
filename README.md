@@ -96,21 +96,19 @@ in its steps and resultant so a consumer can choose its own projection.
 
 ## Demo extension
 
-The seven visible defaults are Testimony, News report, Fact-check, Encyclopedia,
-Official document, Official data, and Scientific study. Advanced study methods
-are available as optional category presets: Observational study, Controlled
-experiment, Randomized controlled study, Double-blind randomized study,
-Independent replication, Systematic review, and Meta-analysis. Custom category
-names are also supported. News aggregator is available as an optional preset.
+The seven visible defaults are Official document (`±12 dBan`), Official data
+(`±11 dBan`), Fact-check (`±9 dBan`), Scientific study (`±8 dBan`), News report
+(`±5 dBan`), Encyclopedia (`±4 dBan`), and News aggregator (`±2 dBan`).
+Testimony and advanced study methods are available as optional category presets:
+Observational study, Controlled experiment, Randomized controlled study,
+Double-blind randomized study, Independent replication, Systematic review, and
+Meta-analysis. Custom category names are also supported.
 
-Each category starts with an illustrative `±10 dBan` control. These adjustable
-example weights support exploration of evidence mechanisms and bias controls.
-Calibration needs application-specific data, and the categories carry no built-in
-ranking of source types: observational studies face confounding; controlled and
+These illustrative weights are editable. Calibration needs application-specific
+data and context: observational studies face confounding; controlled and
 randomized designs help address it; blinding reduces expectancy effects;
-independent replication tests a finding
-with new data; systematic reviews use explicit selection methods; meta-analysis
-combines numerical results. See the [Cochrane Handbook](https://www.cochrane.org/authors/handbooks-and-manuals/handbook/current/chapter-01)
+independent replication tests a finding with new data; systematic reviews use
+explicit selection methods; meta-analysis combines numerical results. See the [Cochrane Handbook](https://www.cochrane.org/authors/handbooks-and-manuals/handbook/current/chapter-01)
 and the [National Academies report on reproducibility and replicability](https://www.nationalacademies.org/read/25303/chapter/4)
 for the terminology behind these distinctions.
 
@@ -141,7 +139,7 @@ the center.
 
 ### Adding and combining evidence
 
-<img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/add-evidence.png" width="640" alt="Evidence controls and one supporting news report with a weight of plus ten decibans.">
+<img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/add-evidence.png" width="640" alt="Evidence controls and one supporting news report with a weight of plus five decibans.">
 
 Choose a category, set its supporting or opposing weight, and add it to the
 history. Editing a category control updates its existing evidence entries of the
@@ -156,7 +154,7 @@ Weak evidence can remain gray when the posterior interval crosses 50%.
 | <img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/positive-agreement.png" width="360" alt="Green result for converging evidence for a claim."> | <img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/negative-agreement.png" width="360" alt="Red result for converging evidence against a claim."> |
 | `+10 +10 +10 = +30 dBan` | `−10 −10 −10 = −30 dBan` |
 
-The resultant starts at the conservative prior endpoint and ends at the posterior
+These walkthrough examples use adjusted weights. The resultant starts at the conservative prior endpoint and ends at the posterior
 odds used for the displayed probability.
 
 ### Conflicting evidence and prior bounds

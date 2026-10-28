@@ -2322,21 +2322,21 @@ tbody th {
   }
 
   // demo/category-state.js
-  var categoryDefinition = (id, labelKey, descriptionKey) => Object.freeze({
+  var categoryDefinition = (id, labelKey, descriptionKey, initialWeight = 10) => Object.freeze({
     id,
     labelKey,
     descriptionKey,
-    initialWeights: Object.freeze({ for: 10, against: 10 })
+    initialWeights: Object.freeze({ for: initialWeight, against: initialWeight })
   });
   var CATEGORY_CATALOG = Object.freeze([
     categoryDefinition("testimony", "category.testimony", "category.testimonyDescription"),
-    categoryDefinition("news-report", "category.newsReport", "category.newsReportDescription"),
-    categoryDefinition("fact-check", "category.factCheck", "category.factCheckDescription"),
-    categoryDefinition("encyclopedia", "category.encyclopedia", "category.encyclopediaDescription"),
-    categoryDefinition("official-document", "category.officialDocument", "category.officialDocumentDescription"),
-    categoryDefinition("official-data", "category.officialData", "category.officialDataDescription"),
-    categoryDefinition("scientific-study", "category.scientificStudy", "category.scientificStudyDescription"),
-    categoryDefinition("news-aggregator", "category.newsAggregator", "category.newsAggregatorDescription"),
+    categoryDefinition("news-report", "category.newsReport", "category.newsReportDescription", 5),
+    categoryDefinition("fact-check", "category.factCheck", "category.factCheckDescription", 9),
+    categoryDefinition("encyclopedia", "category.encyclopedia", "category.encyclopediaDescription", 4),
+    categoryDefinition("official-document", "category.officialDocument", "category.officialDocumentDescription", 12),
+    categoryDefinition("official-data", "category.officialData", "category.officialDataDescription", 11),
+    categoryDefinition("scientific-study", "category.scientificStudy", "category.scientificStudyDescription", 8),
+    categoryDefinition("news-aggregator", "category.newsAggregator", "category.newsAggregatorDescription", 2),
     categoryDefinition("observational-study", "category.observationalStudy", "category.observationalStudyDescription"),
     categoryDefinition("controlled-experiment", "category.controlledExperiment", "category.controlledExperimentDescription"),
     categoryDefinition("randomized-controlled-study", "category.randomizedControlledStudy", "category.randomizedControlledStudyDescription"),
@@ -2346,13 +2346,13 @@ tbody th {
     categoryDefinition("meta-analysis", "category.metaAnalysis", "category.metaAnalysisDescription")
   ]);
   var DEFAULT_CATEGORY_DEFINITION_IDS = Object.freeze([
-    "testimony",
-    "news-report",
-    "fact-check",
-    "encyclopedia",
     "official-document",
     "official-data",
-    "scientific-study"
+    "fact-check",
+    "scientific-study",
+    "news-report",
+    "encyclopedia",
+    "news-aggregator"
   ]);
   function categoryDefinitionById(definitionId) {
     return CATEGORY_CATALOG.find(({ id }) => id === definitionId);
@@ -2551,11 +2551,20 @@ tbody th {
       "prior.orderError": "The minimum bound must be less than or equal to the maximum bound.",
       "scenario.heading": "Example scenarios",
       "scenario.none": "No evidence",
-      "scenario.newsFor": "1 news report for",
-      "scenario.convergingFor": "3 source categories for",
-      "scenario.convergingAgainst": "3 source categories against",
-      "scenario.mixed": "2 items for + 1 against",
-      "scenario.equalOpposing": "1 item for + 1 against",
+      "scenario.newsAggregatorFor": "1 news aggregator for",
+      "scenario.encyclopediaFor": "1 encyclopedia for",
+      "scenario.newsReportFor": "1 news report for",
+      "scenario.twoNewsReportsFor": "2 news reports for",
+      "scenario.threeNewsReportsFor": "3 news reports for",
+      "scenario.scientificStudyFor": "1 scientific study for",
+      "scenario.officialDataFor": "1 official data source for",
+      "scenario.officialDocumentFor": "1 official document for",
+      "scenario.twoOfficialDocumentsFor": "2 official documents for",
+      "scenario.newsReportAgainst": "1 news report against",
+      "scenario.twoNewsReportsAgainst": "2 news reports against",
+      "scenario.officialDataAgainst": "1 official data source against",
+      "scenario.newsReportForAgainst": "1 news report for + 1 against",
+      "scenario.officialDataAgainstTwoNewsReportsFor": "1 official data source against + 2 news reports for",
       "palette.heading": "Color legend",
       "palette.description": "The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.",
       "palette.canvasAria": "Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.",
@@ -2658,19 +2667,19 @@ tbody th {
       "category.duplicateError": "Une catégorie porte déjà ce nom.",
       "category.testimony": "Témoignage",
       "category.testimonyDescription": "Une personne rapporte ce qu’elle a vécu.",
-      "category.newsReport": "Article de presse",
+      "category.newsReport": "Presse",
       "category.newsReportDescription": "Un compte rendu journalistique portant sur un événement ou une affirmation.",
-      "category.factCheck": "Vérification des faits",
+      "category.factCheck": "Fact-check",
       "category.factCheckDescription": "Une vérification publiée portant sur une affirmation précise.",
       "category.encyclopedia": "Encyclopédie",
       "category.encyclopediaDescription": "Une synthèse de référence générale qui cite ses sources.",
-      "category.officialDocument": "Document officiel",
+      "category.officialDocument": "Texte officiel",
       "category.officialDocumentDescription": "Un document émis par une institution publique ou une organisation.",
-      "category.officialData": "Données officielles",
+      "category.officialData": "Donnée officielle",
       "category.officialDataDescription": "Des données publiées par une source officielle.",
-      "category.scientificStudy": "Étude scientifique",
+      "category.scientificStudy": "Science",
       "category.scientificStudyDescription": "Une étude de recherche qui présente ses méthodes et ses résultats.",
-      "category.newsAggregator": "Agrégateur d’actualités",
+      "category.newsAggregator": "Agrégateur",
       "category.newsAggregatorDescription": "Un service qui rassemble des articles provenant d’autres sources.",
       "category.observationalStudy": "Étude observationnelle",
       "category.observationalStudyDescription": "Les chercheurs observent des tendances sans intervenir.",
@@ -2708,11 +2717,20 @@ tbody th {
       "prior.orderError": "La borne minimale doit être inférieure ou égale à la borne maximale.",
       "scenario.heading": "Scénarios d’exemple",
       "scenario.none": "Aucune preuve",
-      "scenario.newsFor": "1 article de presse pour",
-      "scenario.convergingFor": "3 catégories de sources pour",
-      "scenario.convergingAgainst": "3 catégories de sources contre",
-      "scenario.mixed": "2 éléments pour + 1 contre",
-      "scenario.equalOpposing": "1 élément pour + 1 contre",
+      "scenario.newsAggregatorFor": "1 agrégateur confirme",
+      "scenario.encyclopediaFor": "1 encyclopédie confirme",
+      "scenario.newsReportFor": "1 article de presse confirme",
+      "scenario.twoNewsReportsFor": "2 articles de presse confirment",
+      "scenario.threeNewsReportsFor": "3 articles de presse confirment",
+      "scenario.scientificStudyFor": "1 étude scientifique confirme",
+      "scenario.officialDataFor": "1 donnée officielle confirme",
+      "scenario.officialDocumentFor": "1 texte officiel confirme",
+      "scenario.twoOfficialDocumentsFor": "2 textes officiels confirment",
+      "scenario.newsReportAgainst": "1 article de presse contredit",
+      "scenario.twoNewsReportsAgainst": "2 articles de presse contredisent",
+      "scenario.officialDataAgainst": "1 donnée officielle contredit",
+      "scenario.newsReportForAgainst": "1 article de presse pour + 1 article de presse contre",
+      "scenario.officialDataAgainstTwoNewsReportsFor": "1 donnée officielle contre + 2 articles de presse pour",
       "palette.heading": "Légende des couleurs",
       "palette.description": "Le triangle résume la couleur des preuves et de la résultante. La dissonance reste visible lorsque les preuves pointent dans des directions opposées.",
       "palette.canvasAria": "Triangle de légende des couleurs : Dissonance en haut, Contre à gauche, Aucune preuve au centre et Pour à droite. Le point indique la synthèse actuelle.",
@@ -2807,25 +2825,39 @@ tbody th {
   // demo/main.js
   var SCENARIOS = [
     ["none", "scenario.none", []],
-    ["news-for", "scenario.newsFor", [["news-report", "for"]]],
-    ["converging-for", "scenario.convergingFor", [
-      ["testimony", "for"],
-      ["fact-check", "for"],
-      ["official-data", "for"]
+    ["news-aggregator-for", "scenario.newsAggregatorFor", [["news-aggregator", "for"]]],
+    ["encyclopedia-for", "scenario.encyclopediaFor", [["encyclopedia", "for"]]],
+    ["news-report-for", "scenario.newsReportFor", [["news-report", "for"]]],
+    ["two-news-reports-for", "scenario.twoNewsReportsFor", [
+      ["news-report", "for"],
+      ["news-report", "for"]
     ]],
-    ["converging-against", "scenario.convergingAgainst", [
+    ["three-news-reports-for", "scenario.threeNewsReportsFor", [
+      ["news-report", "for"],
+      ["news-report", "for"],
+      ["news-report", "for"]
+    ]],
+    ["scientific-study-for", "scenario.scientificStudyFor", [["scientific-study", "for"]]],
+    ["official-data-for", "scenario.officialDataFor", [["official-data", "for"]]],
+    ["official-document-for", "scenario.officialDocumentFor", [["official-document", "for"]]],
+    ["two-official-documents-for", "scenario.twoOfficialDocumentsFor", [
+      ["official-document", "for"],
+      ["official-document", "for"]
+    ]],
+    ["news-report-against", "scenario.newsReportAgainst", [["news-report", "against"]]],
+    ["two-news-reports-against", "scenario.twoNewsReportsAgainst", [
       ["news-report", "against"],
-      ["official-document", "against"],
-      ["scientific-study", "against"]
-    ]],
-    ["mixed", "scenario.mixed", [
-      ["testimony", "for"],
-      ["fact-check", "for"],
       ["news-report", "against"]
     ]],
-    ["equal-opposing", "scenario.equalOpposing", [
-      ["official-data", "for"],
-      ["testimony", "against"]
+    ["official-data-against", "scenario.officialDataAgainst", [["official-data", "against"]]],
+    ["news-report-for-against", "scenario.newsReportForAgainst", [
+      ["news-report", "for"],
+      ["news-report", "against"]
+    ]],
+    ["official-data-against-two-news-reports-for", "scenario.officialDataAgainstTwoNewsReportsFor", [
+      ["official-data", "against"],
+      ["news-report", "for"],
+      ["news-report", "for"]
     ]]
   ];
   var viewportHeight = 300;

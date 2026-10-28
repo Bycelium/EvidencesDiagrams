@@ -1,19 +1,19 @@
-const categoryDefinition = (id, labelKey, descriptionKey) => Object.freeze({
+const categoryDefinition = (id, labelKey, descriptionKey, initialWeight = 10) => Object.freeze({
   id,
   labelKey,
   descriptionKey,
-  initialWeights: Object.freeze({ for: 10, against: 10 }),
+  initialWeights: Object.freeze({ for: initialWeight, against: initialWeight }),
 });
 
 export const CATEGORY_CATALOG = Object.freeze([
   categoryDefinition('testimony', 'category.testimony', 'category.testimonyDescription'),
-  categoryDefinition('news-report', 'category.newsReport', 'category.newsReportDescription'),
-  categoryDefinition('fact-check', 'category.factCheck', 'category.factCheckDescription'),
-  categoryDefinition('encyclopedia', 'category.encyclopedia', 'category.encyclopediaDescription'),
-  categoryDefinition('official-document', 'category.officialDocument', 'category.officialDocumentDescription'),
-  categoryDefinition('official-data', 'category.officialData', 'category.officialDataDescription'),
-  categoryDefinition('scientific-study', 'category.scientificStudy', 'category.scientificStudyDescription'),
-  categoryDefinition('news-aggregator', 'category.newsAggregator', 'category.newsAggregatorDescription'),
+  categoryDefinition('news-report', 'category.newsReport', 'category.newsReportDescription', 5),
+  categoryDefinition('fact-check', 'category.factCheck', 'category.factCheckDescription', 9),
+  categoryDefinition('encyclopedia', 'category.encyclopedia', 'category.encyclopediaDescription', 4),
+  categoryDefinition('official-document', 'category.officialDocument', 'category.officialDocumentDescription', 12),
+  categoryDefinition('official-data', 'category.officialData', 'category.officialDataDescription', 11),
+  categoryDefinition('scientific-study', 'category.scientificStudy', 'category.scientificStudyDescription', 8),
+  categoryDefinition('news-aggregator', 'category.newsAggregator', 'category.newsAggregatorDescription', 2),
   categoryDefinition('observational-study', 'category.observationalStudy', 'category.observationalStudyDescription'),
   categoryDefinition('controlled-experiment', 'category.controlledExperiment', 'category.controlledExperimentDescription'),
   categoryDefinition('randomized-controlled-study', 'category.randomizedControlledStudy', 'category.randomizedControlledStudyDescription'),
@@ -24,8 +24,8 @@ export const CATEGORY_CATALOG = Object.freeze([
 ]);
 
 export const DEFAULT_CATEGORY_DEFINITION_IDS = Object.freeze([
-  'testimony', 'news-report', 'fact-check', 'encyclopedia',
-  'official-document', 'official-data', 'scientific-study',
+  'official-document', 'official-data', 'fact-check', 'scientific-study',
+  'news-report', 'encyclopedia', 'news-aggregator',
 ]);
 
 export function categoryDefinitionById(definitionId) {
