@@ -212,7 +212,24 @@ Apache License
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Weight of evidence trapezoid diagram</title>
+  <title>Weight of Evidence Calculator &amp; Diagram | Bycelium</title>
+  <meta id="meta-description" name="description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
+  <link rel="canonical" href="https://evidences.bycelium.com/">
+  <meta id="og-title" property="og:title" content="Weight of Evidence Calculator &amp; Diagram | Bycelium">
+  <meta id="og-description" property="og:description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://evidences.bycelium.com/">
+  <meta property="og:site_name" content="Bycelium">
+  <meta property="og:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
+  <meta property="og:image:width" content="757">
+  <meta property="og:image:height" content="480">
+  <meta property="og:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta id="twitter-title" name="twitter:title" content="Weight of Evidence Calculator &amp; Diagram | Bycelium">
+  <meta id="twitter-description" name="twitter:description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
+  <meta name="twitter:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Weight of Evidence Calculator & Diagram","url":"https://evidences.bycelium.com/","description":"Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.","applicationCategory":"EducationalApplication","operatingSystem":"Any"}</script>
   <style>
 :root {
   color-scheme: light;
@@ -304,6 +321,61 @@ h2 {
   min-width: 0;
   gap: .65rem;
   margin-top: .65rem;
+}
+
+.explanation {
+  margin-top: .8rem;
+  padding: 1.1rem;
+  border: 1px solid #d5dde7;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(38 52 69 / 5%);
+}
+
+.explanation h2 {
+  margin-bottom: .45rem;
+  font-size: 1.2rem;
+}
+
+.explanation > p {
+  margin-bottom: .8rem;
+  color: #42556a;
+}
+
+.explanation-terms {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 0;
+}
+
+.explanation-terms > div {
+  padding: .7rem;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.explanation-terms dt {
+  margin-bottom: .2rem;
+  font-weight: 800;
+}
+
+.explanation-terms dd {
+  margin: 0;
+  color: #526478;
+  font-size: .86rem;
+}
+
+.explanation > .explanation-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .9rem;
+  margin: .9rem 0 0;
+}
+
+.explanation-links a {
+  color: #1d4f7a;
+  font-weight: 700;
 }
 
 .result,
@@ -1189,6 +1261,10 @@ tbody th {
     gap: .75rem;
   }
 
+  .explanation-terms {
+    grid-template-columns: 1fr;
+  }
+
   .evidence-trace {
     max-height: min(34vh, 19rem);
   }
@@ -1378,6 +1454,16 @@ tbody th {
         </section>
       </div>
     </div>
+    <section class="explanation" aria-labelledby="explanation-title">
+      <h2 id="explanation-title" data-i18n="explanation.heading">How to read the diagram</h2>
+      <p data-i18n="explanation.intro">This calculator illustrates Bayesian updating: evidence updates a prior opinion into a posterior range. Add items to compare the combined weight of evidence with that range.</p>
+      <dl class="explanation-terms">
+        <div><dt data-i18n="explanation.decibansTerm">Decibans</dt><dd data-i18n="explanation.decibansDefinition">A logarithmic unit for expressing the weight of evidence. Positive values support a claim, negative values count against it, and +10 dBan multiplies the odds by ten.</dd></div>
+        <div><dt data-i18n="explanation.priorsTerm">Priors and posteriors</dt><dd data-i18n="explanation.priorsDefinition">Set a prior range before adding evidence. The diagram shows the posterior range after the combined weight is applied.</dd></div>
+        <div><dt data-i18n="explanation.dissonanceTerm">Dissonance</dt><dd data-i18n="explanation.dissonanceDefinition">The proportion of absolute evidence weight canceled by opposing weights. It reaches 100% when the weights cancel.</dd></div>
+      </dl>
+      <p class="explanation-links"><a href="https://github.com/Bycelium/EvidencesDiagrams#readme" data-i18n="explanation.readmeLink">Read the documentation</a><a href="https://github.com/Bycelium/EvidencesDiagrams" data-i18n="explanation.sourceLink">View the source</a><a href="https://www.npmjs.com/package/@bycelium/evidences-diagrams" data-i18n="explanation.npmLink">Use the npm package</a></p>
+    </section>
   </main><script>
 "use strict";
 (() => {
@@ -2654,10 +2740,22 @@ tbody th {
   var en = {
     meta: { id: "en", label: "English", htmlLang: "en", numberLocale: "en" },
     messages: {
-      "app.title": "Weight of evidence trapezoid diagram",
+      "app.title": "Weight of Evidence Calculator & Diagram | Bycelium",
+      "app.description": "Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.",
       "app.heading": "Weight of evidence diagram",
       "app.intro": "Add evidence, adjust its illustrative weight, and explore combined weight, dissonance, and color.",
       "language.label": "Language",
+      "explanation.heading": "How to read the diagram",
+      "explanation.intro": "This calculator illustrates Bayesian updating: evidence updates a prior opinion into a posterior range. Add items to compare the combined weight of evidence with that range.",
+      "explanation.decibansTerm": "Decibans",
+      "explanation.decibansDefinition": "A logarithmic unit for expressing the weight of evidence. Positive values support a claim, negative values count against it, and +10 dBan multiplies the odds by ten.",
+      "explanation.priorsTerm": "Priors and posteriors",
+      "explanation.priorsDefinition": "Set a prior range before adding evidence. The diagram shows the posterior range after the combined weight is applied.",
+      "explanation.dissonanceTerm": "Dissonance",
+      "explanation.dissonanceDefinition": "The proportion of absolute evidence weight canceled by opposing weights. It reaches 100% when the weights cancel.",
+      "explanation.readmeLink": "Read the documentation",
+      "explanation.sourceLink": "View the source",
+      "explanation.npmLink": "Use the npm package",
       "diagram.label": "Weight of evidence trapezoid diagram",
       "diagram.canvasFallback": "The diagram shows the posterior interval horizontally and absolute weight vertically.",
       "diagram.historyLabel": "Graphical evidence history, from the current summary to older evidence",
@@ -2820,10 +2918,22 @@ tbody th {
   var fr = {
     meta: { id: "fr", label: "Français", htmlLang: "fr", numberLocale: "fr-FR" },
     messages: {
-      "app.title": "Diagramme en trapèze du poids des preuves",
+      "app.title": "Calculateur et diagramme du poids des preuves | Bycelium",
+      "app.description": "Explorez les poids bayésiens des preuves en décibans, les probabilités a priori et a posteriori, et la dissonance dans un diagramme interactif.",
       "app.heading": "Diagramme du poids des preuves",
       "app.intro": "Ajoutez des preuves, réglez leur poids illustratif et explorez le poids combiné, la dissonance et la couleur.",
       "language.label": "Langue",
+      "explanation.heading": "Lire le diagramme",
+      "explanation.intro": "Ce calculateur illustre la mise à jour bayésienne : les preuves transforment un avis a priori en plage a posteriori. Ajoutez des éléments pour comparer le poids combiné des preuves à cette plage.",
+      "explanation.decibansTerm": "Décibans",
+      "explanation.decibansDefinition": "Une unité logarithmique qui exprime le poids des preuves. Les valeurs positives soutiennent une affirmation, les valeurs négatives jouent contre elle et +10 dBan multiplie les cotes par dix.",
+      "explanation.priorsTerm": "A priori et a posteriori",
+      "explanation.priorsDefinition": "Définissez une plage a priori avant d’ajouter des preuves. Le diagramme montre la plage a posteriori après application du poids combiné.",
+      "explanation.dissonanceTerm": "Dissonance",
+      "explanation.dissonanceDefinition": "La proportion du poids absolu des preuves annulée par des poids opposés. Elle atteint 100 % lorsque les poids s’annulent.",
+      "explanation.readmeLink": "Lire la documentation",
+      "explanation.sourceLink": "Voir le code source",
+      "explanation.npmLink": "Utiliser le paquet npm",
       "diagram.label": "Diagramme en trapèze du poids des preuves",
       "diagram.canvasFallback": "Le diagramme montre l’intervalle postérieur horizontalement et le poids absolu verticalement.",
       "diagram.historyLabel": "Historique graphique des preuves, de la synthèse actuelle vers les preuves plus anciennes",
@@ -3832,6 +3942,12 @@ tbody th {
   function translateStaticUi() {
     document.documentElement.lang = i18n.meta.htmlLang;
     document.title = i18n.t("app.title");
+    const description = i18n.t("app.description");
+    document.querySelector("#meta-description").setAttribute("content", description);
+    document.querySelector("#og-title").setAttribute("content", document.title);
+    document.querySelector("#og-description").setAttribute("content", description);
+    document.querySelector("#twitter-title").setAttribute("content", document.title);
+    document.querySelector("#twitter-description").setAttribute("content", description);
     for (const element of document.querySelectorAll("[data-i18n]")) {
       element.textContent = i18n.t(element.dataset.i18n);
     }

@@ -166,6 +166,10 @@ checks and consumer installation test. To add a locale, create a dictionary in
 `demo/locales/` and register it in `demo/i18n.js`. To add a category, update
 `demo/category-state.js` and each locale dictionary.
 
+For deployment, serve `demo/` as the site root so `index.html`, `robots.txt`,
+and `sitemap.xml` are available at their root paths. The generated
+`demo/index.html` remains a self-contained offline demo.
+
 </details>
 
 Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

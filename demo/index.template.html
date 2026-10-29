@@ -3,7 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Weight of evidence trapezoid diagram</title>
+  <title>Weight of Evidence Calculator &amp; Diagram | Bycelium</title>
+  <meta id="meta-description" name="description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
+  <link rel="canonical" href="https://evidences.bycelium.com/">
+  <meta id="og-title" property="og:title" content="Weight of Evidence Calculator &amp; Diagram | Bycelium">
+  <meta id="og-description" property="og:description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://evidences.bycelium.com/">
+  <meta property="og:site_name" content="Bycelium">
+  <meta property="og:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
+  <meta property="og:image:width" content="757">
+  <meta property="og:image:height" content="480">
+  <meta property="og:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta id="twitter-title" name="twitter:title" content="Weight of Evidence Calculator &amp; Diagram | Bycelium">
+  <meta id="twitter-description" name="twitter:description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
+  <meta name="twitter:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
+  <meta name="twitter:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Weight of Evidence Calculator & Diagram","url":"https://evidences.bycelium.com/","description":"Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.","applicationCategory":"EducationalApplication","operatingSystem":"Any"}</script>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -65,6 +82,16 @@
         </section>
       </div>
     </div>
+    <section class="explanation" aria-labelledby="explanation-title">
+      <h2 id="explanation-title" data-i18n="explanation.heading">How to read the diagram</h2>
+      <p data-i18n="explanation.intro">This calculator illustrates Bayesian updating: evidence updates a prior opinion into a posterior range. Add items to compare the combined weight of evidence with that range.</p>
+      <dl class="explanation-terms">
+        <div><dt data-i18n="explanation.decibansTerm">Decibans</dt><dd data-i18n="explanation.decibansDefinition">A logarithmic unit for expressing the weight of evidence. Positive values support a claim, negative values count against it, and +10 dBan multiplies the odds by ten.</dd></div>
+        <div><dt data-i18n="explanation.priorsTerm">Priors and posteriors</dt><dd data-i18n="explanation.priorsDefinition">Set a prior range before adding evidence. The diagram shows the posterior range after the combined weight is applied.</dd></div>
+        <div><dt data-i18n="explanation.dissonanceTerm">Dissonance</dt><dd data-i18n="explanation.dissonanceDefinition">The proportion of absolute evidence weight canceled by opposing weights. It reaches 100% when the weights cancel.</dd></div>
+      </dl>
+      <p class="explanation-links"><a href="https://github.com/Bycelium/EvidencesDiagrams#readme" data-i18n="explanation.readmeLink">Read the documentation</a><a href="https://github.com/Bycelium/EvidencesDiagrams" data-i18n="explanation.sourceLink">View the source</a><a href="https://www.npmjs.com/package/@bycelium/evidences-diagrams" data-i18n="explanation.npmLink">Use the npm package</a></p>
+    </section>
   </main><script type="module" src="./main.js"></script>
 </body>
 </html>

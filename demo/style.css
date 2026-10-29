@@ -90,6 +90,61 @@ h2 {
   margin-top: .65rem;
 }
 
+.explanation {
+  margin-top: .8rem;
+  padding: 1.1rem;
+  border: 1px solid #d5dde7;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(38 52 69 / 5%);
+}
+
+.explanation h2 {
+  margin-bottom: .45rem;
+  font-size: 1.2rem;
+}
+
+.explanation > p {
+  margin-bottom: .8rem;
+  color: #42556a;
+}
+
+.explanation-terms {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  margin: 0;
+}
+
+.explanation-terms > div {
+  padding: .7rem;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.explanation-terms dt {
+  margin-bottom: .2rem;
+  font-weight: 800;
+}
+
+.explanation-terms dd {
+  margin: 0;
+  color: #526478;
+  font-size: .86rem;
+}
+
+.explanation > .explanation-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .9rem;
+  margin: .9rem 0 0;
+}
+
+.explanation-links a {
+  color: #1d4f7a;
+  font-weight: 700;
+}
+
 .result,
 .settings,
 .scenarios,
@@ -971,6 +1026,10 @@ tbody th {
 
   .controls {
     gap: .75rem;
+  }
+
+  .explanation-terms {
+    grid-template-columns: 1fr;
   }
 
   .evidence-trace {

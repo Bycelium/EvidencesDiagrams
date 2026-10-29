@@ -847,6 +847,12 @@ function renderScenarios() {
 function translateStaticUi() {
   document.documentElement.lang = i18n.meta.htmlLang;
   document.title = i18n.t('app.title');
+  const description = i18n.t('app.description');
+  document.querySelector('#meta-description').setAttribute('content', description);
+  document.querySelector('#og-title').setAttribute('content', document.title);
+  document.querySelector('#og-description').setAttribute('content', description);
+  document.querySelector('#twitter-title').setAttribute('content', document.title);
+  document.querySelector('#twitter-description').setAttribute('content', description);
   for (const element of document.querySelectorAll('[data-i18n]')) {
     element.textContent = i18n.t(element.dataset.i18n);
   }
