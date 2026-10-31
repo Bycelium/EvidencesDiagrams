@@ -1,4 +1,5 @@
-import { color, decibansToProbability } from '../dist/index.js';
+import { color } from '../dist/index.js';
+import { formatProbabilityDisplay } from '../dist/probability-bounds.js';
 import { absoluteFromY, positionAbsolute } from './geometry.js';
 
 const NEUTRAL_RGB = [248, 250, 252];
@@ -19,11 +20,9 @@ function resizeCanvas(element, context, width, height) {
 
 function numberText(value, i18n) { return i18n.number(Number(value.toFixed(1)), { maximumFractionDigits: 1 }); }
 function percentageText(weight, i18n) {
-  const value = decibansToProbability({ weightDecibans: weight }).probability * 100;
-  if (value >= 99.5) return `>${i18n.percent(.99, { maximumFractionDigits: 0 })}`;
-  if (value <= .5) return `<${i18n.percent(.01, { maximumFractionDigits: 0 })}`;
-  if (Math.abs(value - 50) < .05) return i18n.percent(.5, { maximumFractionDigits: 0 });
-  return `~${i18n.percent(Math.round(value) / 100, { maximumFractionDigits: 0 })}`;
+  const display = formatProbabilityDisplay(weight, 'exact');
+  if (Math.abs(display.value - 50) < .05) return i18n.percent(.5, { maximumFractionDigits: 0 });
+  return `~${i18n.percent(display.value / 100, { maximumFractionDigits: 12 })}`;
 }
 
 function drawArrowhead(context, segment, tint, selected) {

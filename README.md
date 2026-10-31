@@ -152,12 +152,20 @@ has `probability`. `ProbabilityBoundsOptions` accepts `minPriorDecibans` and
 `anchors.gray`, `anchors.yellow`, `anchors.green`, and `anchors.red`.
 
 Numeric `ProbabilityBound` values have `direction` (`lower`, `upper`, or
-`exact`), `probability`, `displayPercentage`, and English `text`. An
-indeterminate value has `direction: 'indeterminate'`, a `reason` of
+`exact`), `probability`, `displayPercentage`, optional `displayOperator`, and
+English `text`. Percentages within 1% of either endpoint use enough decimal
+precision to avoid finite certainty claims. `displayOperator` supplies the
+strict or conservative comparator when the capped precision reaches 0% or
+100%. An indeterminate value has `direction: 'indeterminate'`, a `reason` of
 `'no-evidence'` or `'dissonant-evidence'`, and English `text`.
 
-The default prior interval is `[-15, +15] dBan`. The diagram keeps raw decibans
-in its steps and resultant so a consumer can choose its own projection.
+The default prior interval is `[-15, +15] dBan`, and the default color
+saturation threshold is `20 dBan`. Full directional color begins when the
+conservative posterior endpoint reaches `±20 dBan`, roughly 99% or 1%. With
+the default priors, that occurs at `±35 dBan` net evidence. The diagram keeps
+raw decibans in its steps and resultant so a consumer can choose its own
+projection. Its visible axis spans twice the saturation threshold on each side,
+or `±40 dBan` by default.
 
 </details>
 
@@ -178,6 +186,20 @@ Playwright module and optional Chromium binary. `check` runs the project checks 
 consumer installation test. To add a locale, create a dictionary in
 `demo/locales/` and register it in `demo/i18n.js`. To add a category, update
 `demo/category-state.js` and each locale dictionary.
+
+Capture the documentation guide stills, frame sequences, and GIFs into a
+review directory with:
+
+```bash
+node scripts/capture-guide-media.mjs \
+  --output-dir /tmp/evidences-guide-final \
+  --playwright-module /path/to/playwright.mjs \
+  --ffmpeg-path /path/to/ffmpeg
+```
+
+The Playwright module supplies its Chromium headless shell. Review the output
+in `/tmp/evidences-guide-final` before copying selected assets into `images/`.
+Pass `--browser-path /path/to/chromium` to override the bundled browser.
 
 ```bash
 node scripts/capture-social-preview.mjs --playwright-module /path/to/playwright.mjs --browser-path /path/to/chromium

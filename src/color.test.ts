@@ -10,7 +10,7 @@ test('returns the four anchor colors', () => {
 });
 
 test('keeps weak balanced opposition close to gray', () => {
-  assert.equal(color({ netWeightDecibans: 0, absoluteWeightDecibans: 6, dissonance: 1 }), '#aca68e');
+  assert.equal(color({ netWeightDecibans: 0, absoluteWeightDecibans: 6, dissonance: 1 }), '#b3a87d');
 });
 
 test('treats omitted and explicit default options identically', () => {
@@ -20,7 +20,7 @@ test('treats omitted and explicit default options identically', () => {
 
 test('lets a custom threshold change the saturation point', () => {
   const summary = { netWeightDecibans: 30, absoluteWeightDecibans: 30, dissonance: 0 };
-  assert.equal(color(summary), '#5fb487');
+  assert.equal(color(summary), '#41bd72');
   assert.equal(color(summary, { saturationThresholdDecibans: 15 }), '#22c55e');
 });
 
@@ -28,7 +28,7 @@ test('keeps rounded interpolation with partial custom anchors', () => {
   const summary = { netWeightDecibans: 30, absoluteWeightDecibans: 30, dissonance: 0 };
   assert.equal(color(summary, {
     anchors: { gray: '#000000', green: '#ffffff' },
-  }), '#808080');
+  }), '#bfbfbf');
 });
 
 test('preserves supplied frozen options and anchors', () => {
@@ -60,12 +60,12 @@ const summary = (weight: number) => ({
 });
 const anchors = DEFAULT_COLOR_OPTIONS.anchors;
 
-test('keeps the center gray and saturates beyond the adverse prior', () => {
+test('keeps the center gray and saturates 20 dBan beyond the adverse prior by default', () => {
   for (const weight of [-15, -10, 0, 10, 15]) assert.equal(color(summary(weight)), anchors.gray);
-  assert.equal(color(summary(30)), '#5fb487');
-  assert.equal(color(summary(-30)), '#c6747a');
-  assert.equal(color(summary(45)), anchors.green);
-  assert.equal(color(summary(-45)), anchors.red);
+  assert.equal(color(summary(30)), '#41bd72');
+  assert.equal(color(summary(-30)), '#da5c5f');
+  assert.equal(color(summary(35)), anchors.green);
+  assert.equal(color(summary(-35)), anchors.red);
   assert.equal(color(summary(450)), anchors.green);
 });
 
@@ -78,7 +78,7 @@ test('visibly widens the gray region with the priors', () => {
     assert.equal(triangleColor(boundary, options), anchors.gray);
     assert.notEqual(triangleColor({ x: boundary.x + 0.05, height: 0 }, options), anchors.gray);
   }
-  assert.deepEqual(fractions, [0, 1 / 3, 1 / 2, 2 / 3]);
+  assert.deepEqual(fractions, [0, 3 / 7, 3 / 5, 3 / 4]);
   const point = { x: 0.5, height: 0 };
   assert.notEqual(triangleColor(point), anchors.gray);
   assert.equal(triangleColor(point, { minPriorDecibans: -60, maxPriorDecibans: 60 }), anchors.gray);
@@ -89,7 +89,7 @@ test('colors absent evidence green with an exact 90% prior', () => {
   const options = { minPriorDecibans: prior, maxPriorDecibans: prior };
   const noEvidence = aggregateEvidence([]);
   assert.ok(trianglePosition(noEvidence, options).x > 0);
-  assert.equal(color(noEvidence, options), '#75ae95');
+  assert.equal(color(noEvidence, options), '#62b388');
   const exactNeutral = { minPriorDecibans: 0, maxPriorDecibans: 0 };
   assert.equal(color(noEvidence, exactNeutral), anchors.gray);
   assert.notEqual(color(summary(1), exactNeutral), anchors.gray);
@@ -105,7 +105,7 @@ test('translates the projection with an asymmetric prior and can reverse the sha
 });
 
 test('mixes conflict yellow with gray and directional regions', () => {
-  assert.equal(color({ netWeightDecibans: 30, absoluteWeightDecibans: 60, dissonance: 0.5 }), '#a5b447');
+  assert.equal(color({ netWeightDecibans: 30, absoluteWeightDecibans: 60, dissonance: 0.5 }), '#95b83d');
   assert.equal(triangleColor({ x: 0, height: 1 }), anchors.yellow);
 });
 

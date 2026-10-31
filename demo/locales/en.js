@@ -173,6 +173,7 @@ export const en = {
     'probability.lower': 'Probability ≥ {percentage}%',
     'probability.upper': 'Probability ≤ {percentage}%',
     'probability.exact': 'Probability = {percentage}%',
+    'probability.comparison': 'Probability {operator} {percentage}%',
     'probability.no-evidence': 'No evidence',
     'probability.dissonant-evidence': 'Dissonant evidence',
     'canvas.breakLine': '// {side} · {gap} dBan',

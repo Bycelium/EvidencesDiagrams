@@ -31,9 +31,9 @@ test('the gray top width follows the prior interval and collapses for an exact p
   }));
 
   assert.equal(exact.topHalfWidth, 0);
-  assert.equal(defaults.topHalfWidth, 1 / 3);
-  assert.equal(wide.topHalfWidth, 2 / 3);
-  assert.equal(defaults.halfWidthAt(0), 1 / 3);
+  assert.equal(defaults.topHalfWidth, 3 / 7);
+  assert.equal(wide.topHalfWidth, 3 / 4);
+  assert.equal(defaults.halfWidthAt(0), 3 / 7);
   assert.equal(defaults.halfWidthAt(1), 1);
 });
 

@@ -8,6 +8,7 @@ import {
   decibansToProbability,
   trianglePosition,
 } from '../dist/index.js';
+import { formatProbabilityDisplay } from '../dist/probability-bounds.js';
 import { buildGeometry } from './geometry.js';
 import { drawDiagram } from './diagram-renderer.js';
 import { createLegendProjection } from './color-legend.js';
@@ -178,18 +179,9 @@ function formatDecibanPercentage(decibans) {
 }
 
 function formatPosteriorPercentage(decibans, direction) {
-  const percentage = decibansToProbability({ weightDecibans: decibans }).probability * 100;
-  const displayPercentage = direction === 'lower'
-    ? Math.floor(percentage)
-    : direction === 'upper'
-      ? Math.ceil(percentage)
-      : Math.round(percentage);
-  const boundedPercentage = direction === 'lower'
-    ? Math.min(displayPercentage, 99)
-    : direction === 'upper'
-      ? Math.max(displayPercentage, 1)
-      : displayPercentage;
-  return i18n.percent(boundedPercentage / 100, { maximumFractionDigits: 0 });
+  const display = formatProbabilityDisplay(decibans, direction);
+  const percentage = i18n.percent(display.value / 100, { maximumFractionDigits: 12 });
+  return display.operator === undefined ? percentage : `${display.operator}${percentage}`;
 }
 
 function axisColor(decibans) {
@@ -748,8 +740,12 @@ function readPriorBounds() {
 
 function localizedProbability(bound) {
   if (bound.direction === 'indeterminate') return i18n.t(`probability.${bound.reason}`);
+  const percentage = i18n.number(bound.displayPercentage, { maximumFractionDigits: 12 });
+  if (bound.displayOperator !== undefined) {
+    return i18n.t('probability.comparison', { operator: bound.displayOperator, percentage });
+  }
   return i18n.t(`probability.${bound.direction}`, {
-    percentage: i18n.number(bound.displayPercentage),
+    percentage,
   });
 }
 
@@ -783,9 +779,10 @@ function update() {
   const diagram = buildEvidenceDiagram(evidenceContributions, colorOptions);
   currentDiagram = diagram;
   const threshold = colorOptions.saturationThresholdDecibans;
+  const visibleExtent = threshold * 2;
   const localDomain = {
-    minimumDecibans: -threshold,
-    maximumDecibans: threshold,
+    minimumDecibans: -visibleExtent,
+    maximumDecibans: visibleExtent,
   };
   const displayDiagram = {
     ...diagram,

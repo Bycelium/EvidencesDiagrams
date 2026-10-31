@@ -52,7 +52,7 @@ test('accepts partial options and asymmetric bounds', () => {
   );
   assert.equal(
     boundProbability(summary(-20), { maxPriorDecibans: -10 }).text,
-    'Probability ≤ 1 %',
+    'Probability ≤ 0.1 %',
   );
   assert.equal(
     boundProbability(summary(-20), { minPriorDecibans: -30, maxPriorDecibans: 5 }).text,
@@ -116,28 +116,110 @@ test('rounds each bound in the conservative direction', () => {
   );
 });
 
-test('preserves numeric extremes and avoids absolute claims for a finite sum', () => {
+test('adds precision near percentage endpoints while preserving conservative bounds', () => {
+  assert.equal(boundProbability(summary(42)).text, 'Probability ≥ 99.8 %');
+  assert.equal(boundProbability(summary(52)).text, 'Probability ≥ 99.98 %');
+  assert.equal(boundProbability(summary(-42)).text, 'Probability ≤ 0.2 %');
+  assert.equal(boundProbability(summary(-52)).text, 'Probability ≤ 0.02 %');
+  assert.equal(
+    boundProbability(summary(-42), { minPriorDecibans: -15, maxPriorDecibans: 69 }).text,
+    'Probability ≤ 99.9 %',
+  );
+  assert.equal(
+    boundProbability(summary(42), { minPriorDecibans: -69, maxPriorDecibans: 15 }).text,
+    'Probability ≥ 0.1 %',
+  );
+  const lower = boundProbability(summary(1), {
+    minPriorDecibans: 119.96875,
+    maxPriorDecibans: 121.96875,
+  });
+  const upper = boundProbability(summary(-1), {
+    minPriorDecibans: -121.96875,
+    maxPriorDecibans: -119.96875,
+  });
+  if (lower.direction === 'indeterminate' || upper.direction === 'indeterminate') assert.fail('Expected bounds.');
+  assert.equal(lower.text, 'Probability ≥ 99.99999999991 %');
+  assert.ok(lower.displayPercentage <= lower.probability * 100);
+  assert.ok(upper.displayPercentage >= upper.probability * 100);
+  assert.equal(
+    boundProbability(summary(1), { minPriorDecibans: 99, maxPriorDecibans: 101 }).text,
+    'Probability ≥ 99.99999998 %',
+  );
+  assert.equal(boundProbability(summary(-99)).text, 'Probability ≤ 0.0000004 %');
+});
+
+test('preserves numeric extremes without finite claims of certainty', () => {
   assert.equal(
     boundProbability(summary(5000), { minPriorDecibans: -15 }).text,
-    'Probability ≥ 99 %',
+    'Probability ≥ 99.999999999999 %',
   );
   assert.equal(
     boundProbability(summary(-5000), { maxPriorDecibans: 15 }).text,
-    'Probability ≤ 1 %',
+    'Probability ≤ 0.000000000001 %',
   );
-  assert.equal(
+  assert.deepEqual(
     boundProbability(summary(Number.MAX_VALUE), {
       minPriorDecibans: Number.MAX_VALUE / 2,
       maxPriorDecibans: Number.MAX_VALUE,
-    }).text,
-    'Probability ≥ 99 %',
+    }),
+    {
+      direction: 'lower',
+      probability: 1,
+      displayPercentage: 99.999999999999,
+      text: 'Probability ≥ 99.999999999999 %',
+    },
   );
-  assert.equal(
+  assert.deepEqual(
     boundProbability(summary(-Number.MAX_VALUE), {
       minPriorDecibans: -Number.MAX_VALUE,
       maxPriorDecibans: -Number.MAX_VALUE / 2,
-    }).text,
-    'Probability ≤ 1 %',
+    }),
+    {
+      direction: 'upper',
+      probability: 0,
+      displayPercentage: 1e-12,
+      text: 'Probability ≤ 0.000000000001 %',
+    },
+  );
+  assert.deepEqual(
+    boundProbability(summary(-5000), { minPriorDecibans: -15, maxPriorDecibans: 10000 }),
+    {
+      direction: 'upper',
+      probability: 1,
+      displayPercentage: 100,
+      displayOperator: '<',
+      text: 'Probability < 100 %',
+    },
+  );
+  assert.deepEqual(
+    boundProbability(summary(5000), { minPriorDecibans: -10000, maxPriorDecibans: 15 }),
+    {
+      direction: 'lower',
+      probability: 0,
+      displayPercentage: 0,
+      displayOperator: '>',
+      text: 'Probability > 0 %',
+    },
+  );
+  assert.deepEqual(
+    boundProbability(summary(5000), { minPriorDecibans: 0, maxPriorDecibans: 0 }),
+    {
+      direction: 'exact',
+      probability: 1,
+      displayPercentage: 99.999999999999,
+      displayOperator: '≥',
+      text: 'Probability ≥ 99.999999999999 %',
+    },
+  );
+  assert.deepEqual(
+    boundProbability(summary(-5000), { minPriorDecibans: 0, maxPriorDecibans: 0 }),
+    {
+      direction: 'exact',
+      probability: 0,
+      displayPercentage: 1e-12,
+      displayOperator: '≤',
+      text: 'Probability ≤ 0.000000000001 %',
+    },
   );
   assert.equal(boundProbability(summary(Number.POSITIVE_INFINITY)).text, 'Probability ≥ 100 %');
   assert.equal(boundProbability(summary(Number.NEGATIVE_INFINITY)).text, 'Probability ≤ 0 %');

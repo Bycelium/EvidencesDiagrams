@@ -3,7 +3,7 @@ import type { ColorOptions, EvidenceSummary, TrianglePosition } from './types.js
 
 export const DEFAULT_COLOR_OPTIONS = Object.freeze({
   ...DEFAULT_PRIORS,
-  saturationThresholdDecibans: 30,
+  saturationThresholdDecibans: 20,
   anchors: Object.freeze({
     gray: '#9ca3af',
     yellow: '#eab308',

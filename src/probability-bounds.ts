@@ -8,6 +8,8 @@ export type ProbabilityBound =
     readonly direction: 'lower' | 'upper' | 'exact';
     readonly probability: number;
     readonly displayPercentage: number;
+    /** Overrides the direction-derived comparator when finite precision reaches an endpoint. */
+    readonly displayOperator?: '≥' | '≤' | '>' | '<';
     readonly text: string;
   }
   | {
@@ -33,42 +35,49 @@ export function boundProbability(
 
   if (minPriorDecibans === maxPriorDecibans) {
     const probability = probabilityFor(netWeightDecibans, minPriorDecibans);
-    const displayPercentage = Math.round(probability * 100);
+    const display = displayPercentage(
+      probability,
+      'exact',
+      finiteInputs(netWeightDecibans, minPriorDecibans),
+    );
     return {
       direction: 'exact',
       probability,
-      displayPercentage,
-      text: `Probability = ${displayPercentage} %`,
+      displayPercentage: display.value,
+      ...(display.operator === undefined ? {} : { displayOperator: display.operator }),
+      text: `Probability ${display.operator ?? '='} ${formatPercentage(display.value)} %`,
     };
   }
 
   if (netWeightDecibans > 0) {
     const probability = probabilityFor(netWeightDecibans, minPriorDecibans);
-    const displayPercentage = lowerDisplayPercentage(
+    const display = displayPercentage(
       probability,
-      netWeightDecibans,
-      minPriorDecibans,
+      'lower',
+      finiteInputs(netWeightDecibans, minPriorDecibans),
     );
     return {
       direction: 'lower',
       probability,
-      displayPercentage,
-      text: `Probability ≥ ${displayPercentage} %`,
+      displayPercentage: display.value,
+      ...(display.operator === undefined ? {} : { displayOperator: display.operator }),
+      text: `Probability ${display.operator ?? '≥'} ${formatPercentage(display.value)} %`,
     };
   }
 
   if (netWeightDecibans < 0) {
     const probability = probabilityFor(netWeightDecibans, maxPriorDecibans);
-    const displayPercentage = upperDisplayPercentage(
+    const display = displayPercentage(
       probability,
-      netWeightDecibans,
-      maxPriorDecibans,
+      'upper',
+      finiteInputs(netWeightDecibans, maxPriorDecibans),
     );
     return {
       direction: 'upper',
       probability,
-      displayPercentage,
-      text: `Probability ≤ ${displayPercentage} %`,
+      displayPercentage: display.value,
+      ...(display.operator === undefined ? {} : { displayOperator: display.operator }),
+      text: `Probability ${display.operator ?? '≤'} ${formatPercentage(display.value)} %`,
     };
   }
 
@@ -94,22 +103,82 @@ export function boundProbability(
   };
 }
 
+const EXTREME_PERCENTAGE = 1;
+const MAX_FRACTION_DIGITS = 12;
+
 function probabilityFor(netWeightDecibans: number, priorDecibans: number): number {
   return decibansToProbability({
     weightDecibans: netWeightDecibans + priorDecibans,
   }).probability;
 }
 
-function lowerDisplayPercentage(probability: number, weight: number, prior: number): number {
-  const percentage = Math.floor(probability * 100);
-  return Number.isFinite(weight) && Number.isFinite(prior)
-    ? Math.min(percentage, 99)
-    : percentage;
+function finiteInputs(weight: number, prior: number): boolean {
+  return Number.isFinite(weight) && Number.isFinite(prior);
 }
 
-function upperDisplayPercentage(probability: number, weight: number, prior: number): number {
-  const percentage = Math.ceil(probability * 100);
-  return Number.isFinite(weight) && Number.isFinite(prior)
-    ? Math.max(percentage, 1)
-    : percentage;
+/** Formats a single posterior endpoint for the bundled demo. */
+export function formatProbabilityDisplay(
+  weightDecibans: number,
+  direction: 'lower' | 'upper' | 'exact',
+): { value: number; operator?: '≥' | '≤' | '>' | '<' } {
+  return displayPercentage(
+    decibansToProbability({ weightDecibans }).probability,
+    direction,
+    Number.isFinite(weightDecibans),
+  );
+}
+
+function displayPercentage(
+  probability: number,
+  direction: 'lower' | 'upper' | 'exact',
+  hasFiniteInputs: boolean,
+): { value: number; operator?: '≥' | '≤' | '>' | '<' } {
+  const percentage = probability * 100;
+  if (!hasFiniteInputs) return roundedPercentage(percentage, direction, 0);
+
+  const distance = Math.min(percentage, 100 - percentage);
+  const fractionDigits = distance < EXTREME_PERCENTAGE
+    ? Math.max(1, Math.min(MAX_FRACTION_DIGITS, Math.ceil(-Math.log10(distance))))
+    : 0;
+  const display = roundedPercentage(percentage, direction, fractionDigits);
+  if (display.value === 100) {
+    const value = 100 - 10 ** -MAX_FRACTION_DIGITS;
+    if (direction === 'upper') return { value: 100, operator: '<' };
+    return direction === 'exact' ? { value, operator: '≥' } : { value };
+  }
+  if (display.value === 0) {
+    const value = 10 ** -MAX_FRACTION_DIGITS;
+    if (direction === 'lower') return { value: 0, operator: '>' };
+    return direction === 'exact' ? { value, operator: '≤' } : { value };
+  }
+  return display;
+}
+
+function roundedPercentage(
+  percentage: number,
+  direction: 'lower' | 'upper' | 'exact',
+  fractionDigits: number,
+): { value: number } {
+  const scale = 10 ** fractionDigits;
+  let rounded = direction === 'lower'
+    ? Math.floor(percentage * scale) / scale
+    : direction === 'upper'
+      ? Math.ceil(percentage * scale) / scale
+      : Math.round(percentage * scale) / scale;
+  const quantum = 1 / scale;
+  if (direction === 'lower' && rounded > percentage) rounded -= quantum;
+  if (direction === 'upper' && rounded < percentage) rounded += quantum;
+  rounded = Number(rounded.toFixed(fractionDigits));
+  if (direction === 'lower' && rounded > percentage) {
+    rounded = Number((rounded - quantum).toFixed(fractionDigits));
+  }
+  if (direction === 'upper' && rounded < percentage) {
+    rounded = Number((rounded + quantum).toFixed(fractionDigits));
+  }
+  return { value: rounded };
+}
+
+function formatPercentage(value: number): string {
+  if (!(value > 0 && value < 10 ** -6)) return String(value);
+  return value.toFixed(MAX_FRACTION_DIGITS).replace(/0+$/u, '').replace(/\.$/u, '');
 }

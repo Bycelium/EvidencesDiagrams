@@ -1776,7 +1776,7 @@ tbody th {
         <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The prior interval sets the width of the gray top. Red, yellow, and green deepen toward the bottom.</p>
           <canvas id="legend-canvas" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend widening downward: uncertain gray spans the top according to the prior interval; against is red at bottom left, dissonance is yellow at bottom center, and for is green at bottom right. The point shows the current summary.">Color legend.</canvas>
           <div class="color" data-i18n-aria-label="palette.currentAria" aria-label="Current summary color"><span id="swatch" class="swatch" aria-hidden="true"></span><code id="hex">#9ca3af</code></div>
-          <div class="palette"><label for="gray-anchor"><span data-i18n="palette.uncertain">Uncertain</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Evidence needed for full color</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1" aria-describedby="palette-threshold-help"></label></div>
+          <div class="palette"><label for="gray-anchor"><span data-i18n="palette.uncertain">Uncertain</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Evidence needed for full color</span><strong><output id="saturation-threshold-value">20</output> dBan</strong><input id="saturation-threshold" type="range" min="5" max="40" step="1" aria-describedby="palette-threshold-help"></label></div>
           <p id="palette-threshold-help" class="palette-help" data-i18n="palette.help">Lower values give stronger colors sooner. The gray top widens with the prior interval. Red and green deepen toward the lower corners; yellow deepens toward the lower center.</p>
         </section>
       </div>
@@ -1851,7 +1851,7 @@ tbody th {
   // dist/color.js
   var DEFAULT_COLOR_OPTIONS = Object.freeze({
     ...DEFAULT_PRIORS,
-    saturationThresholdDecibans: 30,
+    saturationThresholdDecibans: 20,
     anchors: Object.freeze({
       gray: "#9ca3af",
       yellow: "#eab308",
@@ -1991,32 +1991,35 @@ tbody th {
     const { minPriorDecibans: minPriorDecibans2, maxPriorDecibans: maxPriorDecibans2 } = validatePriors(options);
     if (minPriorDecibans2 === maxPriorDecibans2) {
       const probability2 = probabilityFor(netWeightDecibans, minPriorDecibans2);
-      const displayPercentage = Math.round(probability2 * 100);
+      const display = displayPercentage(probability2, "exact", finiteInputs(netWeightDecibans, minPriorDecibans2));
       return {
         direction: "exact",
         probability: probability2,
-        displayPercentage,
-        text: `Probability = ${displayPercentage} %`
+        displayPercentage: display.value,
+        ...display.operator === void 0 ? {} : { displayOperator: display.operator },
+        text: `Probability ${display.operator ?? "="} ${formatPercentage(display.value)} %`
       };
     }
     if (netWeightDecibans > 0) {
       const probability2 = probabilityFor(netWeightDecibans, minPriorDecibans2);
-      const displayPercentage = lowerDisplayPercentage(probability2, netWeightDecibans, minPriorDecibans2);
+      const display = displayPercentage(probability2, "lower", finiteInputs(netWeightDecibans, minPriorDecibans2));
       return {
         direction: "lower",
         probability: probability2,
-        displayPercentage,
-        text: `Probability ≥ ${displayPercentage} %`
+        displayPercentage: display.value,
+        ...display.operator === void 0 ? {} : { displayOperator: display.operator },
+        text: `Probability ${display.operator ?? "≥"} ${formatPercentage(display.value)} %`
       };
     }
     if (netWeightDecibans < 0) {
       const probability2 = probabilityFor(netWeightDecibans, maxPriorDecibans2);
-      const displayPercentage = upperDisplayPercentage(probability2, netWeightDecibans, maxPriorDecibans2);
+      const display = displayPercentage(probability2, "upper", finiteInputs(netWeightDecibans, maxPriorDecibans2));
       return {
         direction: "upper",
         probability: probability2,
-        displayPercentage,
-        text: `Probability ≤ ${displayPercentage} %`
+        displayPercentage: display.value,
+        ...display.operator === void 0 ? {} : { displayOperator: display.operator },
+        text: `Probability ${display.operator ?? "≤"} ${formatPercentage(display.value)} %`
       };
     }
     const absoluteWeightDecibans = summary?.absoluteWeightDecibans;
@@ -2036,18 +2039,61 @@ tbody th {
       text: "Dissonant evidence"
     };
   }
+  var EXTREME_PERCENTAGE = 1;
+  var MAX_FRACTION_DIGITS = 12;
   function probabilityFor(netWeightDecibans, priorDecibans) {
     return decibansToProbability({
       weightDecibans: netWeightDecibans + priorDecibans
     }).probability;
   }
-  function lowerDisplayPercentage(probability2, weight, prior) {
-    const percentage = Math.floor(probability2 * 100);
-    return Number.isFinite(weight) && Number.isFinite(prior) ? Math.min(percentage, 99) : percentage;
+  function finiteInputs(weight, prior) {
+    return Number.isFinite(weight) && Number.isFinite(prior);
   }
-  function upperDisplayPercentage(probability2, weight, prior) {
-    const percentage = Math.ceil(probability2 * 100);
-    return Number.isFinite(weight) && Number.isFinite(prior) ? Math.max(percentage, 1) : percentage;
+  function formatProbabilityDisplay(weightDecibans, direction) {
+    return displayPercentage(decibansToProbability({ weightDecibans }).probability, direction, Number.isFinite(weightDecibans));
+  }
+  function displayPercentage(probability2, direction, hasFiniteInputs) {
+    const percentage = probability2 * 100;
+    if (!hasFiniteInputs)
+      return roundedPercentage(percentage, direction, 0);
+    const distance = Math.min(percentage, 100 - percentage);
+    const fractionDigits = distance < EXTREME_PERCENTAGE ? Math.max(1, Math.min(MAX_FRACTION_DIGITS, Math.ceil(-Math.log10(distance)))) : 0;
+    const display = roundedPercentage(percentage, direction, fractionDigits);
+    if (display.value === 100) {
+      const value = 100 - 10 ** -MAX_FRACTION_DIGITS;
+      if (direction === "upper")
+        return { value: 100, operator: "<" };
+      return direction === "exact" ? { value, operator: "≥" } : { value };
+    }
+    if (display.value === 0) {
+      const value = 10 ** -MAX_FRACTION_DIGITS;
+      if (direction === "lower")
+        return { value: 0, operator: ">" };
+      return direction === "exact" ? { value, operator: "≤" } : { value };
+    }
+    return display;
+  }
+  function roundedPercentage(percentage, direction, fractionDigits) {
+    const scale = 10 ** fractionDigits;
+    let rounded = direction === "lower" ? Math.floor(percentage * scale) / scale : direction === "upper" ? Math.ceil(percentage * scale) / scale : Math.round(percentage * scale) / scale;
+    const quantum = 1 / scale;
+    if (direction === "lower" && rounded > percentage)
+      rounded -= quantum;
+    if (direction === "upper" && rounded < percentage)
+      rounded += quantum;
+    rounded = Number(rounded.toFixed(fractionDigits));
+    if (direction === "lower" && rounded > percentage) {
+      rounded = Number((rounded - quantum).toFixed(fractionDigits));
+    }
+    if (direction === "upper" && rounded < percentage) {
+      rounded = Number((rounded + quantum).toFixed(fractionDigits));
+    }
+    return { value: rounded };
+  }
+  function formatPercentage(value) {
+    if (!(value > 0 && value < 10 ** -6))
+      return String(value);
+    return value.toFixed(MAX_FRACTION_DIGITS).replace(/0+$/u, "").replace(/\.$/u, "");
   }
 
   // dist/evidence-diagram.js
@@ -2501,11 +2547,9 @@ tbody th {
     return i18n2.number(Number(value.toFixed(1)), { maximumFractionDigits: 1 });
   }
   function percentageText(weight, i18n2) {
-    const value = decibansToProbability({ weightDecibans: weight }).probability * 100;
-    if (value >= 99.5) return `>${i18n2.percent(0.99, { maximumFractionDigits: 0 })}`;
-    if (value <= 0.5) return `<${i18n2.percent(0.01, { maximumFractionDigits: 0 })}`;
-    if (Math.abs(value - 50) < 0.05) return i18n2.percent(0.5, { maximumFractionDigits: 0 });
-    return `~${i18n2.percent(Math.round(value) / 100, { maximumFractionDigits: 0 })}`;
+    const display = formatProbabilityDisplay(weight, "exact");
+    if (Math.abs(display.value - 50) < 0.05) return i18n2.percent(0.5, { maximumFractionDigits: 0 });
+    return `~${i18n2.percent(display.value / 100, { maximumFractionDigits: 12 })}`;
   }
   function drawArrowhead(context2, segment, tint, selected) {
     const dx = segment.x2 - segment.x1;
@@ -3454,6 +3498,7 @@ tbody th {
       "probability.lower": "Probability ≥ {percentage}%",
       "probability.upper": "Probability ≤ {percentage}%",
       "probability.exact": "Probability = {percentage}%",
+      "probability.comparison": "Probability {operator} {percentage}%",
       "probability.no-evidence": "No evidence",
       "probability.dissonant-evidence": "Dissonant evidence",
       "canvas.breakLine": "// {side} · {gap} dBan",
@@ -3640,6 +3685,7 @@ tbody th {
       "probability.lower": "Probabilité ≥ {percentage} %",
       "probability.upper": "Probabilité ≤ {percentage} %",
       "probability.exact": "Probabilité = {percentage} %",
+      "probability.comparison": "Probabilité {operator} {percentage} %",
       "probability.no-evidence": "Aucune preuve",
       "probability.dissonant-evidence": "Preuves dissonantes",
       "canvas.breakLine": "// {side} · {gap} dBan",
@@ -3853,10 +3899,9 @@ tbody th {
     return i18n.percent(percentage, { maximumFractionDigits: 0 });
   }
   function formatPosteriorPercentage(decibans, direction) {
-    const percentage = decibansToProbability({ weightDecibans: decibans }).probability * 100;
-    const displayPercentage = direction === "lower" ? Math.floor(percentage) : direction === "upper" ? Math.ceil(percentage) : Math.round(percentage);
-    const boundedPercentage = direction === "lower" ? Math.min(displayPercentage, 99) : direction === "upper" ? Math.max(displayPercentage, 1) : displayPercentage;
-    return i18n.percent(boundedPercentage / 100, { maximumFractionDigits: 0 });
+    const display = formatProbabilityDisplay(decibans, direction);
+    const percentage = i18n.percent(display.value / 100, { maximumFractionDigits: 12 });
+    return display.operator === void 0 ? percentage : `${display.operator}${percentage}`;
   }
   function axisColor(decibans) {
     return color({
@@ -4385,8 +4430,12 @@ tbody th {
   }
   function localizedProbability(bound) {
     if (bound.direction === "indeterminate") return i18n.t(`probability.${bound.reason}`);
+    const percentage = i18n.number(bound.displayPercentage, { maximumFractionDigits: 12 });
+    if (bound.displayOperator !== void 0) {
+      return i18n.t("probability.comparison", { operator: bound.displayOperator, percentage });
+    }
     return i18n.t(`probability.${bound.direction}`, {
-      percentage: i18n.number(bound.displayPercentage)
+      percentage
     });
   }
   function update() {
@@ -4416,9 +4465,10 @@ tbody th {
     const diagram = buildEvidenceDiagram(evidenceContributions, colorOptions);
     currentDiagram = diagram;
     const threshold = colorOptions.saturationThresholdDecibans;
+    const visibleExtent = threshold * 2;
     const localDomain = {
-      minimumDecibans: -threshold,
-      maximumDecibans: threshold
+      minimumDecibans: -visibleExtent,
+      maximumDecibans: visibleExtent
     };
     const displayDiagram = {
       ...diagram,

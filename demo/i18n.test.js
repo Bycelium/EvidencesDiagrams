@@ -6,6 +6,7 @@ import {
   resolveLocale,
   supportedLocales,
 } from './i18n.js';
+import { formatProbabilityDisplay } from '../dist/probability-bounds.js';
 
 function placeholders(entry) {
   const templates = typeof entry === 'string' ? [entry] : Object.values(entry);
@@ -55,4 +56,22 @@ test('translation handles interpolation, plurals, and locale-aware numbers', () 
   assert.equal(i18n.t('evidence.count', { count: 0 }), '0 preuve');
   assert.equal(i18n.t('evidence.count', { count: 2 }), '2 preuves');
   assert.equal(i18n.number(12.5, { maximumFractionDigits: 1 }), '12,5');
+  assert.equal(
+    i18n.t('probability.comparison', {
+      operator: '≥', percentage: i18n.number(99.8, { maximumFractionDigits: 12 }),
+    }),
+    'Probabilité ≥ 99,8 %',
+  );
+  i18n.setLocale('en');
+  assert.equal(
+    i18n.t('probability.comparison', {
+      operator: '<', percentage: i18n.number(100, { maximumFractionDigits: 12 }),
+    }),
+    'Probability < 100%',
+  );
+  const tiny = formatProbabilityDisplay(-5000, 'upper');
+  assert.equal(tiny.value, 1e-12);
+  assert.equal(i18n.number(tiny.value, { maximumFractionDigits: 12 }), '0.000000000001');
+  i18n.setLocale('fr');
+  assert.equal(i18n.number(tiny.value, { maximumFractionDigits: 12 }), '0,000000000001');
 });
