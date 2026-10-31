@@ -61,7 +61,7 @@ const BREAK_HEIGHT = 40;
 const VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL = 1 / 2;
 
 function storedLocale() {
-  try { return localStorage.getItem('evidences-diagrams.locale') ?? DEFAULT_LOCALE; } catch { return DEFAULT_LOCALE; }
+  try { return localStorage.getItem('evidence-diagrams.locale') ?? DEFAULT_LOCALE; } catch { return DEFAULT_LOCALE; }
 }
 
 const i18n = createI18n(storedLocale());
@@ -1169,7 +1169,7 @@ languageSelect.value = i18n.locale;
 languageSelect.addEventListener('change', () => {
   i18n.setLocale(languageSelect.value);
   languageSelect.value = i18n.locale;
-  try { localStorage.setItem('evidences-diagrams.locale', i18n.locale); } catch { /* file:// and privacy modes may disable storage. */ }
+  try { localStorage.setItem('evidence-diagrams.locale', i18n.locale); } catch { /* file:// and privacy modes may disable storage. */ }
   translateStaticUi();
   if (categoryError.dataset.error) {
     categoryError.textContent = i18n.t(`category.${categoryError.dataset.error}Error`);

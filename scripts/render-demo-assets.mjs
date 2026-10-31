@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const packageDirectory = new URL('../', import.meta.url);
 const checkOnly = process.argv.includes('--check');
-const temporaryDirectory = checkOnly ? await mkdtemp(join(tmpdir(), 'evidences-demo-assets-')) : null;
+const temporaryDirectory = checkOnly ? await mkdtemp(join(tmpdir(), 'evidence-demo-assets-')) : null;
 
 const assets = [
   ['demo/favicon.svg', 'demo/favicon-96.png', 96, 96],

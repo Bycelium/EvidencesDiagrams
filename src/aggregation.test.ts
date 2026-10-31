@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { aggregateEvidence } from '@bycelium/evidences-diagrams';
+import { aggregateEvidence } from '@bycelium/evidence-diagrams';
 
 const contributions = (weights: readonly number[]) =>
   weights.map((weightDecibans) => ({ weightDecibans }));

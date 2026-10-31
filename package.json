@@ -1,16 +1,16 @@
 {
-  "name": "@bycelium/evidences-diagrams",
-  "version": "1.0.1",
+  "name": "@bycelium/evidence-diagrams",
+  "version": "1.0.0",
   "description": "Evidence-weight aggregation and visualization in decibans.",
   "type": "module",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Bycelium/EvidencesDiagrams.git"
+    "url": "git+https://github.com/Bycelium/EvidenceDiagrams.git"
   },
-  "homepage": "https://github.com/Bycelium/EvidencesDiagrams#readme",
+  "homepage": "https://github.com/Bycelium/EvidenceDiagrams#readme",
   "bugs": {
-    "url": "https://github.com/Bycelium/EvidencesDiagrams/issues"
+    "url": "https://github.com/Bycelium/EvidenceDiagrams/issues"
   },
   "keywords": [
     "evidence",

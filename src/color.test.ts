@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { aggregateEvidence, boundProbability, color, triangleColor, trianglePosition, probabilityToDecibans, DEFAULT_COLOR_OPTIONS } from '@bycelium/evidences-diagrams';
+import { aggregateEvidence, boundProbability, color, triangleColor, trianglePosition, probabilityToDecibans, DEFAULT_COLOR_OPTIONS } from '@bycelium/evidence-diagrams';
 
 test('returns the four anchor colors', () => {
   assert.equal(color({ netWeightDecibans: 0, absoluteWeightDecibans: 0, dissonance: 0 }), '#9ca3af');

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { boundProbability, decibansToProbability } from '@bycelium/evidences-diagrams';
-import type { EvidenceSummary } from '@bycelium/evidences-diagrams';
+import { boundProbability, decibansToProbability } from '@bycelium/evidence-diagrams';
+import type { EvidenceSummary } from '@bycelium/evidence-diagrams';
 
 function summary(netWeightDecibans: number): EvidenceSummary {
   return { netWeightDecibans, absoluteWeightDecibans: Math.abs(netWeightDecibans), dissonance: 0 };

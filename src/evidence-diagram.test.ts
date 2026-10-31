@@ -4,7 +4,7 @@ import {
   aggregateEvidence,
   buildEvidenceDiagram,
   type EvidenceContribution,
-} from '@bycelium/evidences-diagrams';
+} from '@bycelium/evidence-diagrams';
 
 test('builds the raw cumulative path in chronological order', () => {
   const diagram = buildEvidenceDiagram([

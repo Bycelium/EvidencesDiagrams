@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { decibansToProbability, probabilityToDecibans } from '@bycelium/evidences-diagrams';
+import { decibansToProbability, probabilityToDecibans } from '@bycelium/evidence-diagrams';
 
 test('converts reference probabilities to decibans', () => {
   assert.deepEqual(probabilityToDecibans({ probability: 0.5 }), { weightDecibans: 0 });

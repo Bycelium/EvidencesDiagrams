@@ -1,5 +1,5 @@
 {
-  description = "Development environment for EvidencesDiagrams";
+  description = "Development environment for EvidenceDiagrams";
 
   inputs.nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.xz";
 

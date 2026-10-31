@@ -21,7 +21,7 @@ import {
   type ProbabilityBound,
   type ProbabilityBoundsOptions,
   type TrianglePosition,
-} from '@bycelium/evidences-diagrams';
+} from '@bycelium/evidence-diagrams';
 
 const enrichedContribution = {
   weightDecibans: 12,

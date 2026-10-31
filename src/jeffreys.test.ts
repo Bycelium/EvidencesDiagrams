@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { jeffreysBand } from '@bycelium/evidences-diagrams';
+import { jeffreysBand } from '@bycelium/evidence-diagrams';
 
 const band = (weightDecibans: number) => jeffreysBand({ weightDecibans });
 

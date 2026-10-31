@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const packageRoot = fileURLToPath(new URL('../', import.meta.url));
-const temporaryDirectory = await mkdtemp(join(tmpdir(), 'evidences-diagrams-package-'));
+const temporaryDirectory = await mkdtemp(join(tmpdir(), 'evidence-diagrams-package-'));
 const rootManifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
 
 function run(command, argumentsList, options = {}) {
@@ -72,7 +72,7 @@ try {
   ], { cwd: consumerDirectory });
 
   const source = `import assert from 'node:assert/strict';
-import { aggregateEvidence, buildEvidenceDiagram } from '@bycelium/evidences-diagrams';
+import { aggregateEvidence, buildEvidenceDiagram } from '@bycelium/evidence-diagrams';
 
 assert.deepEqual(aggregateEvidence([{ weightDecibans: 12 }, { weightDecibans: -5 }]), {
   netWeightDecibans: 7,
@@ -88,7 +88,7 @@ assert.equal(
   await writeFile(join(consumerDirectory, 'index.ts'), `import {
   aggregateEvidence,
   type EvidenceSummary,
-} from '@bycelium/evidences-diagrams';
+} from '@bycelium/evidence-diagrams';
 
 const summary: EvidenceSummary = aggregateEvidence([{ weightDecibans: 12 }]);
 const expected: number = summary.netWeightDecibans;
@@ -111,7 +111,7 @@ void expected;
   ], { cwd: consumerDirectory });
 
   const installedManifest = JSON.parse(await readFile(
-    join(consumerDirectory, 'node_modules/@bycelium/evidences-diagrams/package.json'),
+    join(consumerDirectory, 'node_modules/@bycelium/evidence-diagrams/package.json'),
     'utf8',
   ));
   assert.equal(installedManifest.name, rootManifest.name);
@@ -119,7 +119,7 @@ void expected;
   assert.equal(installedManifest.license, 'Apache-2.0');
   for (const name of ['LICENSE', 'NOTICE']) {
     assert.equal(
-      await readFile(join(consumerDirectory, 'node_modules/@bycelium/evidences-diagrams', name), 'utf8'),
+      await readFile(join(consumerDirectory, 'node_modules/@bycelium/evidence-diagrams', name), 'utf8'),
       await readFile(join(packageRoot, name), 'utf8'),
       `The installed ${name} must preserve the project notice.`,
     );
