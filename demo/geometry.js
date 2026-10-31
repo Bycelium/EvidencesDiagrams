@@ -98,14 +98,14 @@ function weightAt(steps, absolute, totalWeight) {
   return totalWeight;
 }
 
-function distanceFromOldest(absolute, breaks, pixelsPerDeciban, breakHeight) {
+function distanceFromOldest(absolute, breaks, verticalPixelsPerDeciban, breakHeight) {
   let distance = 0;
   let cursor = 0;
   for (const breakItem of breaks) {
     if (absolute <= breakItem.startAbsolute) {
-      return distance + (absolute - cursor) * pixelsPerDeciban;
+      return distance + (absolute - cursor) * verticalPixelsPerDeciban;
     }
-    distance += (breakItem.startAbsolute - cursor) * pixelsPerDeciban;
+    distance += (breakItem.startAbsolute - cursor) * verticalPixelsPerDeciban;
     if (absolute <= breakItem.endAbsolute) {
       const proportion = (absolute - breakItem.startAbsolute) / breakItem.absoluteGap;
       return distance + proportion * breakHeight;
@@ -113,7 +113,7 @@ function distanceFromOldest(absolute, breaks, pixelsPerDeciban, breakHeight) {
     distance += breakHeight;
     cursor = breakItem.endAbsolute;
   }
-  return distance + (absolute - cursor) * pixelsPerDeciban;
+  return distance + (absolute - cursor) * verticalPixelsPerDeciban;
 }
 
 function createSections(breaks, totalAbsolute, mapAbsolute) {
@@ -145,7 +145,8 @@ function createSections(breaks, totalAbsolute, mapAbsolute) {
 
 export function buildGeometry(diagram, options) {
   const {
-    pixelsPerDeciban,
+    horizontalPixelsPerDeciban,
+    verticalPixelsPerDeciban,
     breakHeight = 32,
     minPriorDecibans,
     maxPriorDecibans,
@@ -167,14 +168,16 @@ export function buildGeometry(diagram, options) {
   assertFiniteNumber(totalAbsolute, 'absoluteWeightDecibans');
   assertFiniteNumber(minPriorDecibans, 'minPriorDecibans');
   assertFiniteNumber(maxPriorDecibans, 'maxPriorDecibans');
-  assertFiniteNumber(pixelsPerDeciban, 'pixelsPerDeciban');
+  assertFiniteNumber(horizontalPixelsPerDeciban, 'horizontalPixelsPerDeciban');
+  assertFiniteNumber(verticalPixelsPerDeciban, 'verticalPixelsPerDeciban');
   assertFiniteNumber(breakHeight, 'breakHeight');
   if (minimum >= maximum) throw new RangeError('minimum must be strictly less than maximum.');
   if (minPriorDecibans > maxPriorDecibans) {
     throw new RangeError('minPriorDecibans must be less than or equal to maxPriorDecibans.');
   }
   if (totalAbsolute < 0) throw new RangeError('absoluteWeightDecibans must be non-negative.');
-  if (pixelsPerDeciban <= 0) throw new RangeError('pixelsPerDeciban must be strictly positive.');
+  if (horizontalPixelsPerDeciban <= 0) throw new RangeError('horizontalPixelsPerDeciban must be strictly positive.');
+  if (verticalPixelsPerDeciban <= 0) throw new RangeError('verticalPixelsPerDeciban must be strictly positive.');
   if (breakHeight <= 0) throw new RangeError('breakHeight must be strictly positive.');
 
   const steps = diagram.steps.map((step) => {
@@ -266,25 +269,22 @@ export function buildGeometry(diagram, options) {
   const totalDistance = distanceFromOldest(
     totalAbsolute,
     rawBreaks,
-    pixelsPerDeciban,
+    verticalPixelsPerDeciban,
     breakHeight,
   );
   if (!Number.isFinite(totalDistance)) {
     throw new RangeError('The calculated height must remain finite.');
   }
-  const mapAbsolute = (absolute) => {
-    const y = totalDistance - distanceFromOldest(
-      absolute,
-      rawBreaks,
-      pixelsPerDeciban,
-      breakHeight,
-    );
-    return Math.abs(y) <= tolerance(y, totalDistance) ? 0 : y;
-  };
+  const mapAbsolute = (absolute) => distanceFromOldest(
+    absolute,
+    rawBreaks,
+    verticalPixelsPerDeciban,
+    breakHeight,
+  );
 
   const breaks = rawBreaks.map((breakItem) => ({
     side: breakItem.side,
-    y: mapAbsolute(breakItem.endAbsolute),
+    y: mapAbsolute(breakItem.startAbsolute),
     height: breakHeight,
     startAbsolute: breakItem.startAbsolute,
     endAbsolute: breakItem.endAbsolute,
@@ -293,8 +293,11 @@ export function buildGeometry(diagram, options) {
   }));
 
   const edges = minPriorDecibans === maxPriorDecibans
-    ? [minPriorDecibans]
-    : [minPriorDecibans, maxPriorDecibans];
+    ? [{ prior: minPriorDecibans, side: 'exact' }]
+    : [
+      { prior: minPriorDecibans, side: 'minimum' },
+      { prior: maxPriorDecibans, side: 'maximum' },
+    ];
   for (let index = 0; index < steps.length; index += 1) {
     const step = steps[index];
     const ribbonClip = clips[index];
@@ -311,14 +314,14 @@ export function buildGeometry(diagram, options) {
         y2: mapAbsolute(end.absolute),
         startWeight: start.weight,
         endWeight: end.weight,
-        xMinimum1: (start.weight + minPriorDecibans - minimum) * pixelsPerDeciban,
-        xMaximum1: (start.weight + maxPriorDecibans - minimum) * pixelsPerDeciban,
-        xMinimum2: (end.weight + minPriorDecibans - minimum) * pixelsPerDeciban,
-        xMaximum2: (end.weight + maxPriorDecibans - minimum) * pixelsPerDeciban,
+        xMinimum1: (start.weight + minPriorDecibans - minimum) * horizontalPixelsPerDeciban,
+        xMaximum1: (start.weight + maxPriorDecibans - minimum) * horizontalPixelsPerDeciban,
+        xMinimum2: (end.weight + minPriorDecibans - minimum) * horizontalPixelsPerDeciban,
+        xMaximum2: (end.weight + maxPriorDecibans - minimum) * horizontalPixelsPerDeciban,
       };
     }
 
-    for (const prior of edges) {
+    for (const { prior, side } of edges) {
       const edgeClip = visibleInterval(step, minimum, maximum, prior);
       if (edgeClip === null || (
         step.weightDecibans !== 0
@@ -327,9 +330,10 @@ export function buildGeometry(diagram, options) {
       const start = stepPoint(step, edgeClip.tStart);
       const end = stepPoint(step, edgeClip.tEnd);
       step.edgeSegments.push({
-        x1: (start.weight + prior - minimum) * pixelsPerDeciban,
+        side,
+        x1: (start.weight + prior - minimum) * horizontalPixelsPerDeciban,
         y1: mapAbsolute(start.absolute),
-        x2: (end.weight + prior - minimum) * pixelsPerDeciban,
+        x2: (end.weight + prior - minimum) * horizontalPixelsPerDeciban,
         y2: mapAbsolute(end.absolute),
         trueEnd: Math.abs(edgeClip.tEnd - 1) <= tolerance(edgeClip.tEnd, 1),
       });
@@ -352,7 +356,8 @@ export function buildGeometry(diagram, options) {
   return {
     minimum,
     maximum,
-    pixelsPerDeciban,
+    horizontalPixelsPerDeciban,
+    verticalPixelsPerDeciban,
     totalWeight,
     totalAbsolute,
     minPriorDecibans,
@@ -389,7 +394,7 @@ export function positionAbsolute(geometry, absolute) {
       value >= breakItem.startAbsolute - tolerance(value, breakItem.startAbsolute)
       && value <= breakItem.endAbsolute + tolerance(value, breakItem.endAbsolute)
     ) {
-      const proportion = (breakItem.endAbsolute - value) / breakItem.absoluteGap;
+      const proportion = (value - breakItem.startAbsolute) / breakItem.absoluteGap;
       return breakItem.y + clampAlmost(proportion, 0, 1) * breakItem.height;
     }
   }
@@ -398,9 +403,9 @@ export function positionAbsolute(geometry, absolute) {
     && value <= endAbsolute + tolerance(value, endAbsolute)
   ));
   if (section) {
-    return section.yStart - (value - section.startAbsolute) * geometry.pixelsPerDeciban;
+    return section.yStart + (value - section.startAbsolute) * geometry.verticalPixelsPerDeciban;
   }
-  return value === geometry.totalAbsolute ? 0 : geometry.totalHeight;
+  return value === geometry.totalAbsolute ? geometry.totalHeight : 0;
 }
 
 export function absoluteFromY(geometry, y) {
@@ -412,22 +417,22 @@ export function absoluteFromY(geometry, y) {
       && value < bottom - tolerance(value, bottom)
     ) return null;
     if (Math.abs(value - breakItem.y) <= tolerance(value, breakItem.y)) {
-      return breakItem.endAbsolute;
+      return breakItem.startAbsolute;
     }
     if (Math.abs(value - bottom) <= tolerance(value, bottom)) {
-      return breakItem.startAbsolute;
+      return breakItem.endAbsolute;
     }
   }
   const section = geometry.sections.find(({ yStart, yEnd }) => (
-    value <= yStart + tolerance(value, yStart)
-    && value >= yEnd - tolerance(value, yEnd)
+    value >= yStart - tolerance(value, yStart)
+    && value <= yEnd + tolerance(value, yEnd)
   ));
   if (section) {
     return clampAlmost(
-      section.startAbsolute + (section.yStart - value) / geometry.pixelsPerDeciban,
+      section.startAbsolute + (value - section.yStart) / geometry.verticalPixelsPerDeciban,
       section.startAbsolute,
       section.endAbsolute,
     );
   }
-  return value === 0 ? geometry.totalAbsolute : 0;
+  return value === 0 ? 0 : geometry.totalAbsolute;
 }

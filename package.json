@@ -43,6 +43,8 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:demo-assets": "node scripts/render-demo-assets.mjs",
+    "check:demo-assets": "node scripts/render-demo-assets.mjs --check",
     "build:demo": "pnpm run build && node scripts/build-demo.mjs",
     "check:demo": "pnpm run build && node scripts/build-demo.mjs --check",
     "test": "pnpm run build && node --test src/*.test.ts demo/*.test.js",

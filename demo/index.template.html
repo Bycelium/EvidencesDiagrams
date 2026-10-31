@@ -11,16 +11,20 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://evidences.bycelium.com/">
   <meta property="og:site_name" content="Bycelium">
-  <meta property="og:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
-  <meta property="og:image:width" content="757">
-  <meta property="og:image:height" content="480">
-  <meta property="og:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <meta property="og:image" content="https://evidences.bycelium.com/social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Weight of evidence diagram showing two supporting items and one opposing item, with 33.3% dissonance">
   <meta name="twitter:card" content="summary_large_image">
   <meta id="twitter-title" name="twitter:title" content="Weight of Evidence Calculator &amp; Diagram | Bycelium">
   <meta id="twitter-description" name="twitter:description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
-  <meta name="twitter:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <meta name="twitter:image" content="https://evidences.bycelium.com/social-preview.png">
+  <meta name="twitter:image:alt" content="Weight of evidence diagram showing two supporting items and one opposing item, with 33.3% dissonance">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Weight of Evidence Calculator & Diagram","url":"https://evidences.bycelium.com/","description":"Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.","applicationCategory":"EducationalApplication","operatingSystem":"Any"}</script>
+  <link rel="icon" href="./favicon-96.png" sizes="96x96" type="image/png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" sizes="any">
   <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -36,21 +40,25 @@
         <section class="result" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">
           <div class="visual-summary"><p id="probability-description" class="visually-hidden"></p>
             <figure id="visualization"><div class="cone-wrap">
+              <div id="axis-guides" class="axis-guides" aria-hidden="true"><span data-axis-guide="zero-origin"></span><span data-axis-guide="prior-min"></span><span data-axis-guide="prior-max"></span><span data-axis-guide="posterior-min"></span><span data-axis-guide="posterior-max"></span></div>
               <h2 id="resultant-label" class="resultant-label" data-i18n="diagram.resultNone">Combined weight of evidence: None (0 dBan)</h2>
-              <div class="prior-handles-zone" data-i18n-aria-label="prior.handlesLabel" aria-label="Adjustable prior bounds on the posterior axis">
-                <canvas id="prior-resultant" class="prior-resultant" aria-hidden="true"></canvas>
+              <p id="prior-band-text" class="prior-band-text band-caption"></p>
+              <canvas id="cone-ruler" class="cone-ruler" aria-hidden="true"></canvas>
+              <div class="prior-handles-zone" data-i18n-aria-label="prior.handlesLabel" aria-label="Adjustable prior bounds on the prior probability axis">
                 <div class="prior-track"><div id="prior-band" class="prior-band"></div>
                   <button type="button" class="prior-handle prior-handle-min" data-prior-handle="min" role="slider" data-i18n-aria-label="prior.minHandle" aria-label="Adjust the minimum prior bound"></button>
                   <button type="button" class="prior-handle prior-handle-max" data-prior-handle="max" role="slider" data-i18n-aria-label="prior.maxHandle" aria-label="Adjust the maximum prior bound"></button>
-                </div><p id="prior-band-text" class="prior-band-text"></p>
+                </div>
               </div>
-              <canvas id="cone-ruler" class="cone-ruler" aria-hidden="true"></canvas>
-              <div class="cone-viewport"><div id="cone-scroll" class="cone-scroll" tabindex="0" data-i18n-aria-label="diagram.historyLabel" aria-label="Graphical evidence history, from the current summary to older evidence">
-                <canvas id="cone" class="cone-canvas" role="img" aria-describedby="probability-description cone-description" data-i18n="diagram.canvasFallback" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">The diagram shows the posterior interval horizontally and absolute weight vertically.</canvas>
-                <div id="cone-spacer" class="cone-spacer" aria-hidden="true"></div></div>
-                <div class="measures" aria-live="polite" aria-atomic="true"><div class="dissonance-measure"><span data-i18n="measure.dissonance">Dissonance</span> <output id="dissonance">0%</output></div><div id="probability" class="probability"><output id="probability-text" aria-describedby="probability-description" data-i18n="measure.noEvidence">No evidence</output></div></div>
-              </div><p id="cone-description" class="visually-hidden"></p>
-            </div><figcaption data-i18n="diagram.caption">Height measures absolute weight. Arrows follow each item of evidence at plus or minus 45 degrees.</figcaption></figure>
+              <div class="diagram-details-stage"><div id="diagram-details" class="diagram-details"><div class="cone-viewport"><div id="cone-scroll" class="cone-scroll" tabindex="0" data-i18n-aria-label="diagram.historyLabel" aria-label="Graphical evidence history, from the prior to the posterior">
+                  <canvas id="cone" class="cone-canvas" role="img" aria-describedby="probability-description cone-description" data-i18n="diagram.canvasFallback" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">The diagram shows evidence flowing from the prior interval to the posterior interval.</canvas>
+                </div></div></div><button type="button" id="diagram-details-toggle" class="diagram-details-toggle is-expanded" aria-controls="diagram-details" aria-expanded="true" data-i18n-aria-label="diagram.collapseDetails" aria-label="Hide evidence path"><span aria-hidden="true"></span></button></div>
+              <div class="resultant-posterior-row"><div class="posterior-zone"><canvas id="prior-resultant" class="prior-resultant" aria-hidden="true"></canvas><div class="posterior-track"><div id="posterior-band" class="posterior-band"></div></div></div></div>
+              <canvas id="posterior-ruler" class="cone-ruler posterior-ruler" aria-hidden="true"></canvas>
+              <p id="posterior-band-text" class="posterior-band-text band-caption"></p>
+              <div class="measures" aria-live="polite" aria-atomic="true"><div class="dissonance-measure"><span data-i18n="measure.dissonance">Dissonance</span> <output id="dissonance">0%</output></div><div id="probability" class="probability"><output id="probability-text" aria-describedby="probability-description" data-i18n="measure.noEvidence">No evidence</output></div></div>
+              <p id="cone-description" class="visually-hidden"></p>
+            </div><figcaption data-i18n="diagram.caption">Height measures absolute weight. Arrows descend one pixel for every two horizontal pixels.</figcaption></figure>
           </div>
         </section>
         <section class="settings" aria-labelledby="settings-title">
@@ -75,10 +83,10 @@
       <div class="controls">
         <section class="scenarios" aria-labelledby="scenarios-title"><h2 id="scenarios-title" data-i18n="scenario.heading">Example scenarios</h2><div id="scenario-list" class="presets"></div></section>
         <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.</p>
-          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.">Triangular color legend.</canvas>
+          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Against at the upper left, No evidence at the top center, For at the upper right, and Dissonance at the lower point. The point shows the current summary.">Triangular color legend.</canvas>
           <div class="color" data-i18n-aria-label="palette.currentAria" aria-label="Current summary color"><span id="swatch" class="swatch" aria-hidden="true"></span><code id="hex">#9ca3af</code></div>
-          <div class="palette"><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Saturation threshold</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1"></label><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label></div>
-          <p class="palette-help" data-i18n="palette.help">The threshold controls the color transition beyond the gray region defined by the prior bounds.</p>
+          <div class="palette"><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Evidence needed for full color</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1" aria-describedby="palette-threshold-help"></label></div>
+          <p id="palette-threshold-help" class="palette-help" data-i18n="palette.help">Lower values give stronger colors sooner. Red and green build beyond the prior’s gray range; yellow builds as conflicting evidence accumulates.</p>
         </section>
       </div>
     </div>

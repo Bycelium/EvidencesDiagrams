@@ -25,11 +25,18 @@ The demo supports English and French, with editable categories and illustrative 
 <img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/no-evidence.png" width="360" alt="Initial diagram with no evidence, a net weight of zero decibans, and a prior interval.">
 
 With no evidence, the result is `none (0 dBan)`. The prior band is visible and
-the probability remains indeterminate. The color legend places dissonance at the
-top, evidence against at the left, evidence for at the right, and no evidence at
-the center.
+the probability remains indeterminate. The color legend places evidence against
+at the upper left, no evidence at the top center, evidence for at the upper
+right, and dissonance at the lower point.
 
-<img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/color-legend.png" width="360" alt="Triangular color legend showing dissonance, evidence against, no evidence, and evidence for.">
+The diagram places the editable prior and read-only posterior on their own
+probability axes. Expand or collapse the evidence path between them with the
+chevron control. In the expanded view, the full-color ribbon flows downward
+from prior to posterior; the surrounding envelope is shown at half opacity.
+Evidence arrows descend one pixel for every two horizontal pixels, while their
+horizontal positions retain the deciban and probability scale.
+
+<img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/color-legend.png" width="360" alt="Downward triangular color legend with evidence against at the upper left, no evidence at the top center, evidence for at the upper right, and dissonance at the lower point.">
 
 ### Adding and combining evidence
 
@@ -67,7 +74,7 @@ weight while remaining in the absolute weight.
 | <img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/prior-interval.png" width="360" alt="A positive evidence weight evaluated across a prior interval."> | <img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/exact-prior.png" width="360" alt="The same positive evidence weight evaluated with an exact prior."> |
 
 Move the prior handles or use the keyboard to change each bound. Equal bounds
-form an exact prior and expose one reusable handle.
+form an exact prior while retaining both editable endpoint handles.
 
 ## Model
 
@@ -161,13 +168,22 @@ pnpm build:demo
 pnpm check
 ```
 
-`build:demo` bundles the demo into `demo/index.html`; `check` runs the project
-checks and consumer installation test. To add a locale, create a dictionary in
+`build:demo` regenerates the standalone `demo/index.html`. To regenerate the
+favicon PNGs from their editable SVG source, run `pnpm build:demo-assets`; it
+requires the Inkscape CLI. `scripts/capture-social-preview.mjs` captures the
+real demo result as the social-preview PNG through an explicitly supplied
+Playwright module and optional Chromium binary. `check` runs the project checks and
+consumer installation test. To add a locale, create a dictionary in
 `demo/locales/` and register it in `demo/i18n.js`. To add a category, update
 `demo/category-state.js` and each locale dictionary.
 
+```bash
+node scripts/capture-social-preview.mjs --playwright-module /path/to/playwright.mjs --browser-path /path/to/chromium
+```
+
 For deployment, serve `demo/` as the site root so `index.html`, `robots.txt`,
-and `sitemap.xml` are available at their root paths. The generated
+`sitemap.xml`, `social-preview.png`, and the favicon PNGs are available at their
+root paths. The generated
 `demo/index.html` remains a self-contained offline demo.
 
 </details>

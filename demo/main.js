@@ -56,6 +56,7 @@ const SCENARIOS = [
 
 let viewportHeight = 300;
 const BREAK_HEIGHT = 40;
+const VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL = 1 / 2;
 
 function storedLocale() {
   try { return localStorage.getItem('evidences-diagrams.locale') ?? DEFAULT_LOCALE; } catch { return DEFAULT_LOCALE; }
@@ -71,8 +72,10 @@ const canvas = document.querySelector('#cone');
 const context = canvas.getContext('2d', { alpha: true });
 const rulerCanvas = document.querySelector('#cone-ruler');
 const rulerContext = rulerCanvas.getContext('2d', { alpha: true });
+const posteriorRulerCanvas = document.querySelector('#posterior-ruler');
+const posteriorRulerContext = posteriorRulerCanvas.getContext('2d', { alpha: true });
 const coneScroll = document.querySelector('#cone-scroll');
-const coneSpacer = document.querySelector('#cone-spacer');
+const coneWrap = document.querySelector('.cone-wrap');
 const coneDescription = document.querySelector('#cone-description');
 const resultantLabel = document.querySelector('#resultant-label');
 const colorLegend = document.querySelector('#color-legend');
@@ -85,6 +88,7 @@ const maxPriorDecibans = document.querySelector('#prior-max-decibans');
 const probability = document.querySelector('#probability');
 const probabilityText = document.querySelector('#probability-text');
 const probabilityDescription = document.querySelector('#probability-description');
+const dissonanceMeasure = document.querySelector('.dissonance-measure');
 const priorBoundsError = document.querySelector('#prior-bounds-error');
 const visualization = document.querySelector('#visualization');
 const colorSummary = document.querySelector('.color');
@@ -93,8 +97,16 @@ const priorHandles = [...document.querySelectorAll('[data-prior-handle]')];
 const priorBand = document.querySelector('#prior-band');
 const priorTrack = priorBand.parentElement;
 const priorBandText = document.querySelector('#prior-band-text');
+const posteriorBand = document.querySelector('#posterior-band');
+const posteriorTrack = posteriorBand.parentElement;
+const posteriorBandText = document.querySelector('#posterior-band-text');
 const priorResultantCanvas = document.querySelector('#prior-resultant');
 const priorResultantContext = priorResultantCanvas.getContext('2d', { alpha: true });
+const diagramDetails = document.querySelector('#diagram-details');
+const diagramDetailsToggle = document.querySelector('#diagram-details-toggle');
+const axisGuides = Object.fromEntries(
+  [...document.querySelectorAll('[data-axis-guide]')].map((guide) => [guide.dataset.axisGuide, guide]),
+);
 const anchorInputs = Object.fromEntries(
   ['gray', 'yellow', 'red', 'green'].map((name) => [
     name,
@@ -121,14 +133,27 @@ let geometry;
 let currentDiagram;
 let diagramPriors;
 let viewportWidth = 1;
-let pixelsPerDeciban = 4;
-let drawPending = false;
+let horizontalPixelsPerDeciban = 4;
+let verticalPixelsPerDeciban = horizontalPixelsPerDeciban * VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL;
 let priorDrag = null;
+let diagramDetailsExpanded = true;
 
-function scheduleDraw() {
-  if (drawPending) return;
-  drawPending = true;
-  requestAnimationFrame(() => { drawPending = false; drawVisualization(); });
+function syncDiagramDetailsState() {
+  diagramDetails.hidden = !diagramDetailsExpanded;
+  diagramDetailsToggle.setAttribute('aria-expanded', String(diagramDetailsExpanded));
+  diagramDetailsToggle.setAttribute(
+    'aria-label',
+    i18n.t(diagramDetailsExpanded ? 'diagram.collapseDetails' : 'diagram.expandDetails'),
+  );
+  diagramDetailsToggle.classList.toggle('is-expanded', diagramDetailsExpanded);
+  coneWrap.classList.toggle('details-expanded', diagramDetailsExpanded);
+  coneWrap.closest('.result')?.classList.toggle('diagram-expanded', diagramDetailsExpanded);
+}
+
+function setDiagramDetailsExpanded(expanded) {
+  diagramDetailsExpanded = expanded;
+  syncDiagramDetailsState();
+  requestAnimationFrame(update);
 }
 
 function evidenceWeight(item) {
@@ -144,19 +169,65 @@ function formatSigned(value) {
   return `${value > 0 ? '+' : value < 0 ? '−' : ''}${formatDeciban(Math.abs(value))}`;
 }
 
-function formatPriorPercentage(prior) {
-  const percentage = decibansToProbability({ weightDecibans: prior }).probability;
+function formatDecibanPercentage(decibans) {
+  const percentage = decibansToProbability({ weightDecibans: decibans }).probability;
   if (percentage >= .995) return `>${i18n.percent(.99, { maximumFractionDigits: 0 })}`;
   if (percentage <= .005) return `<${i18n.percent(.01, { maximumFractionDigits: 0 })}`;
   return i18n.percent(percentage, { maximumFractionDigits: 0 });
 }
 
-function priorColor(prior) {
+function formatPosteriorPercentage(decibans, direction) {
+  const percentage = decibansToProbability({ weightDecibans: decibans }).probability * 100;
+  const displayPercentage = direction === 'lower'
+    ? Math.floor(percentage)
+    : direction === 'upper'
+      ? Math.ceil(percentage)
+      : Math.round(percentage);
+  const boundedPercentage = direction === 'lower'
+    ? Math.min(displayPercentage, 99)
+    : direction === 'upper'
+      ? Math.max(displayPercentage, 1)
+      : displayPercentage;
+  return i18n.percent(boundedPercentage / 100, { maximumFractionDigits: 0 });
+}
+
+function axisColor(decibans) {
   return color({
-    netWeightDecibans: prior,
-    absoluteWeightDecibans: Math.abs(prior),
+    netWeightDecibans: decibans,
+    absoluteWeightDecibans: Math.abs(decibans),
     dissonance: 0,
   }, { ...colorOptions, minPriorDecibans: 0, maxPriorDecibans: 0 });
+}
+
+function setBandCaption(element, {
+  shortKey,
+  fixedKey,
+  rangeKey,
+  minimum,
+  maximum,
+  minimumColor,
+  maximumColor,
+  suffixKey,
+  formatMinimum = formatDecibanPercentage,
+  formatMaximum = formatDecibanPercentage,
+}) {
+  const exact = minimum === maximum;
+  const minimumValue = formatMinimum(minimum);
+  const maximumValue = formatMaximum(maximum);
+  const minimumMarkup = `<span class="band-caption-endpoint band-caption-minimum" style="color:${minimumColor}">${minimumValue}</span>`;
+  const maximumMarkup = `<span class="band-caption-endpoint band-caption-maximum" style="color:${maximumColor}">${maximumValue}</span>`;
+  const replacements = {
+    minimum: minimumMarkup,
+    maximum: maximumMarkup,
+    value: minimumMarkup,
+  };
+  const messageKey = exact ? fixedKey : rangeKey;
+  const suffix = suffixKey ? ` ${i18n.t(suffixKey)}` : '';
+  const compactValues = exact
+    ? minimumMarkup
+    : `${minimumMarkup}<span class="band-range-separator">–</span>${maximumMarkup}`;
+  const fullCaption = `${i18n.t(messageKey, replacements)}${suffix}`;
+  element.innerHTML = `<span class="band-caption-compact" aria-hidden="true"><span class="band-caption-title">${i18n.t(shortKey)}</span><span class="band-caption-values${exact ? ' is-exact' : ''}">${compactValues}</span></span><span class="band-caption-full">${fullCaption}</span>`;
 }
 
 function syncPriorHandles() {
@@ -181,21 +252,24 @@ function syncPriorHandles() {
   ])].sort((a, b) => a - b);
   const stops = gradientValues.map((value) => {
     const position = visibleRange === 0 ? 50 : (value - visibleMinimum) / visibleRange * 100;
-    return `${priorColor(value)} ${position}%`;
+    return `${axisColor(value)} ${position}%`;
   });
   priorBand.style.background = visibleRange === 0
-    ? priorColor(visibleMinimum)
+    ? axisColor(visibleMinimum)
     : `linear-gradient(90deg, ${stops.join(', ')})`;
-  const minimumColor = priorColor(bounds.min);
-  const maximumColor = priorColor(bounds.max);
-  const minimumText = `<span style="color:${minimumColor}">${formatPriorPercentage(bounds.min)}</span>`;
-  const maximumText = `<span style="color:${maximumColor}">${formatPriorPercentage(bounds.max)}</span>`;
-  priorBandText.innerHTML = i18n.t(bounds.min === bounds.max ? 'prior.fixed' : 'prior.range', {
-    minimum: minimumText,
-    maximum: maximumText,
+  const minimumColor = axisColor(bounds.min);
+  const maximumColor = axisColor(bounds.max);
+  setBandCaption(priorBandText, {
+    shortKey: 'prior.short',
+    fixedKey: 'prior.fixed',
+    rangeKey: 'prior.range',
+    minimum: bounds.min,
+    maximum: bounds.max,
+    minimumColor,
+    maximumColor,
   });
-  const xMin = (visibleMinimum - geometry.minimum) * pixelsPerDeciban;
-  const xMax = (visibleMaximum - geometry.minimum) * pixelsPerDeciban;
+  const xMin = (visibleMinimum - geometry.minimum) * horizontalPixelsPerDeciban;
+  const xMax = (visibleMaximum - geometry.minimum) * horizontalPixelsPerDeciban;
   const bandLeft = Math.max(0, Math.min(viewportWidth, xMin));
   const bandRight = Math.max(0, Math.min(viewportWidth, xMax));
   const bandStart = Math.min(bandLeft, bandRight);
@@ -221,17 +295,9 @@ function syncPriorHandles() {
     pairFits = true;
     pairOffset = 0;
   }
-  const bracketSeparation = Math.max(0, (18 - (xMax - xMin)) / 2);
-  const rawMinimumBracket = xMin - bracketSeparation;
-  const rawMaximumBracket = xMax + bracketSeparation;
-  const bracketOffset = rawMinimumBracket < 0
-    ? -rawMinimumBracket
-    : Math.min(0, viewportWidth - rawMaximumBracket);
-  const minimumBracketX = rawMinimumBracket + bracketOffset;
-  const maximumBracketX = rawMaximumBracket + bracketOffset;
   for (const handle of priorHandles) {
     const key = handle.dataset.priorHandle;
-    const x = (clampToDomain(bounds[key]) - geometry.minimum) * pixelsPerDeciban;
+    const x = (clampToDomain(bounds[key]) - geometry.minimum) * horizontalPixelsPerDeciban;
     const prior = bounds[key];
     handle.hidden = false;
     handle.textContent = '';
@@ -241,8 +307,7 @@ function syncPriorHandles() {
       : Math.max(0, Math.min(viewportWidth - handleWidth, rawLeft));
     handle.style.left = `${left}px`;
     handle.style.setProperty('--prior-anchor', `${x - left}px`);
-    handle.style.setProperty('--bracket-x', `${(key === 'min' ? minimumBracketX : maximumBracketX) - left}px`);
-    handle.style.setProperty('--prior-color', priorColor(prior));
+    handle.style.setProperty('--prior-color', axisColor(prior));
     handle.dataset.prior = key;
     const active = geometry.activeEndpoint?.side === (key === 'min' ? 'minimum' : 'maximum');
     handle.classList.toggle('is-active', active);
@@ -251,10 +316,196 @@ function syncPriorHandles() {
     handle.setAttribute('aria-valuetext', i18n.t('prior.value', {
       bound: i18n.t(key === 'min' ? 'prior.low' : 'prior.high'),
       decibans: formatSigned(prior),
-      percentage: formatPriorPercentage(prior),
+      percentage: formatDecibanPercentage(prior),
     }));
     handle.setAttribute('aria-valuemin', String(Math.min(geometry.minimum, bounds.min)));
     handle.setAttribute('aria-valuemax', String(Math.max(geometry.maximum, bounds.max)));
+  }
+}
+
+function syncPosteriorInterval() {
+  if (!geometry || !currentDiagram) return;
+  const interval = geometry.currentInterval;
+  const exact = interval.minimum === interval.maximum;
+  const clippedMinimum = interval.minimum < geometry.minimum;
+  const clippedMaximum = interval.maximum > geometry.maximum;
+  const visibleMinimum = Math.max(geometry.minimum, Math.min(geometry.maximum, interval.minimum));
+  const visibleMaximum = Math.max(geometry.minimum, Math.min(geometry.maximum, interval.maximum));
+  const left = (visibleMinimum - geometry.minimum) * horizontalPixelsPerDeciban;
+  const right = (visibleMaximum - geometry.minimum) * horizontalPixelsPerDeciban;
+  const minimumColor = axisColor(interval.minimum);
+  const maximumColor = axisColor(interval.maximum);
+  const formatMinimum = (value) => formatPosteriorPercentage(
+    value,
+    exact ? 'exact' : 'lower',
+  );
+  const formatMaximum = (value) => formatPosteriorPercentage(
+    value,
+    exact ? 'exact' : 'upper',
+  );
+  setBandCaption(posteriorBandText, {
+    shortKey: 'posterior.short',
+    fixedKey: 'posterior.fixed',
+    rangeKey: 'posterior.range',
+    minimum: interval.minimum,
+    maximum: interval.maximum,
+    minimumColor,
+    maximumColor,
+    formatMinimum,
+    formatMaximum,
+    suffixKey: interval.visible
+      ? clippedMinimum || clippedMaximum ? 'posterior.clipped' : undefined
+      : 'posterior.offscreen',
+  });
+  posteriorBand.hidden = !interval.visible || exact;
+  posteriorBand.style.left = `${Math.min(left, right)}px`;
+  posteriorBand.style.width = `${Math.max(2, Math.abs(right - left))}px`;
+  const gradientValues = [...new Set([
+    visibleMinimum,
+    visibleMaximum,
+    Math.max(visibleMinimum, Math.min(visibleMaximum, -colorOptions.saturationThresholdDecibans)),
+    Math.max(visibleMinimum, Math.min(visibleMaximum, 0)),
+    Math.max(visibleMinimum, Math.min(visibleMaximum, colorOptions.saturationThresholdDecibans)),
+  ])].sort((a, b) => a - b);
+  const visibleRange = visibleMaximum - visibleMinimum;
+  const stops = gradientValues.map((value) => {
+    const position = visibleRange === 0 ? 50 : (value - visibleMinimum) / visibleRange * 100;
+    return `${axisColor(value)} ${position}%`;
+  });
+  posteriorBand.style.background = visibleRange === 0
+    ? axisColor(visibleMinimum)
+    : `linear-gradient(90deg, ${stops.join(', ')})`;
+  posteriorTrack.classList.toggle('is-exact', exact && interval.visible);
+  posteriorTrack.classList.toggle('is-clipped-minimum', clippedMinimum);
+  posteriorTrack.classList.toggle('is-clipped-maximum', clippedMaximum);
+  posteriorTrack.style.setProperty('--posterior-x', `${left}px`);
+  posteriorTrack.style.setProperty('--posterior-minimum-color', minimumColor);
+  posteriorTrack.style.setProperty('--posterior-maximum-color', maximumColor);
+}
+
+function syncAxisGuide(key, x, startY, endY, visible) {
+  const guide = axisGuides[key];
+  if (!guide) return;
+  guide.hidden = !visible || endY <= startY;
+  if (guide.hidden) return;
+  const wrapBounds = coneWrap.getBoundingClientRect();
+  guide.style.left = `${x}px`;
+  guide.style.top = `${startY - wrapBounds.top}px`;
+  guide.style.height = `${endY - startY}px`;
+}
+
+function syncAxisGuides() {
+  if (!geometry) return;
+  const wrapBounds = coneWrap.getBoundingClientRect();
+  const rulerBounds = rulerCanvas.getBoundingClientRect();
+  const posteriorRulerBounds = posteriorRulerCanvas.getBoundingClientRect();
+  if (!diagramDetailsExpanded) {
+    for (const [key, guide] of Object.entries(axisGuides)) {
+      if (key !== 'zero-origin') guide.hidden = true;
+    }
+    const zeroOrigin = (0 - geometry.minimum) * horizontalPixelsPerDeciban;
+    syncAxisGuide(
+      'zero-origin',
+      rulerBounds.left - wrapBounds.left + zeroOrigin,
+      rulerBounds.bottom,
+      posteriorRulerBounds.top,
+      geometry.minimum <= 0 && geometry.maximum >= 0,
+    );
+    return;
+  }
+  const canvasBounds = canvas.getBoundingClientRect();
+  const priorBounds = priorTrack.getBoundingClientRect();
+  const posteriorBounds = posteriorTrack.getBoundingClientRect();
+  const priorMinimum = (Math.max(geometry.minimum, Math.min(geometry.maximum, geometry.minPriorDecibans)) - geometry.minimum)
+    * horizontalPixelsPerDeciban;
+  const priorMaximum = (Math.max(geometry.minimum, Math.min(geometry.maximum, geometry.maxPriorDecibans)) - geometry.minimum)
+    * horizontalPixelsPerDeciban;
+  const interval = geometry.currentInterval;
+  const posteriorMinimum = (Math.max(geometry.minimum, interval.minimum) - geometry.minimum)
+    * horizontalPixelsPerDeciban;
+  const posteriorMaximum = (Math.min(geometry.maximum, interval.maximum) - geometry.minimum)
+    * horizontalPixelsPerDeciban;
+  const canvasOffset = canvasBounds.left - wrapBounds.left;
+  const exactPrior = geometry.minPriorDecibans === geometry.maxPriorDecibans;
+  const exactPosterior = interval.minimum === interval.maximum;
+  const zeroOrigin = (0 - geometry.minimum) * horizontalPixelsPerDeciban;
+  syncAxisGuide(
+    'zero-origin',
+    canvasOffset + zeroOrigin,
+    rulerBounds.bottom,
+    canvasBounds.bottom,
+    geometry.minimum <= 0 && geometry.maximum >= 0,
+  );
+  syncAxisGuide(
+    'prior-min',
+    canvasOffset + priorMinimum,
+    priorBounds.top + priorBounds.height / 2,
+    canvasBounds.top,
+    geometry.minPriorDecibans >= geometry.minimum && geometry.minPriorDecibans <= geometry.maximum,
+  );
+  syncAxisGuide(
+    'prior-max',
+    canvasOffset + priorMaximum,
+    priorBounds.top + priorBounds.height / 2,
+    canvasBounds.top,
+    !exactPrior && geometry.maxPriorDecibans >= geometry.minimum && geometry.maxPriorDecibans <= geometry.maximum,
+  );
+  syncAxisGuide(
+    'posterior-min',
+    canvasOffset + posteriorMinimum,
+    canvasBounds.bottom,
+    posteriorBounds.top + posteriorBounds.height / 2,
+    interval.visible && interval.minimum >= geometry.minimum,
+  );
+  syncAxisGuide(
+    'posterior-max',
+    canvasOffset + posteriorMaximum,
+    canvasBounds.bottom,
+    posteriorBounds.top + posteriorBounds.height / 2,
+    interval.visible && !exactPosterior && interval.maximum <= geometry.maximum,
+  );
+}
+
+function syncBandCaptionPlacement() {
+  if (!geometry) return;
+  coneWrap.style.removeProperty('--band-caption-overlay-width');
+  coneWrap.style.removeProperty('--band-caption-title-width');
+  const compactCaptions = [...coneWrap.querySelectorAll('.band-caption-compact')];
+  const titleWidth = Math.ceil(Math.max(
+    ...compactCaptions.map((caption) => caption.querySelector('.band-caption-title')?.scrollWidth ?? 0),
+    0,
+  ));
+  coneWrap.style.setProperty('--band-caption-title-width', `${titleWidth}px`);
+  const captionWidth = Math.ceil(Math.max(...compactCaptions.map((caption) => {
+    const parentStyle = getComputedStyle(caption.parentElement);
+    return caption.scrollWidth
+      + Number.parseFloat(parentStyle.paddingLeft)
+      + Number.parseFloat(parentStyle.paddingRight);
+  }), 0));
+  coneWrap.style.setProperty('--band-caption-overlay-width', `${captionWidth}px`);
+  const clamp = (value) => Math.max(geometry.minimum, Math.min(geometry.maximum, value));
+  const priorMinimumX = (clamp(geometry.minPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
+  const priorMaximumX = (clamp(geometry.maxPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
+  const posteriorMinimumX = (clamp(geometry.currentInterval.minimum) - geometry.minimum) * horizontalPixelsPerDeciban;
+  const posteriorMaximumX = (clamp(geometry.currentInterval.maximum) - geometry.minimum) * horizontalPixelsPerDeciban;
+  const negative = geometry.totalWeight < 0;
+  const edgeRoom = negative
+    ? viewportWidth - Math.max(priorMaximumX, posteriorMaximumX)
+    : Math.min(priorMinimumX, posteriorMinimumX);
+  const captionsStacked = edgeRoom < captionWidth + 18;
+  coneWrap.classList.toggle('captions-stacked', captionsStacked);
+  if (!captionsStacked) {
+    const wrapBounds = coneWrap.getBoundingClientRect();
+    const priorBounds = priorTrack.getBoundingClientRect();
+    const posteriorBounds = posteriorTrack.getBoundingClientRect();
+    priorBandText.style.setProperty(
+      '--band-caption-y',
+      `${priorBounds.top - wrapBounds.top + priorBounds.height / 2}px`,
+    );
+    posteriorBandText.style.setProperty(
+      '--band-caption-y',
+      `${posteriorBounds.top - wrapBounds.top + posteriorBounds.height / 2}px`,
+    );
   }
 }
 
@@ -280,45 +531,64 @@ function drawColorLegend() {
   const width = Math.max(1, Math.min(260, Math.round(colorLegend.clientWidth - 32)));
   const height = Math.round(width * .66);
   resizeCanvas(legendCanvas, legendContext, width, height);
-  const top = { x: width / 2, y: 25 };
-  const left = { x: 14, y: height - 25 };
-  const right = { x: width - 14, y: height - 25 };
-  const halfBase = right.x - top.x;
-  const triangleHeight = left.y - top.y;
-  for (let y = Math.ceil(top.y); y <= left.y; y += 1) {
-    const proportion = (left.y - y) / triangleHeight;
+  const baseLeft = { x: 14, y: 25 };
+  const baseRight = { x: width - 14, y: 25 };
+  const apex = { x: width / 2, y: height - 25 };
+  const halfBase = baseRight.x - apex.x;
+  const triangleHeight = apex.y - baseLeft.y;
+  for (let y = Math.ceil(baseLeft.y); y <= apex.y; y += 1) {
+    const proportion = (y - baseLeft.y) / triangleHeight;
     const halfWidth = halfBase * (1 - proportion);
-    for (let x = Math.ceil(top.x - halfWidth); x <= Math.floor(top.x + halfWidth); x += 1) {
+    for (let x = Math.ceil(apex.x - halfWidth); x <= Math.floor(apex.x + halfWidth); x += 1) {
       legendContext.fillStyle = triangleColor({
-        x: (x - top.x) / halfBase,
+        x: (x - apex.x) / halfBase,
         height: proportion,
       }, colorOptions);
       legendContext.fillRect(x, y, 1, 1);
     }
   }
   legendContext.strokeStyle = '#334155'; legendContext.lineWidth = 1.5;
-  legendContext.beginPath(); legendContext.moveTo(top.x, top.y); legendContext.lineTo(left.x, left.y); legendContext.lineTo(right.x, right.y); legendContext.closePath(); legendContext.stroke();
+  legendContext.beginPath(); legendContext.moveTo(baseLeft.x, baseLeft.y); legendContext.lineTo(baseRight.x, baseRight.y); legendContext.lineTo(apex.x, apex.y); legendContext.closePath(); legendContext.stroke();
   const position = trianglePosition(currentDiagram.summary, colorOptions);
-  const x = top.x + position.x * halfBase;
-  const y = left.y - position.height * triangleHeight;
+  const x = apex.x + position.x * halfBase;
+  const y = baseLeft.y + position.height * triangleHeight;
   legendContext.beginPath(); legendContext.arc(x, y, 5, 0, Math.PI * 2);
   legendContext.fillStyle = currentDiagram.resultant.color; legendContext.fill();
   legendContext.strokeStyle = '#0f172a'; legendContext.lineWidth = 2; legendContext.stroke();
   legendContext.fillStyle = '#334155'; legendContext.font = '700 10px system-ui';
-  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.dissonance'), top.x, 10);
-  legendContext.textAlign = 'left'; legendContext.fillText(i18n.t('palette.against'), 0, height - 5);
-  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.noEvidence'), width / 2, height - 5);
-  legendContext.textAlign = 'right'; legendContext.fillText(i18n.t('palette.for'), width, height - 5);
+  legendContext.textAlign = 'left'; legendContext.fillText(i18n.t('palette.against'), 0, 10);
+  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.noEvidence'), width / 2, 10);
+  legendContext.textAlign = 'right'; legendContext.fillText(i18n.t('palette.for'), width, 10);
+  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.dissonance'), apex.x, height - 5);
   legendContext.textAlign = 'start';
 }
 
 function drawVisualization() {
   if (!geometry) return;
+  const priorRulerEndpoints = geometry.minPriorDecibans === geometry.maxPriorDecibans
+    ? [{ weight: geometry.minPriorDecibans, label: formatDecibanPercentage(geometry.minPriorDecibans) }]
+    : [geometry.minPriorDecibans, geometry.maxPriorDecibans].map((weight) => ({
+      weight,
+      label: formatDecibanPercentage(weight),
+    }));
+  const posteriorRulerEndpoints = geometry.currentInterval.minimum === geometry.currentInterval.maximum
+    ? [{
+      weight: geometry.currentInterval.minimum,
+      label: formatPosteriorPercentage(geometry.currentInterval.minimum, 'exact'),
+    }]
+    : [{
+      weight: geometry.currentInterval.minimum,
+      label: formatPosteriorPercentage(geometry.currentInterval.minimum, 'lower'),
+    }, {
+      weight: geometry.currentInterval.maximum,
+      label: formatPosteriorPercentage(geometry.currentInterval.maximum, 'upper'),
+    }];
   drawDiagram({
-    canvas, context, rulerCanvas, rulerContext, priorResultantCanvas, priorResultantContext, geometry, evidence,
-    selectedEvidenceId, viewportWidth, viewportHeight, pixelsPerDeciban,
+    canvas, context, rulerCanvas, rulerContext, posteriorRulerCanvas, posteriorRulerContext,
+    priorResultantCanvas, priorResultantContext, geometry, evidence,
+    selectedEvidenceId, viewportWidth, viewportHeight, horizontalPixelsPerDeciban,
     colorOptions, priors: diagramPriors, latestColor,
-    yOffset: coneScroll.scrollTop,
+    priorRulerEndpoints, posteriorRulerEndpoints,
     i18n,
   });
   canvas.dataset.stepCount = String(geometry.steps.length);
@@ -355,21 +625,28 @@ function createHistoryElement(item) {
 
   selectionButton.addEventListener('click', () => {
     selectedEvidenceId = item.id;
+    if (!diagramDetailsExpanded) {
+      diagramDetailsExpanded = true;
+      syncDiagramDetailsState();
+    }
     update();
     if (!geometry || visualization.hidden) return;
     const step = geometry.steps.find(({ id }) => id === item.id);
     const breakItem = geometry.breaks.find(({ hiddenEvidenceIds }) => hiddenEvidenceIds.includes(item.id));
     const y = step?.visibleRibbon?.y2 ?? breakItem?.y ?? 0;
-    coneScroll.scrollTop = Math.max(0, y - viewportHeight / 3);
-    drawVisualization();
+    requestAnimationFrame(() => {
+      const canvasBounds = canvas.getBoundingClientRect();
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + canvasBounds.top + y - window.innerHeight / 3),
+        behavior: 'smooth',
+      });
+    });
   });
   removeButton.addEventListener('click', () => {
     const index = evidence.findIndex(({ id }) => id === item.id);
     evidence = evidence.filter(({ id }) => id !== item.id);
     const adjacentEvidence = evidence[Math.min(index, evidence.length - 1)];
-    if (selectedEvidenceId === item.id) {
-      selectedEvidenceId = adjacentEvidence?.id ?? null;
-    }
+    if (selectedEvidenceId === item.id) selectedEvidenceId = null;
     update();
     if (adjacentEvidence) {
       evidenceHistory
@@ -509,15 +786,30 @@ function update() {
   const summary = diagram.summary;
   renderHistory();
   document.querySelector('#dissonance').textContent = i18n.percent(summary.dissonance);
+  dissonanceMeasure.style.setProperty(
+    '--measure-color',
+    summary.dissonance > 0 ? colorOptions.anchors.yellow : colorOptions.anchors.gray,
+  );
   const resultantBand = diagram.resultant.jeffreysBand;
   const bandLabel = i18n.t(`band.${resultantBand}`);
   const resultantWeight = summary.netWeightDecibans;
+  coneWrap.classList.toggle('is-negative', resultantWeight < 0);
   const resultantText = resultantWeight === 0
     ? i18n.t('diagram.resultNone')
     : i18n.t('diagram.result', { band: bandLabel, weight: formatSigned(resultantWeight) });
   resultantLabel.textContent = resultantText;
   probability.hidden = false;
   probabilityText.textContent = localizedProbability(diagram.probability);
+  const probabilityColor = diagram.probability.direction === 'lower' && diagram.probability.probability > .5
+    ? 'green'
+    : diagram.probability.direction === 'upper' && diagram.probability.probability < .5
+      ? 'red'
+      : diagram.probability.direction === 'exact' && diagram.probability.probability > .5
+        ? 'green'
+        : diagram.probability.direction === 'exact' && diagram.probability.probability < .5
+          ? 'red'
+          : 'gray';
+  probability.style.setProperty('--measure-color', colorOptions.anchors[probabilityColor]);
   probabilityDescription.textContent = priorBounds.minPriorDecibans === priorBounds.maxPriorDecibans
     ? i18n.t('prior.exactDescription', { prior: formatDeciban(priorBounds.minPriorDecibans) })
     : i18n.t('prior.rangeDescription', {
@@ -534,7 +826,7 @@ function update() {
   const minimum = displayDiagram.domain.minimumDecibans;
   const maximum = displayDiagram.domain.maximumDecibans;
   const amplitude = maximum - minimum;
-  viewportWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+  viewportWidth = Math.max(1, Math.round(priorTrack.clientWidth || 340));
   if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || !Number.isFinite(amplitude) || amplitude <= 0) {
     priorBoundsError.textContent = i18n.t('diagram.invalidGeometry');
     priorBoundsError.hidden = false;
@@ -542,32 +834,31 @@ function update() {
     geometry = undefined;
     return;
   }
-  pixelsPerDeciban = viewportWidth / amplitude;
+  horizontalPixelsPerDeciban = viewportWidth / amplitude;
+  verticalPixelsPerDeciban = horizontalPixelsPerDeciban * VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL;
   diagramPriors = { minPriorDecibans: priorBounds.minPriorDecibans, maxPriorDecibans: priorBounds.maxPriorDecibans };
   geometry = buildGeometry(displayDiagram, {
-    pixelsPerDeciban,
+    horizontalPixelsPerDeciban,
+    verticalPixelsPerDeciban,
     breakHeight: BREAK_HEIGHT,
     minPriorDecibans: priorBounds.minPriorDecibans,
     maxPriorDecibans: priorBounds.maxPriorDecibans,
   });
-  viewportHeight = Math.max(100, Math.min(300, Math.min(window.innerHeight * .35, geometry.totalHeight + 20)));
+  viewportHeight = summary.absoluteWeightDecibans === 0 ? 48 : Math.max(1, geometry.totalHeight);
   coneScroll.style.height = `${viewportHeight}px`;
-  coneScroll.style.setProperty('--cone-height', `${viewportHeight}px`);
-  const scrollable = geometry.totalHeight > coneScroll.clientHeight + .5;
-  coneScroll.classList.toggle('is-scrollable', scrollable);
-  const adjustedWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+  const adjustedWidth = Math.max(1, Math.round(priorTrack.clientWidth || 340));
   if (adjustedWidth !== viewportWidth) {
     viewportWidth = adjustedWidth;
-    pixelsPerDeciban = viewportWidth / amplitude;
+    horizontalPixelsPerDeciban = viewportWidth / amplitude;
+    verticalPixelsPerDeciban = horizontalPixelsPerDeciban * VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL;
     geometry = buildGeometry(displayDiagram, {
-      pixelsPerDeciban,
+      horizontalPixelsPerDeciban,
+      verticalPixelsPerDeciban,
       breakHeight: BREAK_HEIGHT,
       minPriorDecibans: priorBounds.minPriorDecibans,
       maxPriorDecibans: priorBounds.maxPriorDecibans,
     });
   }
-  coneSpacer.style.height = `${scrollable ? geometry.totalHeight : coneScroll.clientHeight}px`;
-  if (!scrollable) coneScroll.scrollTop = 0;
   canvas.dataset.minimum = String(geometry.minimum);
   canvas.dataset.maximum = String(geometry.maximum);
   canvas.dataset.posteriorMinimum = String(geometry.currentInterval.minimum);
@@ -623,17 +914,17 @@ function update() {
   });
   drawVisualization();
   syncPriorHandles();
+  syncPosteriorInterval();
+  syncBandCaptionPlacement();
+  syncAxisGuides();
 }
 
 function addEvidenceItem(categoryId, direction) {
   const category = categories.find(({ id }) => id === categoryId);
   if (!category) return;
   evidence = addEvidence(evidence, category, direction, nextEvidenceId);
-  const item = evidence.at(-1);
   nextEvidenceId += 1;
-  selectedEvidenceId = item.id;
   update();
-  coneScroll.scrollTop = 0;
 }
 
 function createWeightCell(category, label, direction) {
@@ -735,6 +1026,7 @@ function renderCategoryRows() {
       if (addButton) addEvidenceItem(category.id, addButton.dataset.direction);
       if (event.target.closest('.remove-category')) {
         ({ categories, evidence } = removeCategory(categories, evidence, category.id));
+        if (!evidence.some(({ id }) => id === selectedEvidenceId)) selectedEvidenceId = null;
         renderCategoryRows();
         renderPresetOptions();
         update();
@@ -760,16 +1052,13 @@ function applyScenario(id) {
       restoredCategory = true;
     }
     evidence = addEvidence(evidence, category, direction, nextEvidenceId);
-    const item = evidence.at(-1);
     nextEvidenceId += 1;
-    selectedEvidenceId = item.id;
   }
   if (restoredCategory) {
     renderCategoryRows();
     renderPresetOptions();
   }
   update();
-  coneScroll.scrollTop = 0;
 }
 
 function writeColorOptions(options) {
@@ -804,7 +1093,6 @@ function reset() {
   minPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.minPriorDecibans);
   maxPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.maxPriorDecibans);
   update();
-  coneScroll.scrollTop = 0;
 }
 
 const scenarioList = document.querySelector('#scenario-list');
@@ -862,6 +1150,7 @@ function translateStaticUi() {
   for (const element of document.querySelectorAll('[data-i18n-placeholder]')) {
     element.setAttribute('placeholder', i18n.t(element.dataset.i18nPlaceholder));
   }
+  syncDiagramDetailsState();
 }
 
 const languageSelect = document.querySelector('#language');
@@ -873,7 +1162,6 @@ for (const locale of supportedLocales) {
 }
 languageSelect.value = i18n.locale;
 languageSelect.addEventListener('change', () => {
-  const scrollTop = coneScroll.scrollTop;
   i18n.setLocale(languageSelect.value);
   languageSelect.value = i18n.locale;
   try { localStorage.setItem('evidences-diagrams.locale', i18n.locale); } catch { /* file:// and privacy modes may disable storage. */ }
@@ -885,7 +1173,7 @@ languageSelect.addEventListener('change', () => {
   renderPresetOptions();
   renderScenarios();
   update();
-  requestAnimationFrame(() => { coneScroll.scrollTop = scrollTop; drawVisualization(); });
+  requestAnimationFrame(drawVisualization);
 });
 
 const categoryForm = document.querySelector('#category-form');
@@ -956,7 +1244,7 @@ for (const handle of priorHandles) {
       domain: { minimumDecibans: geometry.minimum, maximumDecibans: geometry.maximum },
       clientX: event.clientX,
       prior,
-      pixelsPerDeciban,
+      horizontalPixelsPerDeciban,
       key: Number(minPriorDecibans.value) === Number(maxPriorDecibans.value)
         ? null
         : handle.dataset.priorHandle,
@@ -965,7 +1253,7 @@ for (const handle of priorHandles) {
   });
   handle.addEventListener('pointermove', (event) => {
     if (!priorDrag || !handle.hasPointerCapture(event.pointerId)) return;
-    const delta = (event.clientX - priorDrag.clientX) / priorDrag.pixelsPerDeciban;
+    const delta = (event.clientX - priorDrag.clientX) / priorDrag.horizontalPixelsPerDeciban;
     if (priorDrag.key === null) {
       const next = Math.round(priorDrag.prior + delta);
       if (next === priorDrag.prior) return;
@@ -998,7 +1286,9 @@ for (const handle of priorHandles) {
   });
 }
 
-coneScroll.addEventListener('scroll', scheduleDraw, { passive: true });
+diagramDetailsToggle.addEventListener('click', () => {
+  setDiagramDetailsExpanded(!diagramDetailsExpanded);
+});
 window.addEventListener('resize', () => requestAnimationFrame(update));
 
 translateStaticUi();

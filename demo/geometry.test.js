@@ -21,7 +21,8 @@ const geometry = (weights, options = {}) => {
   const {
     minimum = -45,
     maximum = 45,
-    pixelsPerDeciban = 2,
+    horizontalPixelsPerDeciban = 2,
+    verticalPixelsPerDeciban = horizontalPixelsPerDeciban / 10,
     breakHeight = 32,
     minPriorDecibans = 0,
     maxPriorDecibans = 0,
@@ -37,7 +38,8 @@ const geometry = (weights, options = {}) => {
     }),
   });
   return buildGeometry(diagram, {
-    pixelsPerDeciban,
+    horizontalPixelsPerDeciban,
+    verticalPixelsPerDeciban,
     breakHeight,
     minPriorDecibans,
     maxPriorDecibans,
@@ -47,16 +49,17 @@ const geometry = (weights, options = {}) => {
 test('an excursion hides only fully offscreen evidence', () => {
   const result = geometry([30, 30, 12, -30, -30]);
   assert.equal(result.breaks.length, 1);
-  assert.deepEqual(result.breaks[0], {
+  assert.deepEqual({ ...result.breaks[0], y: undefined }, {
     side: 'right',
-    y: 66,
+    y: undefined,
     height: 32,
     startAbsolute: 45,
     endAbsolute: 99,
     absoluteGap: 54,
     hiddenEvidenceIds: ['p3'],
   });
-  assert.equal(result.totalHeight, 188);
+  closeTo(result.breaks[0].y, 9);
+  closeTo(result.totalHeight, 78 * 2 / 10 + 32);
   assert.equal(result.steps[1].visibleRibbon.endAbsolute, 45);
   assert.equal(result.steps[3].visibleRibbon.startAbsolute, 99);
 });
@@ -82,7 +85,10 @@ test('evidence crossing both sides keeps its central fragment', () => {
   closeTo(absoluteFromY(result, segment.y2), 165);
   closeTo(segment.x1, 180);
   closeTo(segment.x2, 0);
-  closeTo(Math.abs(segment.x2 - segment.x1), Math.abs(segment.y2 - segment.y1));
+  closeTo(
+    Math.abs(segment.y2 - segment.y1) / Math.abs(segment.x2 - segment.x1),
+    1 / 10,
+  );
 });
 
 test('touching a boundary does not create two breaks', () => {
@@ -97,15 +103,22 @@ test('touching a boundary does not create two breaks', () => {
   assert.equal(result.steps[3].visibleRibbon.startAbsolute, 65);
 });
 
-test('ordinary evidence rises at 45 degrees and keeps its identifiers', () => {
-  const result = geometry([12, -5], { pixelsPerDeciban: 3 });
+test('ordinary evidence descends one pixel for every two horizontal pixels and keeps its identifiers', () => {
+  const horizontalPixelsPerDeciban = 3;
+  const result = geometry([12, -5], {
+    horizontalPixelsPerDeciban,
+    verticalPixelsPerDeciban: horizontalPixelsPerDeciban / 2,
+  });
   assert.equal(result.breaks.length, 0);
   assert.deepEqual(result.steps.map(({ id }) => id), ['p1', 'p2']);
   for (const step of result.steps) {
     assert.equal(step.edgeSegments.length, 1);
     const [segment] = step.edgeSegments;
-    closeTo(Math.abs(segment.x2 - segment.x1), Math.abs(segment.y2 - segment.y1));
-    assert.ok(segment.y2 < segment.y1);
+    closeTo(
+      Math.abs(segment.y2 - segment.y1) / Math.abs(segment.x2 - segment.x1),
+      1 / 2,
+    );
+    assert.ok(segment.y2 > segment.y1);
   }
   assert.deepEqual(result.currentInterval, {
     minimum: 7,
@@ -116,7 +129,7 @@ test('ordinary evidence rises at 45 degrees and keeps its identifiers', () => {
     side: 'minimum',
     visible: true,
   });
-  assert.equal(result.totalHeight, 51);
+  closeTo(result.totalHeight, 17 * horizontalPixelsPerDeciban / 2);
 });
 
 test('zero-weight evidence produces a selectable point without a break', () => {
@@ -178,7 +191,8 @@ test('open excursions at the edges become full bands', () => {
       { side: 'left', startAbsolute: 70, endAbsolute: 110 },
     ],
   );
-  assert.equal(result.breaks[1].y, 0);
+  closeTo(result.breaks[0].y, 4);
+  closeTo(result.breaks[1].y, 42);
   assert.deepEqual(result.activeEndpoint, {
     side: 'maximum',
     visible: false,
@@ -188,6 +202,8 @@ test('open excursions at the edges become full bands', () => {
 test('absolute conversions are linear outside breaks and null within them', () => {
   const result = geometry([30, 30, 12, -30, -30]);
   const breakItem = result.breaks[0];
+  assert.equal(positionAbsolute(result, 0), 0);
+  closeTo(positionAbsolute(result, result.totalAbsolute), result.totalHeight);
   for (const absolute of [0, 12.5, 45, 99, 110, 132]) {
     const y = positionAbsolute(result, absolute);
     closeTo(absoluteFromY(result, y), absolute);
@@ -196,27 +212,33 @@ test('absolute conversions are linear outside breaks and null within them', () =
   assert.equal(positionAbsolute(result, 72), breakItem.y + breakItem.height / 2);
   for (const section of result.sections) {
     closeTo(
-      section.yStart - section.yEnd,
-      (section.endAbsolute - section.startAbsolute) * result.pixelsPerDeciban,
+      section.yEnd - section.yStart,
+      (section.endAbsolute - section.startAbsolute) * result.verticalPixelsPerDeciban,
     );
   }
 });
 
 test('many alternating evidence items remain one long linear section', () => {
   const weights = Array.from({ length: 2_000 }, (_, index) => (index % 2 === 0 ? 1 : -1));
-  const result = geometry(weights, { minimum: -2, maximum: 2, pixelsPerDeciban: 0.5 });
+  const result = geometry(weights, {
+    minimum: -2,
+    maximum: 2,
+    horizontalPixelsPerDeciban: 0.5,
+    verticalPixelsPerDeciban: 0.5,
+  });
   assert.equal(result.breaks.length, 0);
   assert.equal(result.sections.length, 1);
   assert.equal(result.totalAbsolute, 2_000);
   assert.equal(result.totalHeight, 1_000);
-  closeTo(absoluteFromY(result, 250), 1_500);
+  closeTo(absoluteFromY(result, 250), 500);
 });
 
 test('both ribbon edges share the same vertical projection', () => {
   const result = geometry([12, -5], {
     minimum: -45,
     maximum: 45,
-    pixelsPerDeciban: 3,
+    horizontalPixelsPerDeciban: 3,
+    verticalPixelsPerDeciban: 3 / 10,
     minPriorDecibans: -10,
     maxPriorDecibans: 20,
   });
@@ -224,10 +246,14 @@ test('both ribbon edges share the same vertical projection', () => {
   for (const step of result.steps) {
     assert.equal(step.edgeSegments.length, 2);
     const [minimum, maximum] = step.edgeSegments;
+    assert.deepEqual([minimum.side, maximum.side], ['minimum', 'maximum']);
     assert.equal(minimum.y1, maximum.y1);
     assert.equal(minimum.y2, maximum.y2);
     closeTo(minimum.x2 - minimum.x1, maximum.x2 - maximum.x1);
-    closeTo(Math.abs(minimum.x2 - minimum.x1), Math.abs(minimum.y2 - minimum.y1));
+    closeTo(
+      Math.abs(minimum.y2 - minimum.y1) / Math.abs(minimum.x2 - minimum.x1),
+      1 / 10,
+    );
     assert.equal(step.visibleRibbon.y1, minimum.y1);
     assert.equal(step.visibleRibbon.y2, minimum.y2);
   }
@@ -268,15 +294,16 @@ test('an excursion compacts only the section where the full ribbon is hidden', (
   });
 
   assert.equal(result.breaks.length, 1);
-  assert.deepEqual(result.breaks[0], {
+  assert.deepEqual({ ...result.breaks[0], y: undefined }, {
     side: 'right',
-    y: 10,
+    y: undefined,
     height: 32,
     startAbsolute: 55,
     endAbsolute: 105,
     absoluteGap: 50,
     hiddenEvidenceIds: ['p2'],
   });
+  closeTo(result.breaks[0].y, 11);
   assert.equal(result.steps[0].visibleRibbon.endAbsolute, 55);
   assert.equal(result.steps[1].visibleRibbon, null);
   assert.equal(result.steps[2].visibleRibbon.startAbsolute, 105);
@@ -324,7 +351,8 @@ test('non-finite inputs and degenerate options are rejected', () => {
     summary: { ...diagram.summary, netWeightDecibans: Number.POSITIVE_INFINITY },
   };
   const options = {
-    pixelsPerDeciban: 2,
+    horizontalPixelsPerDeciban: 2,
+    verticalPixelsPerDeciban: 2 / 10,
     minPriorDecibans: 0,
     maxPriorDecibans: 0,
   };
@@ -337,12 +365,17 @@ test('non-finite inputs and degenerate options are rejected', () => {
     /minimum/,
   );
   assert.throws(
-    () => buildGeometry(diagram, { ...options, pixelsPerDeciban: 0 }),
+    () => buildGeometry(diagram, { ...options, horizontalPixelsPerDeciban: 0 }),
+    /positive/,
+  );
+  assert.throws(
+    () => buildGeometry(diagram, { ...options, verticalPixelsPerDeciban: 0 }),
     /positive/,
   );
   assert.throws(
     () => buildGeometry(diagram, {
-      pixelsPerDeciban: 2,
+      horizontalPixelsPerDeciban: 2,
+      verticalPixelsPerDeciban: 2,
       breakHeight: Number.NaN,
       minPriorDecibans: 0,
       maxPriorDecibans: 0,

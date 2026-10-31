@@ -15,7 +15,7 @@ export const DEFAULT_COLOR_OPTIONS = Object.freeze({
 type AnchorName = keyof typeof DEFAULT_COLOR_OPTIONS.anchors;
 type Rgb = readonly [number, number, number];
 
-/** Projects a summary into the triangle: red at −1, green at +1, and yellow at the top. */
+/** Projects a summary into the triangle: red at −1, green at +1, and yellow at the dissonance apex. */
 export function trianglePosition(
   summary: EvidenceSummary,
   options: ColorOptions = {},

@@ -1,4 +1,4 @@
-<!-- Generated from demo/index.template.html, demo/style.css, demo/main.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->
+<!-- Generated from demo/index.template.html, demo/style.css, demo/favicon.svg, demo/main.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->
 <!--
 Evidences Diagrams
 Copyright (c) 2026 Bycelium
@@ -220,16 +220,20 @@ Apache License
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://evidences.bycelium.com/">
   <meta property="og:site_name" content="Bycelium">
-  <meta property="og:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
-  <meta property="og:image:width" content="757">
-  <meta property="og:image:height" content="480">
-  <meta property="og:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <meta property="og:image" content="https://evidences.bycelium.com/social-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Weight of evidence diagram showing two supporting items and one opposing item, with 33.3% dissonance">
   <meta name="twitter:card" content="summary_large_image">
   <meta id="twitter-title" name="twitter:title" content="Weight of Evidence Calculator &amp; Diagram | Bycelium">
   <meta id="twitter-description" name="twitter:description" content="Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.">
-  <meta name="twitter:image" content="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/evidence-path.png">
-  <meta name="twitter:image:alt" content="Weight of evidence diagram showing an evidence path">
+  <meta name="twitter:image" content="https://evidences.bycelium.com/social-preview.png">
+  <meta name="twitter:image:alt" content="Weight of evidence diagram showing two supporting items and one opposing item, with 33.3% dissonance">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Weight of Evidence Calculator & Diagram","url":"https://evidences.bycelium.com/","description":"Explore Bayesian evidence weights in decibans, prior and posterior probabilities, and dissonance with an interactive diagram.","applicationCategory":"EducationalApplication","operatingSystem":"Any"}</script>
+  <link rel="icon" href="./favicon-96.png" sizes="96x96" type="image/png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" sizes="180x180">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgdmlld0JveD0iMCAwIDk2IDk2IiByb2xlPSJpbWciIGFyaWEtbGFiZWxsZWRieT0idGl0bGUiPgogIDx0aXRsZSBpZD0idGl0bGUiPldlaWdodCBvZiBldmlkZW5jZTwvdGl0bGU+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImV2aWRlbmNlLXRvcCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjAiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlZjQ0NDQiLz4KICAgICAgPHN0b3Agb2Zmc2V0PSIuNSIgc3RvcC1jb2xvcj0iIzljYTNhZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMyMmM1NWUiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImRpc3NvbmFuY2UtZG93biIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNlYWIzMDgiIHN0b3Atb3BhY2l0eT0iMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNlYWIzMDgiIHN0b3Atb3BhY2l0eT0iMSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMjIiIGZpbGw9IiMxNzIwMzMiLz4KICA8cGF0aCBkPSJNMTcgMjVINzlMNDggNzdaIiBmaWxsPSJ1cmwoI2V2aWRlbmNlLXRvcCkiLz4KICA8cGF0aCBkPSJNMTcgMjVINzlMNDggNzdaIiBmaWxsPSJ1cmwoI2Rpc3NvbmFuY2UtZG93bikiLz4KICA8cGF0aCBkPSJNMTcgMjVINzlMNDggNzdaIiBmaWxsPSJub25lIiBzdHJva2U9IiNmOGY3ZjIiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K" type="image/svg+xml" sizes="any">
   <style>
 :root {
   color-scheme: light;
@@ -396,6 +400,11 @@ h2 {
   padding: .7rem .85rem;
 }
 
+.result.diagram-expanded {
+  position: relative;
+  top: auto;
+}
+
 .settings-header,
 .evidence-header {
   display: flex;
@@ -433,33 +442,73 @@ h2 {
 }
 
 .measures {
-  position: absolute;
-  z-index: 4;
-  right: 8px;
-  bottom: 8px;
-  left: 8px;
   display: flex;
-  align-items: end;
-  justify-content: space-between;
+  position: relative;
+  z-index: 6;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: .5rem;
-  pointer-events: none;
+  margin: .25rem 0 .2rem;
 }
 
 .measures div {
   min-width: 0;
   padding: .24rem .38rem;
-  border: 1px solid rgb(203 213 225 / 75%);
+  border: 1px solid color-mix(in srgb, var(--measure-color, #9ca3af) 62%, #fff);
   border-radius: 5px;
   color: #172033;
-  background: rgb(248 250 252 / 88%);
+  background: color-mix(in srgb, var(--measure-color, #9ca3af) 24%, #f8fafc);
   font-size: .9rem;
   font-weight: 750;
   line-height: 1.15;
   white-space: nowrap;
 }
 
-.measures .probability {
-  background: rgb(232 240 248 / 90%);
+.diagram-details-toggle {
+  position: absolute;
+  z-index: 8;
+  top: 50%;
+  left: -2.25rem;
+  display: grid;
+  width: 2.125rem;
+  height: 2.125rem;
+  min-height: 0;
+  padding: 0;
+  place-items: center;
+  border: 1px solid #94a3b8;
+  border-radius: 7px;
+  color: #0f172a;
+  background: #f8fafc;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 16%);
+  transform: translateY(-50%);
+}
+
+.diagram-details-stage .diagram-details-toggle:hover,
+.diagram-details-stage .diagram-details-toggle:active {
+  border-color: #526478;
+  background: #eef3f7;
+  box-shadow: 0 1px 4px rgb(15 23 42 / 22%);
+}
+
+.diagram-details-stage .diagram-details-toggle:focus-visible {
+  border-color: #526478;
+  background: #fff;
+}
+
+.diagram-details-toggle span {
+  width: .72rem;
+  height: .72rem;
+  margin-top: -.3rem;
+  border-right: 3px solid currentcolor;
+  border-bottom: 3px solid currentcolor;
+  transform: rotate(45deg);
+  transition: transform 120ms ease, margin 120ms ease;
+}
+
+.diagram-details-toggle.is-expanded span {
+  margin-top: .3rem;
+  transform: rotate(225deg);
 }
 
 .cone-viewport {
@@ -470,11 +519,13 @@ h2 {
 .prior-handle {
   position: absolute;
   z-index: 5;
-  top: 1px;
+  top: 0;
   width: 1.9rem;
-  min-height: 1.9rem;
+  height: 1.9rem;
+  min-height: 0;
   padding: 0;
   border: 0;
+  border-radius: 0;
   background: transparent;
   cursor: ew-resize;
   transform: none;
@@ -483,46 +534,66 @@ h2 {
 
 .prior-handle:hover,
 .prior-handle:active {
-  border-color: transparent;
   background: transparent;
 }
 
 .prior-handle:focus-visible {
   outline: 2px solid #0f172a;
-  outline-offset: -3px;
+  outline-offset: -2px;
   background: transparent;
 }
 
 .prior-handle::before {
   position: absolute;
-  top: 2px;
+  top: 4px;
   width: 9px;
-  height: 21px;
-  border: 3px solid var(--prior-color, #0f172a);
+  height: 22px;
+  border: 0 solid var(--prior-color, #0f172a);
   content: '';
 }
 
 .prior-handle::after {
   position: absolute;
-  top: 24px;
-  left: var(--prior-anchor, 50%);
-  width: 2px;
-  height: 4px;
-  background: var(--prior-color, #0f172a);
+  top: 6px;
+  width: 10px;
+  height: 18px;
+  border: 1px solid color-mix(in srgb, var(--prior-color, #0f172a) 35%, transparent);
+  border-radius: 4px;
+  background-color: rgb(248 250 252 / 80%);
+  background-image:
+    radial-gradient(circle at 35% 28%, var(--prior-color, #0f172a) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 65% 28%, var(--prior-color, #0f172a) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 35% 50%, var(--prior-color, #0f172a) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 65% 50%, var(--prior-color, #0f172a) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 35% 72%, var(--prior-color, #0f172a) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 65% 72%, var(--prior-color, #0f172a) 0 1px, transparent 1.5px);
   content: '';
-  transform: translateX(-50%);
 }
 
 .prior-handle-min::before {
-  left: var(--bracket-x, var(--prior-anchor, 50%));
-  border-right: 0;
+  left: var(--prior-anchor, 50%);
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
 }
 
 .prior-handle-max::before {
-  left: calc(var(--bracket-x, var(--prior-anchor, 50%)) - 9px);
-  border-left: 0;
+  left: calc(var(--prior-anchor, 50%) - 9px);
+  border-top-width: 2px;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
 }
-.prior-handle.is-active::before { border-width: 4px; }
+
+.prior-handle-min::after { left: calc(var(--prior-anchor, 50%) - 15px); }
+.prior-handle-max::after { left: calc(var(--prior-anchor, 50%) + 5px); }
+
+.prior-handle:hover::after,
+.prior-handle:active::after,
+.prior-handle:focus-visible::after {
+  border-color: var(--prior-color, #0f172a);
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 18%);
+}
 
 .prior-track.is-exact::before,
 .prior-track.is-exact::after {
@@ -536,34 +607,203 @@ h2 {
 }
 
 .prior-track.is-exact::before {
-  top: 2px;
+  top: 4px;
   width: 2px;
-  height: 24px;
+  height: 22px;
 }
 
 .prior-track.is-exact::after {
-  top: 2px;
-  width: 10px;
-  height: 3px;
-  box-shadow: 0 21px 0 var(--prior-color, #0f172a);
+  top: 4px;
+  width: 18px;
+  height: 2px;
+  box-shadow: 0 20px 0 var(--prior-color, #0f172a);
 }
 
-.prior-track.is-exact .prior-handle::before,
-.prior-track.is-exact .prior-handle::after {
+.prior-track.is-exact .prior-handle::before {
   display: none;
 }
 
 .prior-handles-zone {
-  margin: .05rem 0 .15rem;
+  margin-top: -15px;
 }
 
-.prior-band-text {
-  margin: .12rem 0 0;
+.diagram-details-stage {
+  position: relative;
+  z-index: 4;
+  margin-top: -15px;
+}
+
+.diagram-details-stage:has(.diagram-details[hidden]) {
+  min-height: 2.5rem;
+}
+
+.diagram-details {
+  position: relative;
+}
+
+.posterior-zone {
+  position: relative;
+  z-index: 4;
+}
+
+.posterior-track {
+  position: relative;
+  height: 30px;
+  overflow: visible;
+}
+
+.prior-band,
+.posterior-band {
+  position: absolute;
+  top: 10px;
+  z-index: 1;
+  min-width: 2px;
+  height: 10px;
+  overflow: visible;
+  border: 1px solid rgb(15 23 42 / 45%);
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
   color: #0f172a;
-  font-size: .9rem;
+}
+
+.posterior-band::before,
+.posterior-band::after {
+  position: absolute;
+  top: -7px;
+  width: 9px;
+  height: 22px;
+  content: '';
+}
+
+.posterior-band::before {
+  left: -1px;
+  border-top: 2px solid;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+  border-color: var(--posterior-minimum-color, #0f172a);
+}
+
+.posterior-band::after {
+  right: -1px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  border-color: var(--posterior-maximum-color, #0f172a);
+}
+
+.posterior-track.is-clipped-minimum .posterior-band {
+  border-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.posterior-track.is-clipped-minimum .posterior-band::before,
+.posterior-track.is-clipped-maximum .posterior-band::after {
+  display: none;
+}
+
+.posterior-track.is-clipped-maximum .posterior-band {
+  border-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.posterior-track.is-exact::before,
+.posterior-track.is-exact::after {
+  position: absolute;
+  z-index: 2;
+  left: var(--posterior-x, 50%);
+  background: var(--posterior-minimum-color, #0f172a);
+  content: '';
+  transform: translateX(-50%);
+}
+
+.posterior-track.is-exact::before {
+  top: 4px;
+  width: 2px;
+  height: 22px;
+}
+
+.posterior-track.is-exact::after {
+  top: 4px;
+  width: 18px;
+  height: 2px;
+  box-shadow: 0 20px 0 var(--posterior-minimum-color, #0f172a);
+}
+
+.posterior-band-text,
+.prior-band-text {
+  position: absolute;
+  z-index: 7;
+  top: var(--band-caption-y, 0);
+  left: 0;
+  align-self: center;
+  width: var(--band-caption-overlay-width, max-content);
+  min-width: 0;
+  margin: 0;
+  padding: .12rem .3rem;
+  color: #0f172a;
+  background: rgb(248 250 252 / 94%);
+  font-size: .78rem;
   font-weight: 750;
-  line-height: 1.18;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  text-align: left;
+  transform: translateY(-50%);
+}
+
+.band-caption-compact {
+  display: grid;
+  grid-template-columns: var(--band-caption-title-width, max-content) auto;
+  align-items: baseline;
+  gap: .3rem;
+}
+
+.band-caption-title {
+  color: #526478;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.band-caption-values {
+  display: grid;
+  grid-template-columns: 3.2em .7em 3.2em;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.band-caption-values.is-exact {
+  display: block;
+}
+
+.band-caption-endpoint {
+  text-align: right;
+}
+
+.band-caption-minimum {
+  grid-column: 1;
+}
+
+.band-caption-maximum {
+  grid-column: 3;
+}
+
+.band-range-separator {
+  grid-column: 2;
+  color: #64748b;
   text-align: center;
+}
+
+.band-caption-full {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .prior-track {
@@ -572,24 +812,60 @@ h2 {
   overflow: visible;
 }
 
-.prior-band {
-  position: absolute;
-  top: 9px;
-  z-index: 1;
-  min-width: 2px;
-  height: .78rem;
-  overflow: visible;
-  border: 1px solid rgb(15 23 42 / 45%);
-  border-radius: 999px;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 30%);
-  color: #0f172a;
-}
-
 .prior-resultant {
-  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   width: 100%;
   height: 30px;
   pointer-events: none;
+}
+
+.resultant-posterior-row {
+  position: relative;
+  z-index: 5;
+  margin-top: -15px;
+}
+
+.axis-guides {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.axis-guides span {
+  position: absolute;
+  top: 0;
+  display: block;
+  width: 0;
+  border-left: 1px dashed rgb(15 23 42 / 42%);
+}
+
+.axis-guides span[hidden] {
+  display: none;
+}
+
+.axis-guides [data-axis-guide^="posterior"] {
+  border-left-color: rgb(71 85 105 / 32%);
+}
+
+.axis-guides [data-axis-guide="zero-origin"] {
+  z-index: 1;
+  border-left: 1px solid rgb(15 23 42 / 48%);
+}
+
+.resultant-label,
+.prior-handles-zone,
+.resultant-posterior-row,
+.cone-viewport,
+figcaption {
+  position: relative;
+  z-index: 4;
+}
+
+.prior-handles-zone {
+  z-index: 6;
 }
 
 figure {
@@ -602,8 +878,42 @@ figure {
 
 .cone-wrap {
   position: relative;
-  width: 100%;
-  margin: 0 auto;
+  width: calc(100% - 2.5rem);
+  margin: 0 0 0 2.5rem;
+}
+
+.cone-wrap > .resultant-label {
+  width: calc(100% + 2.5rem);
+  margin-left: -2.5rem;
+}
+
+.cone-wrap > .measures {
+  width: calc(100% + 2.5rem);
+  margin: .25rem 0 .2rem -2.5rem;
+}
+
+.cone-wrap.is-negative .band-caption {
+  right: 0;
+  left: auto;
+}
+
+.cone-wrap.captions-stacked .band-caption {
+  position: static;
+  width: auto;
+  margin: .18rem 0;
+  padding: 0 .3rem;
+  background: transparent;
+  text-align: center;
+  transform: none;
+}
+
+.cone-wrap.captions-stacked .band-caption-compact {
+  display: inline-grid;
+}
+
+.cone-wrap.captions-stacked .band-caption-title,
+.cone-wrap.captions-stacked .band-caption-values {
+  background: #f8fafc;
 }
 
 .cone-ruler,
@@ -634,22 +944,18 @@ figure {
 .cone-scroll {
   position: relative;
   height: 300px;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  overscroll-behavior: contain;
+  overflow: hidden;
   border: 0;
   border-radius: 0;
   background: #f8fafc;
-  scrollbar-gutter: auto;
 }
 
-.cone-scroll.is-scrollable {
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+.cone-viewport {
+  margin: 0;
 }
 
-.cone-spacer {
-  min-height: 0;
+.posterior-ruler {
+  margin-top: -15px;
 }
 
 @media (max-width: 460px) {
@@ -659,9 +965,7 @@ figure {
 }
 
 .cone-canvas {
-  position: sticky;
-  top: 0;
-  margin-bottom: calc(-1 * var(--cone-height, 300px));
+  position: relative;
   pointer-events: none;
 }
 
@@ -1035,7 +1339,7 @@ tbody th {
 
 .palette {
   display: grid;
-  grid-template-columns: minmax(190px, 1.55fr) repeat(4, minmax(72px, 1fr));
+  grid-template-columns: repeat(4, minmax(72px, 1fr));
   align-items: end;
   gap: .65rem;
 }
@@ -1056,6 +1360,10 @@ tbody th {
 
 .palette .threshold span {
   grid-column: auto;
+}
+
+.palette .threshold {
+  grid-column: 1 / -1;
 }
 
 .palette .threshold input {
@@ -1220,9 +1528,6 @@ tbody th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .color-legend .palette .threshold {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 1040px) {
@@ -1230,9 +1535,6 @@ tbody th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .palette .threshold {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 820px) {
@@ -1275,6 +1577,26 @@ tbody th {
   }
 }
 
+@media (max-width: 620px) {
+  .posterior-band-text,
+  .prior-band-text,
+  .cone-wrap.is-negative .band-caption,
+  .cone-wrap.captions-stacked .band-caption {
+    position: static;
+    width: auto;
+    margin: .25rem 0 .15rem;
+    padding: 0 .2rem;
+    background: transparent;
+    font-size: .82rem;
+    text-align: center;
+    transform: none;
+  }
+
+  .band-caption-compact {
+    display: inline-grid;
+  }
+}
+
 @media (max-width: 520px) {
   main {
     width: calc(100% - .7rem);
@@ -1298,7 +1620,8 @@ tbody th {
   }
 
   .cone-wrap {
-    width: 100%;
+    width: calc(100% - 2.5rem);
+    margin-left: 2.5rem;
   }
 
   .settings-header {
@@ -1408,21 +1731,25 @@ tbody th {
         <section class="result" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">
           <div class="visual-summary"><p id="probability-description" class="visually-hidden"></p>
             <figure id="visualization"><div class="cone-wrap">
+              <div id="axis-guides" class="axis-guides" aria-hidden="true"><span data-axis-guide="zero-origin"></span><span data-axis-guide="prior-min"></span><span data-axis-guide="prior-max"></span><span data-axis-guide="posterior-min"></span><span data-axis-guide="posterior-max"></span></div>
               <h2 id="resultant-label" class="resultant-label" data-i18n="diagram.resultNone">Combined weight of evidence: None (0 dBan)</h2>
-              <div class="prior-handles-zone" data-i18n-aria-label="prior.handlesLabel" aria-label="Adjustable prior bounds on the posterior axis">
-                <canvas id="prior-resultant" class="prior-resultant" aria-hidden="true"></canvas>
+              <p id="prior-band-text" class="prior-band-text band-caption"></p>
+              <canvas id="cone-ruler" class="cone-ruler" aria-hidden="true"></canvas>
+              <div class="prior-handles-zone" data-i18n-aria-label="prior.handlesLabel" aria-label="Adjustable prior bounds on the prior probability axis">
                 <div class="prior-track"><div id="prior-band" class="prior-band"></div>
                   <button type="button" class="prior-handle prior-handle-min" data-prior-handle="min" role="slider" data-i18n-aria-label="prior.minHandle" aria-label="Adjust the minimum prior bound"></button>
                   <button type="button" class="prior-handle prior-handle-max" data-prior-handle="max" role="slider" data-i18n-aria-label="prior.maxHandle" aria-label="Adjust the maximum prior bound"></button>
-                </div><p id="prior-band-text" class="prior-band-text"></p>
+                </div>
               </div>
-              <canvas id="cone-ruler" class="cone-ruler" aria-hidden="true"></canvas>
-              <div class="cone-viewport"><div id="cone-scroll" class="cone-scroll" tabindex="0" data-i18n-aria-label="diagram.historyLabel" aria-label="Graphical evidence history, from the current summary to older evidence">
-                <canvas id="cone" class="cone-canvas" role="img" aria-describedby="probability-description cone-description" data-i18n="diagram.canvasFallback" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">The diagram shows the posterior interval horizontally and absolute weight vertically.</canvas>
-                <div id="cone-spacer" class="cone-spacer" aria-hidden="true"></div></div>
-                <div class="measures" aria-live="polite" aria-atomic="true"><div class="dissonance-measure"><span data-i18n="measure.dissonance">Dissonance</span> <output id="dissonance">0%</output></div><div id="probability" class="probability"><output id="probability-text" aria-describedby="probability-description" data-i18n="measure.noEvidence">No evidence</output></div></div>
-              </div><p id="cone-description" class="visually-hidden"></p>
-            </div><figcaption data-i18n="diagram.caption">Height measures absolute weight. Arrows follow each item of evidence at plus or minus 45 degrees.</figcaption></figure>
+              <div class="diagram-details-stage"><div id="diagram-details" class="diagram-details"><div class="cone-viewport"><div id="cone-scroll" class="cone-scroll" tabindex="0" data-i18n-aria-label="diagram.historyLabel" aria-label="Graphical evidence history, from the prior to the posterior">
+                  <canvas id="cone" class="cone-canvas" role="img" aria-describedby="probability-description cone-description" data-i18n="diagram.canvasFallback" data-i18n-aria-label="diagram.label" aria-label="Weight of evidence trapezoid diagram">The diagram shows evidence flowing from the prior interval to the posterior interval.</canvas>
+                </div></div></div><button type="button" id="diagram-details-toggle" class="diagram-details-toggle is-expanded" aria-controls="diagram-details" aria-expanded="true" data-i18n-aria-label="diagram.collapseDetails" aria-label="Hide evidence path"><span aria-hidden="true"></span></button></div>
+              <div class="resultant-posterior-row"><div class="posterior-zone"><canvas id="prior-resultant" class="prior-resultant" aria-hidden="true"></canvas><div class="posterior-track"><div id="posterior-band" class="posterior-band"></div></div></div></div>
+              <canvas id="posterior-ruler" class="cone-ruler posterior-ruler" aria-hidden="true"></canvas>
+              <p id="posterior-band-text" class="posterior-band-text band-caption"></p>
+              <div class="measures" aria-live="polite" aria-atomic="true"><div class="dissonance-measure"><span data-i18n="measure.dissonance">Dissonance</span> <output id="dissonance">0%</output></div><div id="probability" class="probability"><output id="probability-text" aria-describedby="probability-description" data-i18n="measure.noEvidence">No evidence</output></div></div>
+              <p id="cone-description" class="visually-hidden"></p>
+            </div><figcaption data-i18n="diagram.caption">Height measures absolute weight. Arrows descend one pixel for every two horizontal pixels.</figcaption></figure>
           </div>
         </section>
         <section class="settings" aria-labelledby="settings-title">
@@ -1447,10 +1774,10 @@ tbody th {
       <div class="controls">
         <section class="scenarios" aria-labelledby="scenarios-title"><h2 id="scenarios-title" data-i18n="scenario.heading">Example scenarios</h2><div id="scenario-list" class="presets"></div></section>
         <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.</p>
-          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.">Triangular color legend.</canvas>
+          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Against at the upper left, No evidence at the top center, For at the upper right, and Dissonance at the lower point. The point shows the current summary.">Triangular color legend.</canvas>
           <div class="color" data-i18n-aria-label="palette.currentAria" aria-label="Current summary color"><span id="swatch" class="swatch" aria-hidden="true"></span><code id="hex">#9ca3af</code></div>
-          <div class="palette"><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Saturation threshold</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1"></label><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label></div>
-          <p class="palette-help" data-i18n="palette.help">The threshold controls the color transition beyond the gray region defined by the prior bounds.</p>
+          <div class="palette"><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Evidence needed for full color</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1" aria-describedby="palette-threshold-help"></label></div>
+          <p id="palette-threshold-help" class="palette-help" data-i18n="palette.help">Lower values give stronger colors sooner. Red and green build beyond the prior’s gray range; yellow builds as conflicting evidence accumulates.</p>
         </section>
       </div>
     </div>
@@ -1866,14 +2193,14 @@ tbody th {
     }
     return totalWeight;
   }
-  function distanceFromOldest(absolute, breaks, pixelsPerDeciban2, breakHeight) {
+  function distanceFromOldest(absolute, breaks, verticalPixelsPerDeciban2, breakHeight) {
     let distance = 0;
     let cursor = 0;
     for (const breakItem of breaks) {
       if (absolute <= breakItem.startAbsolute) {
-        return distance + (absolute - cursor) * pixelsPerDeciban2;
+        return distance + (absolute - cursor) * verticalPixelsPerDeciban2;
       }
-      distance += (breakItem.startAbsolute - cursor) * pixelsPerDeciban2;
+      distance += (breakItem.startAbsolute - cursor) * verticalPixelsPerDeciban2;
       if (absolute <= breakItem.endAbsolute) {
         const proportion = (absolute - breakItem.startAbsolute) / breakItem.absoluteGap;
         return distance + proportion * breakHeight;
@@ -1881,7 +2208,7 @@ tbody th {
       distance += breakHeight;
       cursor = breakItem.endAbsolute;
     }
-    return distance + (absolute - cursor) * pixelsPerDeciban2;
+    return distance + (absolute - cursor) * verticalPixelsPerDeciban2;
   }
   function createSections(breaks, totalAbsolute, mapAbsolute) {
     const sections = [];
@@ -1911,7 +2238,8 @@ tbody th {
   }
   function buildGeometry(diagram, options) {
     const {
-      pixelsPerDeciban: pixelsPerDeciban2,
+      horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2,
+      verticalPixelsPerDeciban: verticalPixelsPerDeciban2,
       breakHeight = 32,
       minPriorDecibans: minPriorDecibans2,
       maxPriorDecibans: maxPriorDecibans2
@@ -1932,14 +2260,16 @@ tbody th {
     assertFiniteNumber(totalAbsolute, "absoluteWeightDecibans");
     assertFiniteNumber(minPriorDecibans2, "minPriorDecibans");
     assertFiniteNumber(maxPriorDecibans2, "maxPriorDecibans");
-    assertFiniteNumber(pixelsPerDeciban2, "pixelsPerDeciban");
+    assertFiniteNumber(horizontalPixelsPerDeciban2, "horizontalPixelsPerDeciban");
+    assertFiniteNumber(verticalPixelsPerDeciban2, "verticalPixelsPerDeciban");
     assertFiniteNumber(breakHeight, "breakHeight");
     if (minimum >= maximum) throw new RangeError("minimum must be strictly less than maximum.");
     if (minPriorDecibans2 > maxPriorDecibans2) {
       throw new RangeError("minPriorDecibans must be less than or equal to maxPriorDecibans.");
     }
     if (totalAbsolute < 0) throw new RangeError("absoluteWeightDecibans must be non-negative.");
-    if (pixelsPerDeciban2 <= 0) throw new RangeError("pixelsPerDeciban must be strictly positive.");
+    if (horizontalPixelsPerDeciban2 <= 0) throw new RangeError("horizontalPixelsPerDeciban must be strictly positive.");
+    if (verticalPixelsPerDeciban2 <= 0) throw new RangeError("verticalPixelsPerDeciban must be strictly positive.");
     if (breakHeight <= 0) throw new RangeError("breakHeight must be strictly positive.");
     const steps = diagram.steps.map((step) => {
       const weightDecibans = step?.weightDecibans;
@@ -2012,31 +2342,31 @@ tbody th {
     const totalDistance = distanceFromOldest(
       totalAbsolute,
       rawBreaks,
-      pixelsPerDeciban2,
+      verticalPixelsPerDeciban2,
       breakHeight
     );
     if (!Number.isFinite(totalDistance)) {
       throw new RangeError("The calculated height must remain finite.");
     }
-    const mapAbsolute = (absolute) => {
-      const y = totalDistance - distanceFromOldest(
-        absolute,
-        rawBreaks,
-        pixelsPerDeciban2,
-        breakHeight
-      );
-      return Math.abs(y) <= tolerance(y, totalDistance) ? 0 : y;
-    };
+    const mapAbsolute = (absolute) => distanceFromOldest(
+      absolute,
+      rawBreaks,
+      verticalPixelsPerDeciban2,
+      breakHeight
+    );
     const breaks = rawBreaks.map((breakItem) => ({
       side: breakItem.side,
-      y: mapAbsolute(breakItem.endAbsolute),
+      y: mapAbsolute(breakItem.startAbsolute),
       height: breakHeight,
       startAbsolute: breakItem.startAbsolute,
       endAbsolute: breakItem.endAbsolute,
       absoluteGap: breakItem.absoluteGap,
       hiddenEvidenceIds: breakItem.hiddenEvidenceIds
     }));
-    const edges = minPriorDecibans2 === maxPriorDecibans2 ? [minPriorDecibans2] : [minPriorDecibans2, maxPriorDecibans2];
+    const edges = minPriorDecibans2 === maxPriorDecibans2 ? [{ prior: minPriorDecibans2, side: "exact" }] : [
+      { prior: minPriorDecibans2, side: "minimum" },
+      { prior: maxPriorDecibans2, side: "maximum" }
+    ];
     for (let index = 0; index < steps.length; index += 1) {
       const step = steps[index];
       const ribbonClip = clips[index];
@@ -2050,21 +2380,22 @@ tbody th {
           y2: mapAbsolute(end.absolute),
           startWeight: start.weight,
           endWeight: end.weight,
-          xMinimum1: (start.weight + minPriorDecibans2 - minimum) * pixelsPerDeciban2,
-          xMaximum1: (start.weight + maxPriorDecibans2 - minimum) * pixelsPerDeciban2,
-          xMinimum2: (end.weight + minPriorDecibans2 - minimum) * pixelsPerDeciban2,
-          xMaximum2: (end.weight + maxPriorDecibans2 - minimum) * pixelsPerDeciban2
+          xMinimum1: (start.weight + minPriorDecibans2 - minimum) * horizontalPixelsPerDeciban2,
+          xMaximum1: (start.weight + maxPriorDecibans2 - minimum) * horizontalPixelsPerDeciban2,
+          xMinimum2: (end.weight + minPriorDecibans2 - minimum) * horizontalPixelsPerDeciban2,
+          xMaximum2: (end.weight + maxPriorDecibans2 - minimum) * horizontalPixelsPerDeciban2
         };
       }
-      for (const prior of edges) {
+      for (const { prior, side } of edges) {
         const edgeClip = visibleInterval(step, minimum, maximum, prior);
         if (edgeClip === null || step.weightDecibans !== 0 && edgeClip.tEnd - edgeClip.tStart <= tolerance(edgeClip.tStart, edgeClip.tEnd)) continue;
         const start = stepPoint(step, edgeClip.tStart);
         const end = stepPoint(step, edgeClip.tEnd);
         step.edgeSegments.push({
-          x1: (start.weight + prior - minimum) * pixelsPerDeciban2,
+          side,
+          x1: (start.weight + prior - minimum) * horizontalPixelsPerDeciban2,
           y1: mapAbsolute(start.absolute),
-          x2: (end.weight + prior - minimum) * pixelsPerDeciban2,
+          x2: (end.weight + prior - minimum) * horizontalPixelsPerDeciban2,
           y2: mapAbsolute(end.absolute),
           trueEnd: Math.abs(edgeClip.tEnd - 1) <= tolerance(edgeClip.tEnd, 1)
         });
@@ -2085,7 +2416,8 @@ tbody th {
     return {
       minimum,
       maximum,
-      pixelsPerDeciban: pixelsPerDeciban2,
+      horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2,
+      verticalPixelsPerDeciban: verticalPixelsPerDeciban2,
       totalWeight,
       totalAbsolute,
       minPriorDecibans: minPriorDecibans2,
@@ -2117,15 +2449,15 @@ tbody th {
     const value = assertGeometryValue(geometry2, absolute, "absolute", geometry2?.totalAbsolute);
     for (const breakItem of geometry2.breaks) {
       if (value >= breakItem.startAbsolute - tolerance(value, breakItem.startAbsolute) && value <= breakItem.endAbsolute + tolerance(value, breakItem.endAbsolute)) {
-        const proportion = (breakItem.endAbsolute - value) / breakItem.absoluteGap;
+        const proportion = (value - breakItem.startAbsolute) / breakItem.absoluteGap;
         return breakItem.y + clampAlmost(proportion, 0, 1) * breakItem.height;
       }
     }
     const section = geometry2.sections.find(({ startAbsolute, endAbsolute }) => value >= startAbsolute - tolerance(value, startAbsolute) && value <= endAbsolute + tolerance(value, endAbsolute));
     if (section) {
-      return section.yStart - (value - section.startAbsolute) * geometry2.pixelsPerDeciban;
+      return section.yStart + (value - section.startAbsolute) * geometry2.verticalPixelsPerDeciban;
     }
-    return value === geometry2.totalAbsolute ? 0 : geometry2.totalHeight;
+    return value === geometry2.totalAbsolute ? geometry2.totalHeight : 0;
   }
   function absoluteFromY(geometry2, y) {
     const value = assertGeometryValue(geometry2, y, "y", geometry2?.totalHeight);
@@ -2133,25 +2465,26 @@ tbody th {
       const bottom = breakItem.y + breakItem.height;
       if (value > breakItem.y + tolerance(value, breakItem.y) && value < bottom - tolerance(value, bottom)) return null;
       if (Math.abs(value - breakItem.y) <= tolerance(value, breakItem.y)) {
-        return breakItem.endAbsolute;
-      }
-      if (Math.abs(value - bottom) <= tolerance(value, bottom)) {
         return breakItem.startAbsolute;
       }
+      if (Math.abs(value - bottom) <= tolerance(value, bottom)) {
+        return breakItem.endAbsolute;
+      }
     }
-    const section = geometry2.sections.find(({ yStart, yEnd }) => value <= yStart + tolerance(value, yStart) && value >= yEnd - tolerance(value, yEnd));
+    const section = geometry2.sections.find(({ yStart, yEnd }) => value >= yStart - tolerance(value, yStart) && value <= yEnd + tolerance(value, yEnd));
     if (section) {
       return clampAlmost(
-        section.startAbsolute + (section.yStart - value) / geometry2.pixelsPerDeciban,
+        section.startAbsolute + (value - section.yStart) / geometry2.verticalPixelsPerDeciban,
         section.startAbsolute,
         section.endAbsolute
       );
     }
-    return value === 0 ? geometry2.totalAbsolute : 0;
+    return value === 0 ? 0 : geometry2.totalAbsolute;
   }
 
   // demo/diagram-renderer.js
   var NEUTRAL_RGB = [248, 250, 252];
+  var RULER_HEIGHT = 28;
   var backgroundCanvas;
   var backgroundContext;
   var backgroundImage;
@@ -2167,9 +2500,6 @@ tbody th {
   function numberText(value, i18n2) {
     return i18n2.number(Number(value.toFixed(1)), { maximumFractionDigits: 1 });
   }
-  function signedText(value, i18n2) {
-    return `${value > 0 ? "+" : value < 0 ? "−" : ""}${numberText(Math.abs(value), i18n2)}`;
-  }
   function percentageText(weight, i18n2) {
     const value = decibansToProbability({ weightDecibans: weight }).probability * 100;
     if (value >= 99.5) return `>${i18n2.percent(0.99, { maximumFractionDigits: 0 })}`;
@@ -2182,7 +2512,7 @@ tbody th {
     const dy = segment.y2 - segment.y1;
     const length = Math.hypot(dx, dy);
     if (length < 0.01 || !segment.trueEnd) return;
-    const size = Math.min(selected ? 14 : 11, length * 0.45);
+    const size = Math.min(selected ? 16 : 13, length * 0.45);
     const angle = Math.atan2(dy, dx);
     context2.beginPath();
     context2.moveTo(segment.x2, segment.y2);
@@ -2192,25 +2522,90 @@ tbody th {
     context2.fillStyle = tint;
     context2.fill();
   }
-  function drawArrow(context2, segment, tint, selected) {
-    const length = Math.hypot(segment.x2 - segment.x1, segment.y2 - segment.y1);
-    if (length < 0.01) return;
+  function diagonalArrowPoints(segment, side, selected) {
+    const dx = segment.x2 - segment.x1;
+    const dy = segment.y2 - segment.y1;
+    const length = Math.hypot(dx, dy);
+    if (length < 0.01) return null;
     const width = selected ? 5 : 3;
+    const halfWidth = width / 2;
+    const tangent = { x: dx / length, y: dy / length };
+    const normal = { x: -dy / length, y: dx / length };
+    const direction = side === "minimum" ? 1 : -1;
+    const outward = { x: normal.x * direction, y: normal.y * direction };
+    const startInside = {
+      x: segment.x1 - outward.x * halfWidth,
+      y: segment.y1 - outward.y * halfWidth
+    };
+    const startOutside = {
+      x: segment.x1 + outward.x * halfWidth,
+      y: segment.y1 + outward.y * halfWidth
+    };
+    if (!segment.trueEnd) {
+      return [
+        startInside,
+        {
+          x: segment.x2 - outward.x * halfWidth,
+          y: segment.y2 - outward.y * halfWidth
+        },
+        {
+          x: segment.x2 + outward.x * halfWidth,
+          y: segment.y2 + outward.y * halfWidth
+        },
+        startOutside
+      ];
+    }
+    const longitudinalSize = Math.min(selected ? 24 : 21, length * 0.72);
+    const rear = {
+      x: segment.x2 - tangent.x * longitudinalSize,
+      y: segment.y2 - tangent.y * longitudinalSize
+    };
+    const segmentTop = Math.max(0, Math.min(segment.y1, segment.y2));
+    const segmentBottom = Math.max(segment.y1, segment.y2);
+    const verticalRoom = outward.y < 0 ? rear.y - segmentTop : segmentBottom - rear.y;
+    const exteriorRoom = Math.max(
+      0,
+      verticalRoom / Math.max(Math.abs(outward.y), Number.EPSILON)
+    );
+    const rearHalfWidth = Math.min(halfWidth, exteriorRoom);
+    const outwardSize = Math.min(
+      selected ? 10 : 9,
+      longitudinalSize * 0.6,
+      exteriorRoom
+    );
+    return [
+      startInside,
+      {
+        x: rear.x - outward.x * rearHalfWidth,
+        y: rear.y - outward.y * rearHalfWidth
+      },
+      { x: segment.x2, y: segment.y2 },
+      {
+        x: rear.x + outward.x * Math.max(rearHalfWidth, outwardSize),
+        y: rear.y + outward.y * Math.max(rearHalfWidth, outwardSize)
+      },
+      {
+        x: rear.x + outward.x * rearHalfWidth,
+        y: rear.y + outward.y * rearHalfWidth
+      },
+      startOutside
+    ];
+  }
+  function traceDiagonalArrow(context2, points) {
+    if (!points) return;
+    context2.beginPath();
+    context2.moveTo(points[0].x, points[0].y);
+    for (let index = 1; index < points.length; index += 1) {
+      context2.lineTo(points[index].x, points[index].y);
+    }
+    context2.closePath();
+  }
+  function drawDiagonalArrow(context2, points, tint) {
+    if (!points) return;
     context2.save();
-    context2.lineCap = "round";
-    context2.strokeStyle = "#fff";
-    context2.lineWidth = width + 3;
-    context2.beginPath();
-    context2.moveTo(segment.x1, segment.y1);
-    context2.lineTo(segment.x2, segment.y2);
-    context2.stroke();
-    context2.strokeStyle = tint;
-    context2.lineWidth = width;
-    context2.beginPath();
-    context2.moveTo(segment.x1, segment.y1);
-    context2.lineTo(segment.x2, segment.y2);
-    context2.stroke();
-    drawArrowhead(context2, segment, tint, selected);
+    context2.fillStyle = tint;
+    traceDiagonalArrow(context2, points);
+    context2.fill();
     context2.restore();
   }
   function summaryColor(rawWeight, absolute, colorOptions2) {
@@ -2263,8 +2658,8 @@ tbody th {
       options.anchors?.green
     ].join("|");
   }
-  function drawBackground(context2, data, yOffset) {
-    const { geometry: geometry2, viewportHeight: viewportHeight2, viewportWidth: viewportWidth2, pixelsPerDeciban: pixelsPerDeciban2, colorOptions: colorOptions2, priors } = data;
+  function drawBackground(context2, data) {
+    const { geometry: geometry2, viewportHeight: viewportHeight2, viewportWidth: viewportWidth2, horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2, colorOptions: colorOptions2 } = data;
     const amplitude = geometry2.maximum - geometry2.minimum;
     const tickStep = geometry2.totalAbsolute > amplitude ? 4 : 2;
     const backgroundWidth = Math.max(1, Math.ceil(viewportWidth2 / tickStep));
@@ -2272,7 +2667,6 @@ tbody th {
     const background = prepareBackground(backgroundWidth, backgroundHeight);
     const backgroundKey = {
       geometry: geometry2,
-      yOffset,
       viewportWidth: viewportWidth2,
       viewportHeight: viewportHeight2,
       tickStep,
@@ -2284,9 +2678,8 @@ tbody th {
       const rgbCache = /* @__PURE__ */ new Map();
       const columns = Array.from({ length: backgroundWidth }, (_, column) => {
         const x = Math.min(viewportWidth2, (column + 0.5) * tickStep);
-        const posterior = geometry2.minimum + x / pixelsPerDeciban2;
+        const posterior = geometry2.minimum + x / horizontalPixelsPerDeciban2;
         return {
-          posterior,
           references: references.map(({ prior, blendWeight }) => ({
             weight: posterior - prior,
             blendWeight
@@ -2295,14 +2688,13 @@ tbody th {
       });
       for (let row = 0; row < backgroundHeight; row += 1) {
         const y = Math.min(viewportHeight2, (row + 0.5) * tickStep);
-        const geometryY = y + yOffset;
+        const geometryY = y;
         const absolute = geometryY > geometry2.totalHeight ? null : absoluteFromY(geometry2, geometryY);
         for (let column = 0; column < backgroundWidth; column += 1) {
           const index = (row * backgroundWidth + column) * 4;
           const rgb = [...NEUTRAL_RGB];
           const currentColumn = columns[column];
-          const insideEnvelope = absolute !== null && currentColumn.posterior >= geometry2.minPriorDecibans - absolute && currentColumn.posterior <= geometry2.maxPriorDecibans + absolute;
-          if (insideEnvelope) {
+          if (absolute !== null) {
             const sum = [0, 0, 0];
             for (const { weight, blendWeight } of currentColumn.references) {
               const tint = summaryColor(weight, absolute, colorOptions2);
@@ -2321,27 +2713,27 @@ tbody th {
       lastBackground = backgroundKey;
     }
     context2.save();
-    context2.imageSmoothingEnabled = false;
+    context2.beginPath();
+    for (const section of geometry2.sections) {
+      const minimumStart = (geometry2.minPriorDecibans - section.startAbsolute - geometry2.minimum) * horizontalPixelsPerDeciban2;
+      const maximumStart = (geometry2.maxPriorDecibans + section.startAbsolute - geometry2.minimum) * horizontalPixelsPerDeciban2;
+      const minimumEnd = (geometry2.minPriorDecibans - section.endAbsolute - geometry2.minimum) * horizontalPixelsPerDeciban2;
+      const maximumEnd = (geometry2.maxPriorDecibans + section.endAbsolute - geometry2.minimum) * horizontalPixelsPerDeciban2;
+      context2.moveTo(minimumStart, section.yStart);
+      context2.lineTo(maximumStart, section.yStart);
+      context2.lineTo(maximumEnd, section.yEnd);
+      context2.lineTo(minimumEnd, section.yEnd);
+      context2.closePath();
+    }
+    context2.clip();
+    context2.imageSmoothingEnabled = true;
+    context2.globalAlpha = 0.5;
     context2.drawImage(background.canvas, 0, 0, backgroundWidth, backgroundHeight, 0, 0, viewportWidth2, viewportHeight2);
     context2.restore();
-    const visibleHeight = Math.max(0, Math.min(viewportHeight2, geometry2.totalHeight - yOffset));
-    context2.save();
-    context2.strokeStyle = "rgb(15 23 42 / 55%)";
-    context2.lineWidth = 1;
-    context2.setLineDash([3, 3]);
-    for (const prior of /* @__PURE__ */ new Set([priors.minPriorDecibans, priors.maxPriorDecibans])) {
-      const x = (prior - geometry2.minimum) * pixelsPerDeciban2;
-      if (x >= 0 && x <= viewportWidth2) {
-        context2.beginPath();
-        context2.moveTo(x, 0);
-        context2.lineTo(x, visibleHeight);
-        context2.stroke();
-      }
-    }
-    context2.restore();
+    return { ...background, width: backgroundWidth, height: backgroundHeight };
   }
-  function drawBreak(context2, breakItem, yOffset, viewportWidth2, selectedEvidenceId2, i18n2) {
-    const y = breakItem.y - yOffset;
+  function drawBreak(context2, breakItem, viewportWidth2, selectedEvidenceId2, i18n2) {
+    const y = breakItem.y;
     if (y + breakItem.height < 0) return;
     const selection = breakItem.hiddenEvidenceIds.includes(selectedEvidenceId2);
     context2.fillStyle = selection ? "#dbeafe" : "#e2e8f0";
@@ -2364,16 +2756,16 @@ tbody th {
     context2.font = "700 12px system-ui";
     context2.fillText(line2, 10, y + 32);
   }
-  function drawAxis(context2, data, showLabels) {
-    const { geometry: geometry2, viewportWidth: viewportWidth2, pixelsPerDeciban: pixelsPerDeciban2, latestColor: latestColor2, i18n: i18n2 } = data;
-    const active = geometry2.totalWeight === 0 ? null : geometry2.totalWeight > 0 ? geometry2.minPriorDecibans : geometry2.maxPriorDecibans;
+  function drawProbabilityAxis(context2, data, { position, endpoints }) {
+    const { geometry: geometry2, viewportWidth: viewportWidth2, horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2, i18n: i18n2 } = data;
+    const endpointLabels = new Map(endpoints.map(({ weight, label }) => [weight, label]));
     const first = Math.ceil(geometry2.minimum / 5);
     const last = Math.floor(geometry2.maximum / 5);
     const tickCount = Math.max(0, last - first + 1);
     const maxTicks = Math.max(1, Math.ceil(viewportWidth2 / 3) + 4);
     const tickStep = Math.max(1, Math.ceil(tickCount / maxTicks));
     const ticks = /* @__PURE__ */ new Set([geometry2.minimum, geometry2.maximum, 0]);
-    if (active !== null) ticks.add(active);
+    for (const endpoint of endpoints) ticks.add(endpoint.weight);
     for (let index = 0; index < tickCount; index += tickStep) {
       const value = (first + index) * 5;
       if (!Number.isFinite(value)) break;
@@ -2381,7 +2773,10 @@ tbody th {
     }
     if (tickCount) ticks.add(last * 5);
     const values = [...ticks].filter((x) => Number.isFinite(x) && x >= geometry2.minimum && x <= geometry2.maximum).sort((a, b) => a - b);
-    const y = showLabels ? 48 : 0;
+    const atBottom = position === "bottom";
+    const y = atBottom ? RULER_HEIGHT - 0.5 : 0.5;
+    const tickEnd = y + (atBottom ? -3 : 3);
+    const labelBaseline = atBottom ? 16 : 22;
     context2.save();
     context2.strokeStyle = "#64748b";
     context2.lineWidth = 1;
@@ -2389,40 +2784,39 @@ tbody th {
     context2.moveTo(0, y);
     context2.lineTo(viewportWidth2, y);
     context2.stroke();
-    context2.font = "700 12px system-ui";
-    const placements = [];
-    const priorities = active === null ? [0, geometry2.minimum, geometry2.maximum] : [active, 0, geometry2.minimum, geometry2.maximum];
-    const ordered = [.../* @__PURE__ */ new Set([...priorities, ...values])];
-    for (const posterior of ordered) {
-      const x = (posterior - geometry2.minimum) * pixelsPerDeciban2;
+    for (const weight of values) {
+      const x = (weight - geometry2.minimum) * horizontalPixelsPerDeciban2;
       context2.beginPath();
-      context2.moveTo(x, y - (showLabels ? 3 : 0));
-      context2.lineTo(x, y + (showLabels ? 0 : 6));
+      context2.moveTo(x, y);
+      context2.lineTo(x, tickEnd);
       context2.stroke();
-      if (!showLabels) continue;
-      const topText = percentageText(posterior, i18n2);
-      const bottomText = active === null ? null : signedText(posterior - active, i18n2);
-      const width = Math.max(context2.measureText(topText).width, bottomText === null ? 0 : context2.measureText(bottomText).width);
+    }
+    context2.font = "700 12px system-ui";
+    context2.textBaseline = "alphabetic";
+    const placements = [];
+    const priorities = [0, ...endpoints.map(({ weight }) => weight), geometry2.minimum, geometry2.maximum];
+    const ordered = [.../* @__PURE__ */ new Set([...priorities, ...values])];
+    for (const weight of ordered) {
+      if (!Number.isFinite(weight) || weight < geometry2.minimum || weight > geometry2.maximum) continue;
+      const x = (weight - geometry2.minimum) * horizontalPixelsPerDeciban2;
+      const text = endpointLabels.get(weight) ?? percentageText(weight, i18n2);
+      const width = context2.measureText(text).width;
       const left = Math.max(1, Math.min(viewportWidth2 - width - 1, x - width / 2));
       if (placements.some(([a, b]) => left <= b + 5 && left + width >= a - 5)) continue;
       context2.fillStyle = "rgb(248 250 252 / 92%)";
-      context2.fillRect(left - 2, 3, width + 4, 31);
+      context2.fillRect(left - 2, labelBaseline - 13, width + 4, 17);
       context2.fillStyle = "#526478";
-      context2.fillText(topText, left + (width - context2.measureText(topText).width) / 2, 15);
-      if (bottomText !== null) {
-        context2.fillStyle = posterior === active ? latestColor2 : "#334155";
-        context2.fillText(bottomText, left + (width - context2.measureText(bottomText).width) / 2, 30);
-      }
+      context2.fillText(text, left, labelBaseline);
       placements.push([left, left + width]);
     }
     context2.restore();
   }
   function drawResultant(context2, data, y) {
-    const { geometry: geometry2, viewportWidth: viewportWidth2, pixelsPerDeciban: pixelsPerDeciban2, latestColor: latestColor2 } = data;
+    const { geometry: geometry2, viewportWidth: viewportWidth2, horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2, latestColor: latestColor2 } = data;
     if (geometry2.totalWeight === 0) return;
     const prior = geometry2.totalWeight > 0 ? geometry2.minPriorDecibans : geometry2.maxPriorDecibans;
-    const rawStart = (prior - geometry2.minimum) * pixelsPerDeciban2;
-    const rawEnd = (prior + geometry2.totalWeight - geometry2.minimum) * pixelsPerDeciban2;
+    const rawStart = (prior - geometry2.minimum) * horizontalPixelsPerDeciban2;
+    const rawEnd = (prior + geometry2.totalWeight - geometry2.minimum) * horizontalPixelsPerDeciban2;
     if (rawStart < 0 && rawEnd < 0 || rawStart > viewportWidth2 && rawEnd > viewportWidth2) return;
     const start = Math.max(0, Math.min(viewportWidth2, rawStart));
     const end = Math.max(0, Math.min(viewportWidth2, rawEnd));
@@ -2445,15 +2839,15 @@ tbody th {
     }
     context2.restore();
   }
-  function ribbonPath(context2, ribbon, yOffset) {
+  function ribbonPath(context2, ribbon) {
     context2.beginPath();
-    context2.moveTo(ribbon.xMinimum1, ribbon.y1 - yOffset);
-    context2.lineTo(ribbon.xMaximum1, ribbon.y1 - yOffset);
-    context2.lineTo(ribbon.xMaximum2, ribbon.y2 - yOffset);
-    context2.lineTo(ribbon.xMinimum2, ribbon.y2 - yOffset);
+    context2.moveTo(ribbon.xMinimum1, ribbon.y1);
+    context2.lineTo(ribbon.xMaximum1, ribbon.y1);
+    context2.lineTo(ribbon.xMaximum2, ribbon.y2);
+    context2.lineTo(ribbon.xMinimum2, ribbon.y2);
     context2.closePath();
   }
-  function strokeRibbon(context2, ribbon, yOffset, exactPrior, selected) {
+  function strokeRibbon(context2, ribbon, exactPrior, selected) {
     context2.save();
     context2.lineJoin = "round";
     if (exactPrior) {
@@ -2465,19 +2859,19 @@ tbody th {
       context2.strokeStyle = "#0f172a";
       context2.lineWidth = 7;
       context2.beginPath();
-      context2.moveTo(ribbon.xMinimum1, ribbon.y1 - yOffset);
-      context2.lineTo(ribbon.xMinimum2, ribbon.y2 - yOffset);
+      context2.moveTo(ribbon.xMinimum1, ribbon.y1);
+      context2.lineTo(ribbon.xMinimum2, ribbon.y2);
       context2.stroke();
     } else {
-      ribbonPath(context2, ribbon, yOffset);
+      ribbonPath(context2, ribbon);
       context2.strokeStyle = selected ? "#0f172a" : "rgb(15 23 42 / 35%)";
       context2.lineWidth = selected ? 3 : 1;
       context2.stroke();
     }
     context2.restore();
   }
-  function drawZeroPoint(context2, ribbon, yOffset, tint, selected, viewportWidth2, viewportHeight2) {
-    const y = ribbon.y1 - yOffset;
+  function drawZeroPoint(context2, ribbon, tint, selected, viewportWidth2, viewportHeight2) {
+    const y = ribbon.y1;
     if (y < -8 || y > viewportHeight2 + 8) return;
     const radius = selected ? 6 : 4;
     const left = Math.max(0, Math.min(ribbon.xMinimum1, ribbon.xMaximum1));
@@ -2485,10 +2879,6 @@ tbody th {
     if (left > right) return;
     const x = Math.max(0, Math.min(viewportWidth2, (left + right) / 2));
     context2.save();
-    context2.beginPath();
-    context2.arc(x, y, radius + 2, 0, Math.PI * 2);
-    context2.fillStyle = "#fff";
-    context2.fill();
     context2.beginPath();
     context2.arc(x, y, radius, 0, Math.PI * 2);
     context2.fillStyle = tint;
@@ -2498,17 +2888,17 @@ tbody th {
     context2.stroke();
     context2.restore();
   }
-  function drawExactPrior(context2, ribbon, data, yOffset) {
+  function drawExactPrior(context2, ribbon, data) {
     const { viewportHeight: viewportHeight2, colorOptions: colorOptions2 } = data;
     const yDelta = ribbon.y2 - ribbon.y1;
-    const minimumY = Math.max(0, Math.ceil(Math.min(ribbon.y1, ribbon.y2) - yOffset - 1));
+    const minimumY = Math.max(0, Math.ceil(Math.min(ribbon.y1, ribbon.y2) - 1));
     const maximumY = Math.min(
       Math.ceil(viewportHeight2),
-      Math.floor(Math.max(ribbon.y1, ribbon.y2) - yOffset + 1)
+      Math.floor(Math.max(ribbon.y1, ribbon.y2) + 1)
     );
     if (minimumY > maximumY) return;
     for (let y = minimumY; y <= maximumY; y += 1) {
-      const t = yDelta === 0 ? 0.5 : Math.max(0, Math.min(1, (y + yOffset - ribbon.y1) / yDelta));
+      const t = yDelta === 0 ? 0.5 : Math.max(0, Math.min(1, (y - ribbon.y1) / yDelta));
       const weight = ribbon.startWeight + (ribbon.endWeight - ribbon.startWeight) * t;
       const absolute = ribbon.startAbsolute + (ribbon.endAbsolute - ribbon.startAbsolute) * t;
       const left = ribbon.xMinimum1 + (ribbon.xMinimum2 - ribbon.xMinimum1) * t;
@@ -2516,7 +2906,15 @@ tbody th {
       context2.fillRect(left - 1.5, y - 0.75, 3, 1.5);
     }
   }
-  function drawRibbons(context2, data, yOffset) {
+  function fillRibbon(context2, ribbon, viewportWidth2, viewportHeight2, background) {
+    context2.save();
+    ribbonPath(context2, ribbon);
+    context2.clip();
+    context2.imageSmoothingEnabled = true;
+    context2.drawImage(background.canvas, 0, 0, background.width, background.height, 0, 0, viewportWidth2, viewportHeight2);
+    context2.restore();
+  }
+  function drawRibbons(context2, data, background) {
     const {
       geometry: geometry2,
       evidence: evidence2,
@@ -2527,20 +2925,21 @@ tbody th {
     } = data;
     const byId = new Map(geometry2.steps.map((step) => [step.id, step]));
     const exactPrior = geometry2.minPriorDecibans === geometry2.maxPriorDecibans;
+    const arrows = [];
     for (const item of evidence2) {
       const step = byId.get(item.id);
       const ribbon = step?.visibleRibbon;
       if (!ribbon) continue;
       const selected = item.id === selectedEvidenceId2;
       if (step.weightDecibans !== 0) {
-        strokeRibbon(context2, ribbon, yOffset, exactPrior, selected);
-        if (exactPrior) drawExactPrior(context2, ribbon, data, yOffset);
+        if (!exactPrior) fillRibbon(context2, ribbon, viewportWidth2, viewportHeight2, background);
+        strokeRibbon(context2, ribbon, exactPrior, selected);
+        if (exactPrior) drawExactPrior(context2, ribbon, data);
       }
       if (step.weightDecibans === 0) {
         drawZeroPoint(
           context2,
           ribbon,
-          yOffset,
           summaryColor(ribbon.endWeight, ribbon.endAbsolute, colorOptions2),
           selected,
           viewportWidth2,
@@ -2548,7 +2947,7 @@ tbody th {
         );
       }
       for (const edge of step.edgeSegments) {
-        const segment = { ...edge, y1: edge.y1 - yOffset, y2: edge.y2 - yOffset };
+        const segment = edge;
         if (segment.y1 < -30 && segment.y2 < -30 || segment.y1 > viewportHeight2 + 30 && segment.y2 > viewportHeight2 + 30) continue;
         if (exactPrior) {
           context2.save();
@@ -2561,55 +2960,151 @@ tbody th {
           context2.restore();
         } else {
           const tint = item.direction === "for" ? "#15803d" : "#dc2626";
-          drawArrow(context2, segment, tint, selected);
+          arrows.push({
+            tint,
+            points: diagonalArrowPoints(segment, edge.side, selected)
+          });
         }
       }
     }
+    for (const arrow of arrows) drawDiagonalArrow(context2, arrow.points, arrow.tint);
   }
-  function drawAbsoluteScale(context2, geometry2, yOffset, viewportHeight2, i18n2) {
-    const tickStep = geometry2.totalAbsolute <= 20 ? 5 : geometry2.totalAbsolute <= 60 ? 10 : 25;
+  function absoluteTickStep(verticalPixelsPerDeciban2) {
+    const minimumSpacing = 18;
+    const minimumStep = minimumSpacing / verticalPixelsPerDeciban2;
+    const magnitude = 10 ** Math.floor(Math.log10(minimumStep));
+    for (const factor of [1, 2, 5, 10]) {
+      const step = factor * magnitude;
+      if (step >= minimumStep) return step;
+    }
+    return 10 * magnitude;
+  }
+  function visibleAbsoluteTicks(geometry2, tickStep) {
+    const ticks = /* @__PURE__ */ new Map();
+    for (const section of geometry2.sections) {
+      const first = Math.ceil(
+        (section.startAbsolute - Number.EPSILON * Math.max(1, section.startAbsolute)) / tickStep
+      );
+      const last = Math.floor(
+        (section.endAbsolute + Number.EPSILON * Math.max(1, section.endAbsolute)) / tickStep
+      );
+      for (let index = Math.max(0, first); index <= last; index += 1) {
+        const absolute = index * tickStep;
+        ticks.set(absolute.toPrecision(14), absolute);
+      }
+    }
+    return [...ticks.values()].sort((a, b) => a - b);
+  }
+  function drawAbsoluteScale(context2, geometry2, viewportHeight2, i18n2) {
+    const tickStep = absoluteTickStep(geometry2.verticalPixelsPerDeciban);
     context2.save();
     context2.font = "700 12px system-ui";
-    context2.textBaseline = "alphabetic";
-    for (let absolute = 0; absolute <= geometry2.totalAbsolute + 1e-3; absolute += tickStep) {
-      if (geometry2.breaks.some((breakItem) => absolute > breakItem.startAbsolute && absolute < breakItem.endAbsolute)) continue;
-      const y = positionAbsolute(geometry2, absolute) - yOffset;
+    context2.textBaseline = "middle";
+    context2.strokeStyle = "rgb(51 65 85 / 75%)";
+    context2.lineWidth = 1;
+    context2.beginPath();
+    context2.moveTo(3, 0);
+    context2.lineTo(3, Math.min(viewportHeight2, geometry2.totalHeight));
+    context2.stroke();
+    for (const absolute of visibleAbsoluteTicks(geometry2, tickStep)) {
+      const y = positionAbsolute(geometry2, absolute);
       if (y < 0 || y > viewportHeight2) continue;
+      context2.beginPath();
+      context2.moveTo(3, y);
+      context2.lineTo(9, y);
+      context2.stroke();
+      if (y < 18 || y > viewportHeight2 - 7) continue;
       const text = numberText(absolute, i18n2);
       const width = context2.measureText(text).width;
-      const row = Math.max(13, Math.min(viewportHeight2 - 2, y - 4));
       context2.fillStyle = "rgb(248 250 252 / 88%)";
-      context2.fillRect(5, row - 12, width + 6, 15);
+      context2.fillRect(10, y - 7, width + 5, 14);
       context2.fillStyle = "#334155";
-      context2.fillText(text, 8, row);
+      context2.fillText(text, 12, y);
+    }
+    context2.restore();
+  }
+  function drawZeroOrigin(context2, data, height = data.viewportHeight) {
+    const { geometry: geometry2, horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2 } = data;
+    if (geometry2.minimum > 0 || geometry2.maximum < 0) return;
+    const x = (0 - geometry2.minimum) * horizontalPixelsPerDeciban2;
+    context2.save();
+    context2.strokeStyle = "rgb(15 23 42 / 48%)";
+    context2.lineWidth = 1;
+    context2.beginPath();
+    context2.moveTo(x, 0);
+    context2.lineTo(x, height);
+    context2.stroke();
+    context2.restore();
+  }
+  function drawEndpointGuides(context2, data) {
+    const { geometry: geometry2, viewportWidth: viewportWidth2, viewportHeight: viewportHeight2, horizontalPixelsPerDeciban: horizontalPixelsPerDeciban2 } = data;
+    context2.save();
+    context2.strokeStyle = "rgb(15 23 42 / 38%)";
+    context2.lineWidth = 1;
+    context2.setLineDash([3, 3]);
+    for (const prior of /* @__PURE__ */ new Set([geometry2.minPriorDecibans, geometry2.maxPriorDecibans])) {
+      const x = (prior - geometry2.minimum) * horizontalPixelsPerDeciban2;
+      if (x < 0 || x > viewportWidth2) continue;
+      context2.beginPath();
+      context2.moveTo(x, 0);
+      context2.lineTo(x, viewportHeight2);
+      context2.stroke();
+    }
+    const posteriorTop = Math.max(0, viewportHeight2 - 28);
+    if (geometry2.currentInterval.visible) {
+      for (const posterior of /* @__PURE__ */ new Set([
+        geometry2.currentInterval.minimum,
+        geometry2.currentInterval.maximum
+      ])) {
+        const x = (posterior - geometry2.minimum) * horizontalPixelsPerDeciban2;
+        if (x < 0 || x > viewportWidth2) continue;
+        context2.beginPath();
+        context2.moveTo(x, posteriorTop);
+        context2.lineTo(x, viewportHeight2);
+        context2.stroke();
+      }
     }
     context2.restore();
   }
   function drawDiagram(data) {
-    const { canvas: canvas2, context: context2, rulerCanvas: rulerCanvas2, rulerContext: rulerContext2, priorResultantCanvas: priorResultantCanvas2, priorResultantContext: priorResultantContext2, viewportWidth: viewportWidth2, viewportHeight: viewportHeight2, yOffset, geometry: geometry2, selectedEvidenceId: selectedEvidenceId2 } = data;
+    const {
+      canvas: canvas2,
+      context: context2,
+      rulerCanvas: rulerCanvas2,
+      rulerContext: rulerContext2,
+      posteriorRulerCanvas: posteriorRulerCanvas2,
+      posteriorRulerContext: posteriorRulerContext2,
+      priorResultantCanvas: priorResultantCanvas2,
+      priorResultantContext: priorResultantContext2,
+      viewportWidth: viewportWidth2,
+      viewportHeight: viewportHeight2,
+      geometry: geometry2,
+      selectedEvidenceId: selectedEvidenceId2,
+      priorRulerEndpoints,
+      posteriorRulerEndpoints
+    } = data;
     resizeCanvas(canvas2, context2, viewportWidth2, viewportHeight2);
     context2.clearRect(0, 0, viewportWidth2, viewportHeight2);
-    drawBackground(context2, data, yOffset);
-    for (const breakItem of geometry2.breaks) drawBreak(context2, breakItem, yOffset, viewportWidth2, selectedEvidenceId2, data.i18n);
-    drawRibbons(context2, data, yOffset);
-    drawAbsoluteScale(context2, geometry2, yOffset, viewportHeight2, data.i18n);
-    const interval = geometry2.currentInterval;
-    if (interval.visible) {
-      context2.save();
-      context2.strokeStyle = "#0f172a";
-      context2.lineWidth = 3;
-      context2.beginPath();
-      context2.moveTo(Math.max(0, Math.min(viewportWidth2, (interval.minimum - geometry2.minimum) * data.pixelsPerDeciban)), 0);
-      context2.lineTo(Math.max(0, Math.min(viewportWidth2, (interval.maximum - geometry2.minimum) * data.pixelsPerDeciban)), 0);
-      context2.stroke();
-      context2.restore();
-    }
-    drawAxis(context2, data, false);
-    drawResultant(context2, data, 0);
-    resizeCanvas(rulerCanvas2, rulerContext2, viewportWidth2, 48);
-    rulerContext2.clearRect(0, 0, viewportWidth2, 48);
-    drawAxis(rulerContext2, data, true);
-    drawResultant(rulerContext2, data, 48);
+    const background = drawBackground(context2, data);
+    for (const breakItem of geometry2.breaks) drawBreak(context2, breakItem, viewportWidth2, selectedEvidenceId2, data.i18n);
+    drawRibbons(context2, data, background);
+    drawEndpointGuides(context2, data);
+    drawZeroOrigin(context2, data);
+    drawAbsoluteScale(context2, geometry2, viewportHeight2, data.i18n);
+    resizeCanvas(rulerCanvas2, rulerContext2, viewportWidth2, RULER_HEIGHT);
+    rulerContext2.clearRect(0, 0, viewportWidth2, RULER_HEIGHT);
+    drawZeroOrigin(rulerContext2, data, RULER_HEIGHT);
+    drawProbabilityAxis(rulerContext2, data, {
+      position: "bottom",
+      endpoints: priorRulerEndpoints
+    });
+    resizeCanvas(posteriorRulerCanvas2, posteriorRulerContext2, viewportWidth2, RULER_HEIGHT);
+    posteriorRulerContext2.clearRect(0, 0, viewportWidth2, RULER_HEIGHT);
+    drawZeroOrigin(posteriorRulerContext2, data, RULER_HEIGHT);
+    drawProbabilityAxis(posteriorRulerContext2, data, {
+      position: "top",
+      endpoints: posteriorRulerEndpoints
+    });
     resizeCanvas(priorResultantCanvas2, priorResultantContext2, viewportWidth2, 30);
     priorResultantContext2.clearRect(0, 0, viewportWidth2, 30);
     drawResultant(priorResultantContext2, data, 15);
@@ -2757,14 +3252,16 @@ tbody th {
       "explanation.sourceLink": "View the source",
       "explanation.npmLink": "Use the npm package",
       "diagram.label": "Weight of evidence trapezoid diagram",
-      "diagram.canvasFallback": "The diagram shows the posterior interval horizontally and absolute weight vertically.",
-      "diagram.historyLabel": "Graphical evidence history, from the current summary to older evidence",
-      "diagram.caption": "Height measures absolute weight. Arrows follow each item of evidence at plus or minus 45 degrees.",
+      "diagram.canvasFallback": "The diagram shows evidence flowing downward from the prior interval to the posterior interval.",
+      "diagram.historyLabel": "Graphical evidence history, from the prior to the posterior",
+      "diagram.caption": "Height measures absolute weight. Arrows descend one pixel for every two horizontal pixels.",
+      "diagram.expandDetails": "Show evidence path",
+      "diagram.collapseDetails": "Hide evidence path",
       "diagram.resultNone": "Combined weight of evidence: None (0 dBan)",
       "diagram.result": "Combined weight of evidence: {band} ({weight} dBan)",
       "diagram.summaryAria": { one: "Summary of {count} evidence item", other: "Summary of {count} evidence items" },
       "diagram.summaryDetails": "{summary}: {net} net decibans, {absolute} absolute decibans, {dissonance} dissonance, {band} band, color {color}.",
-      "diagram.description": "Current net weight {net} dBan and absolute weight {absolute} dBan. The posterior axis runs from {minimum} to {maximum} dBan. The current posterior interval runs from {currentMinimum} to {currentMaximum} dBan. Its envelope runs from {envelopeMinimum} to {envelopeMaximum} dBan. The active prior is {activePrior}. The resultant runs from {resultantStart} to {resultantEnd} dBan. {position} {breaks}",
+      "diagram.description": "Current net weight {net} dBan and absolute weight {absolute} dBan. The prior and posterior axes run from {minimum} to {maximum} dBan. The current posterior interval runs from {currentMinimum} to {currentMaximum} dBan. Its envelope runs from {envelopeMinimum} to {envelopeMaximum} dBan. The active prior is {activePrior}. The resultant runs from {resultantStart} to {resultantEnd} dBan. {position} {breaks}",
       "diagram.noBreaks": "There are no compacted breaks.",
       "diagram.break": {
         one: "A {side} break runs from absolute weight {start} to {end}, skips {gap} dBan, and contains {count} fully offscreen evidence item with identifier {ids}.",
@@ -2843,18 +3340,24 @@ tbody th {
       "prior.slightNegative": "Slightly negative: −5 / 0",
       "prior.veryPositive": "Very positive: +20 / +30",
       "prior.exactFifty": "Exact 50% prior",
-      "prior.handlesLabel": "Adjustable prior bounds on the posterior axis",
+      "prior.handlesLabel": "Adjustable prior bounds on the prior probability axis",
       "prior.minHandle": "Adjust the minimum prior bound",
       "prior.maxHandle": "Adjust the maximum prior bound",
       "prior.value": "{bound} bound: {decibans} dBan, {percentage}",
       "prior.low": "low",
       "prior.high": "high",
+      "prior.short": "Prior",
       "prior.fixed": "Prior before evidence: {minimum}",
       "prior.range": "Prior before evidence: between {minimum} and {maximum}",
       "prior.exactDescription": "Calculated with a prior fixed at {prior} dBan.",
       "prior.rangeDescription": "Valid for a prior between {minimum} and {maximum} dBan.",
       "prior.finiteError": "Enter two finite bounds in decibans.",
       "prior.orderError": "The minimum bound must be less than or equal to the maximum bound.",
+      "posterior.fixed": "Posterior after evidence: {value}",
+      "posterior.range": "Posterior after evidence: between {minimum} and {maximum}",
+      "posterior.short": "Posterior",
+      "posterior.clipped": "The interval continues outside the displayed axis.",
+      "posterior.offscreen": "This interval is outside the displayed axis.",
       "scenario.heading": "Example scenarios",
       "scenario.none": "No evidence",
       "scenario.newsAggregatorFor": "1 news aggregator for",
@@ -2873,15 +3376,15 @@ tbody th {
       "scenario.officialDataAgainstTwoNewsReportsFor": "1 official data source against + 2 news reports for",
       "palette.heading": "Color legend",
       "palette.description": "The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.",
-      "palette.canvasAria": "Color legend triangle: Dissonance at the top, Against at the left, No evidence in the center, and For at the right. The point shows the current summary.",
+      "palette.canvasAria": "Color legend triangle: Against at the upper left, No evidence at the top center, For at the upper right, and Dissonance at the lower point. The point shows the current summary.",
       "palette.canvasFallback": "Triangular color legend.",
       "palette.currentAria": "Current summary color",
-      "palette.saturation": "Saturation threshold",
+      "palette.saturation": "Evidence needed for full color",
       "palette.noEvidence": "No evidence",
       "palette.dissonance": "Dissonance",
       "palette.against": "Against",
       "palette.for": "For",
-      "palette.help": "The threshold controls the color transition beyond the gray region defined by the prior bounds.",
+      "palette.help": "Lower values give stronger colors sooner. Red and green build beyond the prior’s gray range; yellow builds as conflicting evidence accumulates.",
       "action.reset": "Reset",
       "direction.for": "for",
       "direction.against": "against",
@@ -2935,14 +3438,16 @@ tbody th {
       "explanation.sourceLink": "Voir le code source",
       "explanation.npmLink": "Utiliser le paquet npm",
       "diagram.label": "Diagramme en trapèze du poids des preuves",
-      "diagram.canvasFallback": "Le diagramme montre l’intervalle postérieur horizontalement et le poids absolu verticalement.",
-      "diagram.historyLabel": "Historique graphique des preuves, de la synthèse actuelle vers les preuves plus anciennes",
-      "diagram.caption": "La hauteur mesure le poids absolu. Les flèches suivent chaque preuve, à plus ou moins 45 degrés.",
+      "diagram.canvasFallback": "Le diagramme montre les preuves descendant de l’intervalle a priori vers l’intervalle a posteriori.",
+      "diagram.historyLabel": "Historique graphique des preuves, de l’a priori vers l’a posteriori",
+      "diagram.caption": "La hauteur mesure le poids absolu. Les flèches descendent d’un pixel pour deux pixels horizontaux.",
+      "diagram.expandDetails": "Afficher le parcours des preuves",
+      "diagram.collapseDetails": "Masquer le parcours des preuves",
       "diagram.resultNone": "Poids des preuves combiné : Nul (0 dBan)",
       "diagram.result": "Poids des preuves combiné : {band} ({weight} dBan)",
       "diagram.summaryAria": { one: "Synthèse de {count} preuve", other: "Synthèse de {count} preuves" },
       "diagram.summaryDetails": "{summary} : {net} décibans nets, {absolute} décibans absolus, {dissonance} de dissonance, bande {band}, couleur {color}.",
-      "diagram.description": "Poids net actuel {net} dBan et poids absolu {absolute} dBan. L’axe postérieur va de {minimum} à {maximum} dBan. L’intervalle postérieur courant va de {currentMinimum} à {currentMaximum} dBan. Son enveloppe va de {envelopeMinimum} à {envelopeMaximum} dBan. L’a priori actif est {activePrior}. La résultante va de {resultantStart} à {resultantEnd} dBan. {position} {breaks}",
+      "diagram.description": "Poids net actuel {net} dBan et poids absolu {absolute} dBan. Les axes a priori et a posteriori vont de {minimum} à {maximum} dBan. L’intervalle postérieur courant va de {currentMinimum} à {currentMaximum} dBan. Son enveloppe va de {envelopeMinimum} à {envelopeMaximum} dBan. L’a priori actif est {activePrior}. La résultante va de {resultantStart} à {resultantEnd} dBan. {position} {breaks}",
       "diagram.noBreaks": "Aucune rupture compacte.",
       "diagram.break": {
         one: "Une rupture {side} va du poids absolu {start} à {end}, saute {gap} dBan et contient {count} preuve entièrement hors champ, identifiant {ids}.",
@@ -3021,18 +3526,24 @@ tbody th {
       "prior.slightNegative": "Légèrement négatif : −5 / 0",
       "prior.veryPositive": "Très positif : +20 / +30",
       "prior.exactFifty": "A priori exact de 50 %",
-      "prior.handlesLabel": "Bornes d’a priori réglables sur l’axe postérieur",
+      "prior.handlesLabel": "Bornes d’a priori réglables sur l’axe de probabilité a priori",
       "prior.minHandle": "Ajuster la borne minimale de l’a priori",
       "prior.maxHandle": "Ajuster la borne maximale de l’a priori",
       "prior.value": "Borne {bound} : {decibans} dBan, {percentage}",
       "prior.low": "basse",
       "prior.high": "haute",
+      "prior.short": "A priori",
       "prior.fixed": "A priori avant les preuves : {minimum}",
       "prior.range": "A priori avant les preuves : entre {minimum} et {maximum}",
       "prior.exactDescription": "Calculée avec un a priori fixé à {prior} dBan.",
       "prior.rangeDescription": "Valable pour un a priori compris entre {minimum} et {maximum} dBan.",
       "prior.finiteError": "Saisissez deux bornes finies en décibans.",
       "prior.orderError": "La borne minimale doit être inférieure ou égale à la borne maximale.",
+      "posterior.fixed": "A posteriori après les preuves : {value}",
+      "posterior.range": "A posteriori après les preuves : entre {minimum} et {maximum}",
+      "posterior.short": "A posteriori",
+      "posterior.clipped": "L’intervalle se poursuit hors de l’axe affiché.",
+      "posterior.offscreen": "Cet intervalle est hors de l’axe affiché.",
       "scenario.heading": "Scénarios d’exemple",
       "scenario.none": "Aucune preuve",
       "scenario.newsAggregatorFor": "1 agrégateur confirme",
@@ -3051,15 +3562,15 @@ tbody th {
       "scenario.officialDataAgainstTwoNewsReportsFor": "1 donnée officielle contre + 2 articles de presse pour",
       "palette.heading": "Légende des couleurs",
       "palette.description": "Le triangle résume la couleur des preuves et de la résultante. La dissonance reste visible lorsque les preuves pointent dans des directions opposées.",
-      "palette.canvasAria": "Triangle de légende des couleurs : Dissonance en haut, Contre à gauche, Aucune preuve au centre et Pour à droite. Le point indique la synthèse actuelle.",
+      "palette.canvasAria": "Triangle de légende des couleurs : Contre en haut à gauche, Aucune preuve en haut au centre, Pour en haut à droite et Dissonance à la pointe inférieure. Le point indique la synthèse actuelle.",
       "palette.canvasFallback": "Légende triangulaire des couleurs.",
       "palette.currentAria": "Couleur de la synthèse actuelle",
-      "palette.saturation": "Seuil de saturation",
+      "palette.saturation": "Poids requis pour une couleur intense",
       "palette.noEvidence": "Aucune preuve",
       "palette.dissonance": "Dissonance",
       "palette.against": "Contre",
       "palette.for": "Pour",
-      "palette.help": "Le seuil règle la transition de couleur au-delà de la zone grise définie par les bornes de l’a priori.",
+      "palette.help": "Des valeurs plus faibles renforcent les couleurs plus tôt. Le rouge et le vert se développent au-delà de la zone grise de l’a priori ; le jaune augmente lorsque des preuves contradictoires s’accumulent.",
       "action.reset": "Réinitialiser",
       "direction.for": "pour",
       "direction.against": "contre",
@@ -3180,6 +3691,7 @@ tbody th {
   ];
   var viewportHeight = 300;
   var BREAK_HEIGHT = 40;
+  var VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL = 1 / 2;
   function storedLocale() {
     try {
       return localStorage.getItem("evidences-diagrams.locale") ?? DEFAULT_LOCALE;
@@ -3197,8 +3709,10 @@ tbody th {
   var context = canvas.getContext("2d", { alpha: true });
   var rulerCanvas = document.querySelector("#cone-ruler");
   var rulerContext = rulerCanvas.getContext("2d", { alpha: true });
+  var posteriorRulerCanvas = document.querySelector("#posterior-ruler");
+  var posteriorRulerContext = posteriorRulerCanvas.getContext("2d", { alpha: true });
   var coneScroll = document.querySelector("#cone-scroll");
-  var coneSpacer = document.querySelector("#cone-spacer");
+  var coneWrap = document.querySelector(".cone-wrap");
   var coneDescription = document.querySelector("#cone-description");
   var resultantLabel = document.querySelector("#resultant-label");
   var colorLegend = document.querySelector("#color-legend");
@@ -3211,6 +3725,7 @@ tbody th {
   var probability = document.querySelector("#probability");
   var probabilityText = document.querySelector("#probability-text");
   var probabilityDescription = document.querySelector("#probability-description");
+  var dissonanceMeasure = document.querySelector(".dissonance-measure");
   var priorBoundsError = document.querySelector("#prior-bounds-error");
   var visualization = document.querySelector("#visualization");
   var colorSummary = document.querySelector(".color");
@@ -3219,8 +3734,16 @@ tbody th {
   var priorBand = document.querySelector("#prior-band");
   var priorTrack = priorBand.parentElement;
   var priorBandText = document.querySelector("#prior-band-text");
+  var posteriorBand = document.querySelector("#posterior-band");
+  var posteriorTrack = posteriorBand.parentElement;
+  var posteriorBandText = document.querySelector("#posterior-band-text");
   var priorResultantCanvas = document.querySelector("#prior-resultant");
   var priorResultantContext = priorResultantCanvas.getContext("2d", { alpha: true });
+  var diagramDetails = document.querySelector("#diagram-details");
+  var diagramDetailsToggle = document.querySelector("#diagram-details-toggle");
+  var axisGuides = Object.fromEntries(
+    [...document.querySelectorAll("[data-axis-guide]")].map((guide) => [guide.dataset.axisGuide, guide])
+  );
   var anchorInputs = Object.fromEntries(
     ["gray", "yellow", "red", "green"].map((name) => [
       name,
@@ -3246,16 +3769,25 @@ tbody th {
   var currentDiagram;
   var diagramPriors;
   var viewportWidth = 1;
-  var pixelsPerDeciban = 4;
-  var drawPending = false;
+  var horizontalPixelsPerDeciban = 4;
+  var verticalPixelsPerDeciban = horizontalPixelsPerDeciban * VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL;
   var priorDrag = null;
-  function scheduleDraw() {
-    if (drawPending) return;
-    drawPending = true;
-    requestAnimationFrame(() => {
-      drawPending = false;
-      drawVisualization();
-    });
+  var diagramDetailsExpanded = true;
+  function syncDiagramDetailsState() {
+    diagramDetails.hidden = !diagramDetailsExpanded;
+    diagramDetailsToggle.setAttribute("aria-expanded", String(diagramDetailsExpanded));
+    diagramDetailsToggle.setAttribute(
+      "aria-label",
+      i18n.t(diagramDetailsExpanded ? "diagram.collapseDetails" : "diagram.expandDetails")
+    );
+    diagramDetailsToggle.classList.toggle("is-expanded", diagramDetailsExpanded);
+    coneWrap.classList.toggle("details-expanded", diagramDetailsExpanded);
+    coneWrap.closest(".result")?.classList.toggle("diagram-expanded", diagramDetailsExpanded);
+  }
+  function setDiagramDetailsExpanded(expanded) {
+    diagramDetailsExpanded = expanded;
+    syncDiagramDetailsState();
+    requestAnimationFrame(update);
   }
   function evidenceWeight(item) {
     const magnitude = evidencePresentation(item, categories, i18n.t).weight;
@@ -3267,18 +3799,52 @@ tbody th {
   function formatSigned(value) {
     return `${value > 0 ? "+" : value < 0 ? "−" : ""}${formatDeciban(Math.abs(value))}`;
   }
-  function formatPriorPercentage(prior) {
-    const percentage = decibansToProbability({ weightDecibans: prior }).probability;
+  function formatDecibanPercentage(decibans) {
+    const percentage = decibansToProbability({ weightDecibans: decibans }).probability;
     if (percentage >= 0.995) return `>${i18n.percent(0.99, { maximumFractionDigits: 0 })}`;
     if (percentage <= 5e-3) return `<${i18n.percent(0.01, { maximumFractionDigits: 0 })}`;
     return i18n.percent(percentage, { maximumFractionDigits: 0 });
   }
-  function priorColor(prior) {
+  function formatPosteriorPercentage(decibans, direction) {
+    const percentage = decibansToProbability({ weightDecibans: decibans }).probability * 100;
+    const displayPercentage = direction === "lower" ? Math.floor(percentage) : direction === "upper" ? Math.ceil(percentage) : Math.round(percentage);
+    const boundedPercentage = direction === "lower" ? Math.min(displayPercentage, 99) : direction === "upper" ? Math.max(displayPercentage, 1) : displayPercentage;
+    return i18n.percent(boundedPercentage / 100, { maximumFractionDigits: 0 });
+  }
+  function axisColor(decibans) {
     return color({
-      netWeightDecibans: prior,
-      absoluteWeightDecibans: Math.abs(prior),
+      netWeightDecibans: decibans,
+      absoluteWeightDecibans: Math.abs(decibans),
       dissonance: 0
     }, { ...colorOptions, minPriorDecibans: 0, maxPriorDecibans: 0 });
+  }
+  function setBandCaption(element, {
+    shortKey,
+    fixedKey,
+    rangeKey,
+    minimum,
+    maximum,
+    minimumColor,
+    maximumColor,
+    suffixKey,
+    formatMinimum = formatDecibanPercentage,
+    formatMaximum = formatDecibanPercentage
+  }) {
+    const exact = minimum === maximum;
+    const minimumValue = formatMinimum(minimum);
+    const maximumValue = formatMaximum(maximum);
+    const minimumMarkup = `<span class="band-caption-endpoint band-caption-minimum" style="color:${minimumColor}">${minimumValue}</span>`;
+    const maximumMarkup = `<span class="band-caption-endpoint band-caption-maximum" style="color:${maximumColor}">${maximumValue}</span>`;
+    const replacements = {
+      minimum: minimumMarkup,
+      maximum: maximumMarkup,
+      value: minimumMarkup
+    };
+    const messageKey = exact ? fixedKey : rangeKey;
+    const suffix = suffixKey ? ` ${i18n.t(suffixKey)}` : "";
+    const compactValues = exact ? minimumMarkup : `${minimumMarkup}<span class="band-range-separator">–</span>${maximumMarkup}`;
+    const fullCaption = `${i18n.t(messageKey, replacements)}${suffix}`;
+    element.innerHTML = `<span class="band-caption-compact" aria-hidden="true"><span class="band-caption-title">${i18n.t(shortKey)}</span><span class="band-caption-values${exact ? " is-exact" : ""}">${compactValues}</span></span><span class="band-caption-full">${fullCaption}</span>`;
   }
   function syncPriorHandles() {
     if (!geometry || !currentDiagram) return;
@@ -3302,19 +3868,22 @@ tbody th {
     ])].sort((a, b) => a - b);
     const stops = gradientValues.map((value) => {
       const position = visibleRange === 0 ? 50 : (value - visibleMinimum) / visibleRange * 100;
-      return `${priorColor(value)} ${position}%`;
+      return `${axisColor(value)} ${position}%`;
     });
-    priorBand.style.background = visibleRange === 0 ? priorColor(visibleMinimum) : `linear-gradient(90deg, ${stops.join(", ")})`;
-    const minimumColor = priorColor(bounds.min);
-    const maximumColor = priorColor(bounds.max);
-    const minimumText = `<span style="color:${minimumColor}">${formatPriorPercentage(bounds.min)}</span>`;
-    const maximumText = `<span style="color:${maximumColor}">${formatPriorPercentage(bounds.max)}</span>`;
-    priorBandText.innerHTML = i18n.t(bounds.min === bounds.max ? "prior.fixed" : "prior.range", {
-      minimum: minimumText,
-      maximum: maximumText
+    priorBand.style.background = visibleRange === 0 ? axisColor(visibleMinimum) : `linear-gradient(90deg, ${stops.join(", ")})`;
+    const minimumColor = axisColor(bounds.min);
+    const maximumColor = axisColor(bounds.max);
+    setBandCaption(priorBandText, {
+      shortKey: "prior.short",
+      fixedKey: "prior.fixed",
+      rangeKey: "prior.range",
+      minimum: bounds.min,
+      maximum: bounds.max,
+      minimumColor,
+      maximumColor
     });
-    const xMin = (visibleMinimum - geometry.minimum) * pixelsPerDeciban;
-    const xMax = (visibleMaximum - geometry.minimum) * pixelsPerDeciban;
+    const xMin = (visibleMinimum - geometry.minimum) * horizontalPixelsPerDeciban;
+    const xMax = (visibleMaximum - geometry.minimum) * horizontalPixelsPerDeciban;
     const bandLeft = Math.max(0, Math.min(viewportWidth, xMin));
     const bandRight = Math.max(0, Math.min(viewportWidth, xMax));
     const bandStart = Math.min(bandLeft, bandRight);
@@ -3338,15 +3907,9 @@ tbody th {
       pairFits = true;
       pairOffset = 0;
     }
-    const bracketSeparation = Math.max(0, (18 - (xMax - xMin)) / 2);
-    const rawMinimumBracket = xMin - bracketSeparation;
-    const rawMaximumBracket = xMax + bracketSeparation;
-    const bracketOffset = rawMinimumBracket < 0 ? -rawMinimumBracket : Math.min(0, viewportWidth - rawMaximumBracket);
-    const minimumBracketX = rawMinimumBracket + bracketOffset;
-    const maximumBracketX = rawMaximumBracket + bracketOffset;
     for (const handle of priorHandles) {
       const key = handle.dataset.priorHandle;
-      const x = (clampToDomain(bounds[key]) - geometry.minimum) * pixelsPerDeciban;
+      const x = (clampToDomain(bounds[key]) - geometry.minimum) * horizontalPixelsPerDeciban;
       const prior = bounds[key];
       handle.hidden = false;
       handle.textContent = "";
@@ -3354,8 +3917,7 @@ tbody th {
       const left = pairFits ? rawLeft : Math.max(0, Math.min(viewportWidth - handleWidth, rawLeft));
       handle.style.left = `${left}px`;
       handle.style.setProperty("--prior-anchor", `${x - left}px`);
-      handle.style.setProperty("--bracket-x", `${(key === "min" ? minimumBracketX : maximumBracketX) - left}px`);
-      handle.style.setProperty("--prior-color", priorColor(prior));
+      handle.style.setProperty("--prior-color", axisColor(prior));
       handle.dataset.prior = key;
       const active = geometry.activeEndpoint?.side === (key === "min" ? "minimum" : "maximum");
       handle.classList.toggle("is-active", active);
@@ -3364,10 +3926,180 @@ tbody th {
       handle.setAttribute("aria-valuetext", i18n.t("prior.value", {
         bound: i18n.t(key === "min" ? "prior.low" : "prior.high"),
         decibans: formatSigned(prior),
-        percentage: formatPriorPercentage(prior)
+        percentage: formatDecibanPercentage(prior)
       }));
       handle.setAttribute("aria-valuemin", String(Math.min(geometry.minimum, bounds.min)));
       handle.setAttribute("aria-valuemax", String(Math.max(geometry.maximum, bounds.max)));
+    }
+  }
+  function syncPosteriorInterval() {
+    if (!geometry || !currentDiagram) return;
+    const interval = geometry.currentInterval;
+    const exact = interval.minimum === interval.maximum;
+    const clippedMinimum = interval.minimum < geometry.minimum;
+    const clippedMaximum = interval.maximum > geometry.maximum;
+    const visibleMinimum = Math.max(geometry.minimum, Math.min(geometry.maximum, interval.minimum));
+    const visibleMaximum = Math.max(geometry.minimum, Math.min(geometry.maximum, interval.maximum));
+    const left = (visibleMinimum - geometry.minimum) * horizontalPixelsPerDeciban;
+    const right = (visibleMaximum - geometry.minimum) * horizontalPixelsPerDeciban;
+    const minimumColor = axisColor(interval.minimum);
+    const maximumColor = axisColor(interval.maximum);
+    const formatMinimum = (value) => formatPosteriorPercentage(
+      value,
+      exact ? "exact" : "lower"
+    );
+    const formatMaximum = (value) => formatPosteriorPercentage(
+      value,
+      exact ? "exact" : "upper"
+    );
+    setBandCaption(posteriorBandText, {
+      shortKey: "posterior.short",
+      fixedKey: "posterior.fixed",
+      rangeKey: "posterior.range",
+      minimum: interval.minimum,
+      maximum: interval.maximum,
+      minimumColor,
+      maximumColor,
+      formatMinimum,
+      formatMaximum,
+      suffixKey: interval.visible ? clippedMinimum || clippedMaximum ? "posterior.clipped" : void 0 : "posterior.offscreen"
+    });
+    posteriorBand.hidden = !interval.visible || exact;
+    posteriorBand.style.left = `${Math.min(left, right)}px`;
+    posteriorBand.style.width = `${Math.max(2, Math.abs(right - left))}px`;
+    const gradientValues = [.../* @__PURE__ */ new Set([
+      visibleMinimum,
+      visibleMaximum,
+      Math.max(visibleMinimum, Math.min(visibleMaximum, -colorOptions.saturationThresholdDecibans)),
+      Math.max(visibleMinimum, Math.min(visibleMaximum, 0)),
+      Math.max(visibleMinimum, Math.min(visibleMaximum, colorOptions.saturationThresholdDecibans))
+    ])].sort((a, b) => a - b);
+    const visibleRange = visibleMaximum - visibleMinimum;
+    const stops = gradientValues.map((value) => {
+      const position = visibleRange === 0 ? 50 : (value - visibleMinimum) / visibleRange * 100;
+      return `${axisColor(value)} ${position}%`;
+    });
+    posteriorBand.style.background = visibleRange === 0 ? axisColor(visibleMinimum) : `linear-gradient(90deg, ${stops.join(", ")})`;
+    posteriorTrack.classList.toggle("is-exact", exact && interval.visible);
+    posteriorTrack.classList.toggle("is-clipped-minimum", clippedMinimum);
+    posteriorTrack.classList.toggle("is-clipped-maximum", clippedMaximum);
+    posteriorTrack.style.setProperty("--posterior-x", `${left}px`);
+    posteriorTrack.style.setProperty("--posterior-minimum-color", minimumColor);
+    posteriorTrack.style.setProperty("--posterior-maximum-color", maximumColor);
+  }
+  function syncAxisGuide(key, x, startY, endY, visible) {
+    const guide = axisGuides[key];
+    if (!guide) return;
+    guide.hidden = !visible || endY <= startY;
+    if (guide.hidden) return;
+    const wrapBounds = coneWrap.getBoundingClientRect();
+    guide.style.left = `${x}px`;
+    guide.style.top = `${startY - wrapBounds.top}px`;
+    guide.style.height = `${endY - startY}px`;
+  }
+  function syncAxisGuides() {
+    if (!geometry) return;
+    const wrapBounds = coneWrap.getBoundingClientRect();
+    const rulerBounds = rulerCanvas.getBoundingClientRect();
+    const posteriorRulerBounds = posteriorRulerCanvas.getBoundingClientRect();
+    if (!diagramDetailsExpanded) {
+      for (const [key, guide] of Object.entries(axisGuides)) {
+        if (key !== "zero-origin") guide.hidden = true;
+      }
+      const zeroOrigin2 = (0 - geometry.minimum) * horizontalPixelsPerDeciban;
+      syncAxisGuide(
+        "zero-origin",
+        rulerBounds.left - wrapBounds.left + zeroOrigin2,
+        rulerBounds.bottom,
+        posteriorRulerBounds.top,
+        geometry.minimum <= 0 && geometry.maximum >= 0
+      );
+      return;
+    }
+    const canvasBounds = canvas.getBoundingClientRect();
+    const priorBounds = priorTrack.getBoundingClientRect();
+    const posteriorBounds = posteriorTrack.getBoundingClientRect();
+    const priorMinimum = (Math.max(geometry.minimum, Math.min(geometry.maximum, geometry.minPriorDecibans)) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const priorMaximum = (Math.max(geometry.minimum, Math.min(geometry.maximum, geometry.maxPriorDecibans)) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const interval = geometry.currentInterval;
+    const posteriorMinimum = (Math.max(geometry.minimum, interval.minimum) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const posteriorMaximum = (Math.min(geometry.maximum, interval.maximum) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const canvasOffset = canvasBounds.left - wrapBounds.left;
+    const exactPrior = geometry.minPriorDecibans === geometry.maxPriorDecibans;
+    const exactPosterior = interval.minimum === interval.maximum;
+    const zeroOrigin = (0 - geometry.minimum) * horizontalPixelsPerDeciban;
+    syncAxisGuide(
+      "zero-origin",
+      canvasOffset + zeroOrigin,
+      rulerBounds.bottom,
+      canvasBounds.bottom,
+      geometry.minimum <= 0 && geometry.maximum >= 0
+    );
+    syncAxisGuide(
+      "prior-min",
+      canvasOffset + priorMinimum,
+      priorBounds.top + priorBounds.height / 2,
+      canvasBounds.top,
+      geometry.minPriorDecibans >= geometry.minimum && geometry.minPriorDecibans <= geometry.maximum
+    );
+    syncAxisGuide(
+      "prior-max",
+      canvasOffset + priorMaximum,
+      priorBounds.top + priorBounds.height / 2,
+      canvasBounds.top,
+      !exactPrior && geometry.maxPriorDecibans >= geometry.minimum && geometry.maxPriorDecibans <= geometry.maximum
+    );
+    syncAxisGuide(
+      "posterior-min",
+      canvasOffset + posteriorMinimum,
+      canvasBounds.bottom,
+      posteriorBounds.top + posteriorBounds.height / 2,
+      interval.visible && interval.minimum >= geometry.minimum
+    );
+    syncAxisGuide(
+      "posterior-max",
+      canvasOffset + posteriorMaximum,
+      canvasBounds.bottom,
+      posteriorBounds.top + posteriorBounds.height / 2,
+      interval.visible && !exactPosterior && interval.maximum <= geometry.maximum
+    );
+  }
+  function syncBandCaptionPlacement() {
+    if (!geometry) return;
+    coneWrap.style.removeProperty("--band-caption-overlay-width");
+    coneWrap.style.removeProperty("--band-caption-title-width");
+    const compactCaptions = [...coneWrap.querySelectorAll(".band-caption-compact")];
+    const titleWidth = Math.ceil(Math.max(
+      ...compactCaptions.map((caption) => caption.querySelector(".band-caption-title")?.scrollWidth ?? 0),
+      0
+    ));
+    coneWrap.style.setProperty("--band-caption-title-width", `${titleWidth}px`);
+    const captionWidth = Math.ceil(Math.max(...compactCaptions.map((caption) => {
+      const parentStyle = getComputedStyle(caption.parentElement);
+      return caption.scrollWidth + Number.parseFloat(parentStyle.paddingLeft) + Number.parseFloat(parentStyle.paddingRight);
+    }), 0));
+    coneWrap.style.setProperty("--band-caption-overlay-width", `${captionWidth}px`);
+    const clamp2 = (value) => Math.max(geometry.minimum, Math.min(geometry.maximum, value));
+    const priorMinimumX = (clamp2(geometry.minPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const priorMaximumX = (clamp2(geometry.maxPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const posteriorMinimumX = (clamp2(geometry.currentInterval.minimum) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const posteriorMaximumX = (clamp2(geometry.currentInterval.maximum) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const negative = geometry.totalWeight < 0;
+    const edgeRoom = negative ? viewportWidth - Math.max(priorMaximumX, posteriorMaximumX) : Math.min(priorMinimumX, posteriorMinimumX);
+    const captionsStacked = edgeRoom < captionWidth + 18;
+    coneWrap.classList.toggle("captions-stacked", captionsStacked);
+    if (!captionsStacked) {
+      const wrapBounds = coneWrap.getBoundingClientRect();
+      const priorBounds = priorTrack.getBoundingClientRect();
+      const posteriorBounds = posteriorTrack.getBoundingClientRect();
+      priorBandText.style.setProperty(
+        "--band-caption-y",
+        `${priorBounds.top - wrapBounds.top + priorBounds.height / 2}px`
+      );
+      posteriorBandText.style.setProperty(
+        "--band-caption-y",
+        `${posteriorBounds.top - wrapBounds.top + posteriorBounds.height / 2}px`
+      );
     }
   }
   function setPriorFromHandle(key, prior) {
@@ -3390,17 +4122,17 @@ tbody th {
     const width = Math.max(1, Math.min(260, Math.round(colorLegend.clientWidth - 32)));
     const height = Math.round(width * 0.66);
     resizeCanvas2(legendCanvas, legendContext, width, height);
-    const top = { x: width / 2, y: 25 };
-    const left = { x: 14, y: height - 25 };
-    const right = { x: width - 14, y: height - 25 };
-    const halfBase = right.x - top.x;
-    const triangleHeight = left.y - top.y;
-    for (let y2 = Math.ceil(top.y); y2 <= left.y; y2 += 1) {
-      const proportion = (left.y - y2) / triangleHeight;
+    const baseLeft = { x: 14, y: 25 };
+    const baseRight = { x: width - 14, y: 25 };
+    const apex = { x: width / 2, y: height - 25 };
+    const halfBase = baseRight.x - apex.x;
+    const triangleHeight = apex.y - baseLeft.y;
+    for (let y2 = Math.ceil(baseLeft.y); y2 <= apex.y; y2 += 1) {
+      const proportion = (y2 - baseLeft.y) / triangleHeight;
       const halfWidth = halfBase * (1 - proportion);
-      for (let x2 = Math.ceil(top.x - halfWidth); x2 <= Math.floor(top.x + halfWidth); x2 += 1) {
+      for (let x2 = Math.ceil(apex.x - halfWidth); x2 <= Math.floor(apex.x + halfWidth); x2 += 1) {
         legendContext.fillStyle = triangleColor({
-          x: (x2 - top.x) / halfBase,
+          x: (x2 - apex.x) / halfBase,
           height: proportion
         }, colorOptions);
         legendContext.fillRect(x2, y2, 1, 1);
@@ -3409,14 +4141,14 @@ tbody th {
     legendContext.strokeStyle = "#334155";
     legendContext.lineWidth = 1.5;
     legendContext.beginPath();
-    legendContext.moveTo(top.x, top.y);
-    legendContext.lineTo(left.x, left.y);
-    legendContext.lineTo(right.x, right.y);
+    legendContext.moveTo(baseLeft.x, baseLeft.y);
+    legendContext.lineTo(baseRight.x, baseRight.y);
+    legendContext.lineTo(apex.x, apex.y);
     legendContext.closePath();
     legendContext.stroke();
     const position = trianglePosition(currentDiagram.summary, colorOptions);
-    const x = top.x + position.x * halfBase;
-    const y = left.y - position.height * triangleHeight;
+    const x = apex.x + position.x * halfBase;
+    const y = baseLeft.y + position.height * triangleHeight;
     legendContext.beginPath();
     legendContext.arc(x, y, 5, 0, Math.PI * 2);
     legendContext.fillStyle = currentDiagram.resultant.color;
@@ -3426,23 +4158,39 @@ tbody th {
     legendContext.stroke();
     legendContext.fillStyle = "#334155";
     legendContext.font = "700 10px system-ui";
-    legendContext.textAlign = "center";
-    legendContext.fillText(i18n.t("palette.dissonance"), top.x, 10);
     legendContext.textAlign = "left";
-    legendContext.fillText(i18n.t("palette.against"), 0, height - 5);
+    legendContext.fillText(i18n.t("palette.against"), 0, 10);
     legendContext.textAlign = "center";
-    legendContext.fillText(i18n.t("palette.noEvidence"), width / 2, height - 5);
+    legendContext.fillText(i18n.t("palette.noEvidence"), width / 2, 10);
     legendContext.textAlign = "right";
-    legendContext.fillText(i18n.t("palette.for"), width, height - 5);
+    legendContext.fillText(i18n.t("palette.for"), width, 10);
+    legendContext.textAlign = "center";
+    legendContext.fillText(i18n.t("palette.dissonance"), apex.x, height - 5);
     legendContext.textAlign = "start";
   }
   function drawVisualization() {
     if (!geometry) return;
+    const priorRulerEndpoints = geometry.minPriorDecibans === geometry.maxPriorDecibans ? [{ weight: geometry.minPriorDecibans, label: formatDecibanPercentage(geometry.minPriorDecibans) }] : [geometry.minPriorDecibans, geometry.maxPriorDecibans].map((weight) => ({
+      weight,
+      label: formatDecibanPercentage(weight)
+    }));
+    const posteriorRulerEndpoints = geometry.currentInterval.minimum === geometry.currentInterval.maximum ? [{
+      weight: geometry.currentInterval.minimum,
+      label: formatPosteriorPercentage(geometry.currentInterval.minimum, "exact")
+    }] : [{
+      weight: geometry.currentInterval.minimum,
+      label: formatPosteriorPercentage(geometry.currentInterval.minimum, "lower")
+    }, {
+      weight: geometry.currentInterval.maximum,
+      label: formatPosteriorPercentage(geometry.currentInterval.maximum, "upper")
+    }];
     drawDiagram({
       canvas,
       context,
       rulerCanvas,
       rulerContext,
+      posteriorRulerCanvas,
+      posteriorRulerContext,
       priorResultantCanvas,
       priorResultantContext,
       geometry,
@@ -3450,11 +4198,12 @@ tbody th {
       selectedEvidenceId,
       viewportWidth,
       viewportHeight,
-      pixelsPerDeciban,
+      horizontalPixelsPerDeciban,
       colorOptions,
       priors: diagramPriors,
       latestColor,
-      yOffset: coneScroll.scrollTop,
+      priorRulerEndpoints,
+      posteriorRulerEndpoints,
       i18n
     });
     canvas.dataset.stepCount = String(geometry.steps.length);
@@ -3487,21 +4236,28 @@ tbody th {
     element.append(selectionButton, removeButton);
     selectionButton.addEventListener("click", () => {
       selectedEvidenceId = item.id;
+      if (!diagramDetailsExpanded) {
+        diagramDetailsExpanded = true;
+        syncDiagramDetailsState();
+      }
       update();
       if (!geometry || visualization.hidden) return;
       const step = geometry.steps.find(({ id }) => id === item.id);
       const breakItem = geometry.breaks.find(({ hiddenEvidenceIds }) => hiddenEvidenceIds.includes(item.id));
       const y = step?.visibleRibbon?.y2 ?? breakItem?.y ?? 0;
-      coneScroll.scrollTop = Math.max(0, y - viewportHeight / 3);
-      drawVisualization();
+      requestAnimationFrame(() => {
+        const canvasBounds = canvas.getBoundingClientRect();
+        window.scrollTo({
+          top: Math.max(0, window.scrollY + canvasBounds.top + y - window.innerHeight / 3),
+          behavior: "smooth"
+        });
+      });
     });
     removeButton.addEventListener("click", () => {
       const index = evidence.findIndex(({ id }) => id === item.id);
       evidence = evidence.filter(({ id }) => id !== item.id);
       const adjacentEvidence = evidence[Math.min(index, evidence.length - 1)];
-      if (selectedEvidenceId === item.id) {
-        selectedEvidenceId = adjacentEvidence?.id ?? null;
-      }
+      if (selectedEvidenceId === item.id) selectedEvidenceId = null;
       update();
       if (adjacentEvidence) {
         evidenceHistory.querySelector(`[data-evidence-id="${adjacentEvidence.id}"] .evidence-step`).focus();
@@ -3622,13 +4378,20 @@ tbody th {
     const summary = diagram.summary;
     renderHistory();
     document.querySelector("#dissonance").textContent = i18n.percent(summary.dissonance);
+    dissonanceMeasure.style.setProperty(
+      "--measure-color",
+      summary.dissonance > 0 ? colorOptions.anchors.yellow : colorOptions.anchors.gray
+    );
     const resultantBand = diagram.resultant.jeffreysBand;
     const bandLabel = i18n.t(`band.${resultantBand}`);
     const resultantWeight = summary.netWeightDecibans;
+    coneWrap.classList.toggle("is-negative", resultantWeight < 0);
     const resultantText = resultantWeight === 0 ? i18n.t("diagram.resultNone") : i18n.t("diagram.result", { band: bandLabel, weight: formatSigned(resultantWeight) });
     resultantLabel.textContent = resultantText;
     probability.hidden = false;
     probabilityText.textContent = localizedProbability(diagram.probability);
+    const probabilityColor = diagram.probability.direction === "lower" && diagram.probability.probability > 0.5 ? "green" : diagram.probability.direction === "upper" && diagram.probability.probability < 0.5 ? "red" : diagram.probability.direction === "exact" && diagram.probability.probability > 0.5 ? "green" : diagram.probability.direction === "exact" && diagram.probability.probability < 0.5 ? "red" : "gray";
+    probability.style.setProperty("--measure-color", colorOptions.anchors[probabilityColor]);
     probabilityDescription.textContent = priorBounds.minPriorDecibans === priorBounds.maxPriorDecibans ? i18n.t("prior.exactDescription", { prior: formatDeciban(priorBounds.minPriorDecibans) }) : i18n.t("prior.rangeDescription", {
       minimum: formatDeciban(priorBounds.minPriorDecibans),
       maximum: formatDeciban(priorBounds.maxPriorDecibans)
@@ -3642,7 +4405,7 @@ tbody th {
     const minimum = displayDiagram.domain.minimumDecibans;
     const maximum = displayDiagram.domain.maximumDecibans;
     const amplitude = maximum - minimum;
-    viewportWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+    viewportWidth = Math.max(1, Math.round(priorTrack.clientWidth || 340));
     if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || !Number.isFinite(amplitude) || amplitude <= 0) {
       priorBoundsError.textContent = i18n.t("diagram.invalidGeometry");
       priorBoundsError.hidden = false;
@@ -3650,32 +4413,31 @@ tbody th {
       geometry = void 0;
       return;
     }
-    pixelsPerDeciban = viewportWidth / amplitude;
+    horizontalPixelsPerDeciban = viewportWidth / amplitude;
+    verticalPixelsPerDeciban = horizontalPixelsPerDeciban * VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL;
     diagramPriors = { minPriorDecibans: priorBounds.minPriorDecibans, maxPriorDecibans: priorBounds.maxPriorDecibans };
     geometry = buildGeometry(displayDiagram, {
-      pixelsPerDeciban,
+      horizontalPixelsPerDeciban,
+      verticalPixelsPerDeciban,
       breakHeight: BREAK_HEIGHT,
       minPriorDecibans: priorBounds.minPriorDecibans,
       maxPriorDecibans: priorBounds.maxPriorDecibans
     });
-    viewportHeight = Math.max(100, Math.min(300, Math.min(window.innerHeight * 0.35, geometry.totalHeight + 20)));
+    viewportHeight = summary.absoluteWeightDecibans === 0 ? 48 : Math.max(1, geometry.totalHeight);
     coneScroll.style.height = `${viewportHeight}px`;
-    coneScroll.style.setProperty("--cone-height", `${viewportHeight}px`);
-    const scrollable = geometry.totalHeight > coneScroll.clientHeight + 0.5;
-    coneScroll.classList.toggle("is-scrollable", scrollable);
-    const adjustedWidth = Math.max(1, Math.round(coneScroll.clientWidth || 340));
+    const adjustedWidth = Math.max(1, Math.round(priorTrack.clientWidth || 340));
     if (adjustedWidth !== viewportWidth) {
       viewportWidth = adjustedWidth;
-      pixelsPerDeciban = viewportWidth / amplitude;
+      horizontalPixelsPerDeciban = viewportWidth / amplitude;
+      verticalPixelsPerDeciban = horizontalPixelsPerDeciban * VERTICAL_PIXELS_PER_HORIZONTAL_PIXEL;
       geometry = buildGeometry(displayDiagram, {
-        pixelsPerDeciban,
+        horizontalPixelsPerDeciban,
+        verticalPixelsPerDeciban,
         breakHeight: BREAK_HEIGHT,
         minPriorDecibans: priorBounds.minPriorDecibans,
         maxPriorDecibans: priorBounds.maxPriorDecibans
       });
     }
-    coneSpacer.style.height = `${scrollable ? geometry.totalHeight : coneScroll.clientHeight}px`;
-    if (!scrollable) coneScroll.scrollTop = 0;
     canvas.dataset.minimum = String(geometry.minimum);
     canvas.dataset.maximum = String(geometry.maximum);
     canvas.dataset.posteriorMinimum = String(geometry.currentInterval.minimum);
@@ -3733,16 +4495,16 @@ tbody th {
     });
     drawVisualization();
     syncPriorHandles();
+    syncPosteriorInterval();
+    syncBandCaptionPlacement();
+    syncAxisGuides();
   }
   function addEvidenceItem(categoryId, direction) {
     const category = categories.find(({ id }) => id === categoryId);
     if (!category) return;
     evidence = addEvidence(evidence, category, direction, nextEvidenceId);
-    const item = evidence.at(-1);
     nextEvidenceId += 1;
-    selectedEvidenceId = item.id;
     update();
-    coneScroll.scrollTop = 0;
   }
   function createWeightCell(category, label, direction) {
     const weight = category.weights[direction];
@@ -3841,6 +4603,7 @@ tbody th {
         if (addButton) addEvidenceItem(category.id, addButton.dataset.direction);
         if (event.target.closest(".remove-category")) {
           ({ categories, evidence } = removeCategory(categories, evidence, category.id));
+          if (!evidence.some(({ id }) => id === selectedEvidenceId)) selectedEvidenceId = null;
           renderCategoryRows();
           renderPresetOptions();
           update();
@@ -3864,16 +4627,13 @@ tbody th {
         restoredCategory = true;
       }
       evidence = addEvidence(evidence, category, direction, nextEvidenceId);
-      const item = evidence.at(-1);
       nextEvidenceId += 1;
-      selectedEvidenceId = item.id;
     }
     if (restoredCategory) {
       renderCategoryRows();
       renderPresetOptions();
     }
     update();
-    coneScroll.scrollTop = 0;
   }
   function writeColorOptions(options) {
     saturationThreshold.value = String(options.saturationThresholdDecibans);
@@ -3905,7 +4665,6 @@ tbody th {
     minPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.minPriorDecibans);
     maxPriorDecibans.value = String(DEFAULT_PRIOR_BOUNDS.maxPriorDecibans);
     update();
-    coneScroll.scrollTop = 0;
   }
   var scenarioList = document.querySelector("#scenario-list");
   var presetCategoryForm = document.querySelector("#preset-category-form");
@@ -3957,6 +4716,7 @@ tbody th {
     for (const element of document.querySelectorAll("[data-i18n-placeholder]")) {
       element.setAttribute("placeholder", i18n.t(element.dataset.i18nPlaceholder));
     }
+    syncDiagramDetailsState();
   }
   var languageSelect = document.querySelector("#language");
   for (const locale of supportedLocales) {
@@ -3967,7 +4727,6 @@ tbody th {
   }
   languageSelect.value = i18n.locale;
   languageSelect.addEventListener("change", () => {
-    const scrollTop = coneScroll.scrollTop;
     i18n.setLocale(languageSelect.value);
     languageSelect.value = i18n.locale;
     try {
@@ -3982,10 +4741,7 @@ tbody th {
     renderPresetOptions();
     renderScenarios();
     update();
-    requestAnimationFrame(() => {
-      coneScroll.scrollTop = scrollTop;
-      drawVisualization();
-    });
+    requestAnimationFrame(drawVisualization);
   });
   var categoryForm = document.querySelector("#category-form");
   var categoryName = document.querySelector("#category-name");
@@ -4052,14 +4808,14 @@ tbody th {
         domain: { minimumDecibans: geometry.minimum, maximumDecibans: geometry.maximum },
         clientX: event.clientX,
         prior,
-        pixelsPerDeciban,
+        horizontalPixelsPerDeciban,
         key: Number(minPriorDecibans.value) === Number(maxPriorDecibans.value) ? null : handle.dataset.priorHandle
       };
       handle.setPointerCapture(event.pointerId);
     });
     handle.addEventListener("pointermove", (event) => {
       if (!priorDrag || !handle.hasPointerCapture(event.pointerId)) return;
-      const delta = (event.clientX - priorDrag.clientX) / priorDrag.pixelsPerDeciban;
+      const delta = (event.clientX - priorDrag.clientX) / priorDrag.horizontalPixelsPerDeciban;
       if (priorDrag.key === null) {
         const next = Math.round(priorDrag.prior + delta);
         if (next === priorDrag.prior) return;
@@ -4091,7 +4847,9 @@ tbody th {
       }
     });
   }
-  coneScroll.addEventListener("scroll", scheduleDraw, { passive: true });
+  diagramDetailsToggle.addEventListener("click", () => {
+    setDiagramDetailsExpanded(!diagramDetailsExpanded);
+  });
   window.addEventListener("resize", () => requestAnimationFrame(update));
   translateStaticUi();
   renderCategoryRows();
