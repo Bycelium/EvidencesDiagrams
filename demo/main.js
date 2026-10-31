@@ -10,6 +10,7 @@ import {
 } from '../dist/index.js';
 import { buildGeometry } from './geometry.js';
 import { drawDiagram } from './diagram-renderer.js';
+import { createLegendProjection } from './color-legend.js';
 import {
   addEvidence,
   CATEGORY_CATALOG,
@@ -79,7 +80,7 @@ const coneWrap = document.querySelector('.cone-wrap');
 const coneDescription = document.querySelector('#cone-description');
 const resultantLabel = document.querySelector('#resultant-label');
 const colorLegend = document.querySelector('#color-legend');
-const legendCanvas = document.querySelector('#legend-triangle');
+const legendCanvas = document.querySelector('#legend-canvas');
 const legendContext = legendCanvas.getContext('2d', { alpha: true });
 const saturationThreshold = document.querySelector('#saturation-threshold');
 const saturationThresholdValue = document.querySelector('#saturation-threshold-value');
@@ -531,35 +532,42 @@ function drawColorLegend() {
   const width = Math.max(1, Math.min(260, Math.round(colorLegend.clientWidth - 32)));
   const height = Math.round(width * .66);
   resizeCanvas(legendCanvas, legendContext, width, height);
-  const baseLeft = { x: 14, y: 25 };
-  const baseRight = { x: width - 14, y: 25 };
-  const apex = { x: width / 2, y: height - 25 };
-  const halfBase = baseRight.x - apex.x;
-  const triangleHeight = apex.y - baseLeft.y;
-  for (let y = Math.ceil(baseLeft.y); y <= apex.y; y += 1) {
-    const proportion = (y - baseLeft.y) / triangleHeight;
-    const halfWidth = halfBase * (1 - proportion);
-    for (let x = Math.ceil(apex.x - halfWidth); x <= Math.floor(apex.x + halfWidth); x += 1) {
-      legendContext.fillStyle = triangleColor({
-        x: (x - apex.x) / halfBase,
-        height: proportion,
-      }, colorOptions);
+  const centerX = width / 2;
+  const topY = 25;
+  const bottomY = height - 25;
+  const fullHalfWidth = width / 2 - 14;
+  const legendHeight = bottomY - topY;
+  const projection = createLegendProjection(colorOptions);
+  for (let y = Math.ceil(topY); y <= bottomY; y += 1) {
+    const legendPosition = (y - topY) / legendHeight;
+    const halfWidth = fullHalfWidth * projection.halfWidthAt(legendPosition);
+    for (let x = Math.ceil(centerX - halfWidth); x <= Math.floor(centerX + halfWidth); x += 1) {
+      legendContext.fillStyle = triangleColor(projection.colorPosition({
+        x: (x - centerX) / fullHalfWidth,
+        height: legendPosition,
+      }), colorOptions);
       legendContext.fillRect(x, y, 1, 1);
     }
   }
   legendContext.strokeStyle = '#334155'; legendContext.lineWidth = 1.5;
-  legendContext.beginPath(); legendContext.moveTo(baseLeft.x, baseLeft.y); legendContext.lineTo(baseRight.x, baseRight.y); legendContext.lineTo(apex.x, apex.y); legendContext.closePath(); legendContext.stroke();
-  const position = trianglePosition(currentDiagram.summary, colorOptions);
-  const x = apex.x + position.x * halfBase;
-  const y = baseLeft.y + position.height * triangleHeight;
+  legendContext.beginPath();
+  legendContext.moveTo(centerX - fullHalfWidth * projection.topHalfWidth, topY);
+  legendContext.lineTo(centerX + fullHalfWidth * projection.topHalfWidth, topY);
+  legendContext.lineTo(centerX + fullHalfWidth, bottomY);
+  legendContext.lineTo(centerX - fullHalfWidth, bottomY);
+  legendContext.closePath();
+  legendContext.stroke();
+  const position = projection.legendPosition(trianglePosition(currentDiagram.summary, colorOptions));
+  const x = centerX + position.x * fullHalfWidth;
+  const y = topY + position.height * legendHeight;
   legendContext.beginPath(); legendContext.arc(x, y, 5, 0, Math.PI * 2);
   legendContext.fillStyle = currentDiagram.resultant.color; legendContext.fill();
   legendContext.strokeStyle = '#0f172a'; legendContext.lineWidth = 2; legendContext.stroke();
   legendContext.fillStyle = '#334155'; legendContext.font = '700 10px system-ui';
-  legendContext.textAlign = 'left'; legendContext.fillText(i18n.t('palette.against'), 0, 10);
-  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.noEvidence'), width / 2, 10);
-  legendContext.textAlign = 'right'; legendContext.fillText(i18n.t('palette.for'), width, 10);
-  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.dissonance'), apex.x, height - 5);
+  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.uncertain'), centerX, 10);
+  legendContext.textAlign = 'left'; legendContext.fillText(i18n.t('palette.against'), 0, height - 5);
+  legendContext.textAlign = 'center'; legendContext.fillText(i18n.t('palette.dissonance'), centerX, height - 5);
+  legendContext.textAlign = 'right'; legendContext.fillText(i18n.t('palette.for'), width, height - 5);
   legendContext.textAlign = 'start';
 }
 

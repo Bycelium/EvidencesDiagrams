@@ -1,4 +1,4 @@
-<!-- Generated from demo/index.template.html, demo/style.css, demo/favicon.svg, demo/main.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->
+<!-- Generated from demo/index.template.html, demo/style.css, demo/favicon.svg, demo/main.js, demo/color-legend.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->
 <!--
 Evidences Diagrams
 Copyright (c) 2026 Bycelium
@@ -1408,7 +1408,7 @@ tbody th {
   margin-top: .8rem;
 }
 
-#legend-triangle {
+#legend-canvas {
   display: block;
   width: min(100%, 260px);
   height: auto;
@@ -1773,11 +1773,11 @@ tbody th {
       </div>
       <div class="controls">
         <section class="scenarios" aria-labelledby="scenarios-title"><h2 id="scenarios-title" data-i18n="scenario.heading">Example scenarios</h2><div id="scenario-list" class="presets"></div></section>
-        <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.</p>
-          <canvas id="legend-triangle" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend triangle: Against at the upper left, No evidence at the top center, For at the upper right, and Dissonance at the lower point. The point shows the current summary.">Triangular color legend.</canvas>
+        <section id="color-legend" class="color-legend" aria-labelledby="color-legend-title"><h2 id="color-legend-title" data-i18n="palette.heading">Color legend</h2><p data-i18n="palette.description">The prior interval sets the width of the gray top. Red, yellow, and green deepen toward the bottom.</p>
+          <canvas id="legend-canvas" role="img" data-i18n="palette.canvasFallback" data-i18n-aria-label="palette.canvasAria" aria-label="Color legend widening downward: uncertain gray spans the top according to the prior interval; against is red at bottom left, dissonance is yellow at bottom center, and for is green at bottom right. The point shows the current summary.">Color legend.</canvas>
           <div class="color" data-i18n-aria-label="palette.currentAria" aria-label="Current summary color"><span id="swatch" class="swatch" aria-hidden="true"></span><code id="hex">#9ca3af</code></div>
-          <div class="palette"><label for="gray-anchor"><span data-i18n="palette.noEvidence">No evidence</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Evidence needed for full color</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1" aria-describedby="palette-threshold-help"></label></div>
-          <p id="palette-threshold-help" class="palette-help" data-i18n="palette.help">Lower values give stronger colors sooner. Red and green build beyond the prior’s gray range; yellow builds as conflicting evidence accumulates.</p>
+          <div class="palette"><label for="gray-anchor"><span data-i18n="palette.uncertain">Uncertain</span><input id="gray-anchor" type="color"></label><label for="yellow-anchor"><span data-i18n="palette.dissonance">Dissonance</span><input id="yellow-anchor" type="color"></label><label for="red-anchor"><span data-i18n="palette.against">Against</span><input id="red-anchor" type="color"></label><label for="green-anchor"><span data-i18n="palette.for">For</span><input id="green-anchor" type="color"></label><label class="threshold" for="saturation-threshold"><span data-i18n="palette.saturation">Evidence needed for full color</span><strong><output id="saturation-threshold-value">30</output> dBan</strong><input id="saturation-threshold" type="range" min="1" max="100" step="1" aria-describedby="palette-threshold-help"></label></div>
+          <p id="palette-threshold-help" class="palette-help" data-i18n="palette.help">Lower values give stronger colors sooner. The gray top widens with the prior interval. Red and green deepen toward the lower corners; yellow deepens toward the lower center.</p>
         </section>
       </div>
     </div>
@@ -3110,6 +3110,53 @@ tbody th {
     drawResultant(priorResultantContext2, data, 15);
   }
 
+  // demo/color-legend.js
+  function projectionGeometry(options) {
+    const minimum = options?.minPriorDecibans;
+    const maximum = options?.maxPriorDecibans;
+    const threshold = options?.saturationThresholdDecibans;
+    if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || minimum > maximum) {
+      throw new RangeError("Legend priors must be finite and ordered.");
+    }
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+      throw new RangeError("The legend saturation threshold must be finite and positive.");
+    }
+    const priorHalfWidth = maximum / 2 - minimum / 2;
+    const topHalfWidth = priorHalfWidth < threshold ? priorHalfWidth / threshold / (1 + priorHalfWidth / threshold) : 1 / (1 + threshold / priorHalfWidth);
+    return { priorHalfWidth, threshold, topHalfWidth };
+  }
+  function clamp2(value) {
+    return Math.max(-1, Math.min(1, value));
+  }
+  function createLegendProjection(options) {
+    const { priorHalfWidth, threshold, topHalfWidth } = projectionGeometry(options);
+    function directionalSaturation2(orientation) {
+      if (orientation === 1) return 1;
+      const radius = priorHalfWidth + threshold;
+      const saturation = Number.isFinite(radius) ? (orientation * radius - priorHalfWidth) / threshold : orientation - (1 - orientation) * priorHalfWidth / threshold;
+      const tolerance2 = 8 * Number.EPSILON * Math.max(1, priorHalfWidth / threshold);
+      return saturation <= tolerance2 ? 0 : Math.min(saturation, 1);
+    }
+    return {
+      topHalfWidth,
+      halfWidthAt(height) {
+        return topHalfWidth + (1 - topHalfWidth) * height;
+      },
+      colorPosition({ x, height }) {
+        const yellowWeight = Math.min(
+          height,
+          Math.max(0, topHalfWidth + (1 - topHalfWidth) * height - Math.abs(x))
+        );
+        return { x, height: yellowWeight };
+      },
+      legendPosition({ x, height }) {
+        const orientation = height === 1 ? 0 : Math.abs(clamp2(x / (1 - height)));
+        const saturation = directionalSaturation2(orientation);
+        return { x, height: height + (1 - height) * saturation };
+      }
+    };
+  }
+
   // demo/category-state.js
   var categoryDefinition = (id, labelKey, descriptionKey, initialWeight = 10) => Object.freeze({
     id,
@@ -3375,16 +3422,16 @@ tbody th {
       "scenario.newsReportForAgainst": "1 news report for + 1 against",
       "scenario.officialDataAgainstTwoNewsReportsFor": "1 official data source against + 2 news reports for",
       "palette.heading": "Color legend",
-      "palette.description": "The triangle summarizes evidence and resultant color. Dissonance remains visible when evidence points in opposing directions.",
-      "palette.canvasAria": "Color legend triangle: Against at the upper left, No evidence at the top center, For at the upper right, and Dissonance at the lower point. The point shows the current summary.",
-      "palette.canvasFallback": "Triangular color legend.",
+      "palette.description": "The prior interval sets the width of the gray top. Red, yellow, and green deepen toward the bottom.",
+      "palette.canvasAria": "Color legend widening downward: uncertain gray spans the top according to the prior interval; against is red at bottom left, dissonance is yellow at bottom center, and for is green at bottom right. The point shows the current summary.",
+      "palette.canvasFallback": "Color legend.",
       "palette.currentAria": "Current summary color",
       "palette.saturation": "Evidence needed for full color",
-      "palette.noEvidence": "No evidence",
+      "palette.uncertain": "Uncertain",
       "palette.dissonance": "Dissonance",
       "palette.against": "Against",
       "palette.for": "For",
-      "palette.help": "Lower values give stronger colors sooner. Red and green build beyond the prior’s gray range; yellow builds as conflicting evidence accumulates.",
+      "palette.help": "Lower values give stronger colors sooner. The gray top widens with the prior interval. Red and green deepen toward the lower corners; yellow deepens toward the lower center.",
       "action.reset": "Reset",
       "direction.for": "for",
       "direction.against": "against",
@@ -3561,16 +3608,16 @@ tbody th {
       "scenario.newsReportForAgainst": "1 article de presse pour + 1 article de presse contre",
       "scenario.officialDataAgainstTwoNewsReportsFor": "1 donnée officielle contre + 2 articles de presse pour",
       "palette.heading": "Légende des couleurs",
-      "palette.description": "Le triangle résume la couleur des preuves et de la résultante. La dissonance reste visible lorsque les preuves pointent dans des directions opposées.",
-      "palette.canvasAria": "Triangle de légende des couleurs : Contre en haut à gauche, Aucune preuve en haut au centre, Pour en haut à droite et Dissonance à la pointe inférieure. Le point indique la synthèse actuelle.",
-      "palette.canvasFallback": "Légende triangulaire des couleurs.",
+      "palette.description": "L’intervalle a priori détermine la largeur du haut gris. Le rouge, le jaune et le vert s’intensifient vers le bas.",
+      "palette.canvasAria": "Légende des couleurs s’élargissant vers le bas : le gris de l’incertitude occupe le haut selon l’intervalle a priori ; Contre est rouge en bas à gauche, Dissonance est jaune en bas au centre et Pour est vert en bas à droite. Le point indique la synthèse actuelle.",
+      "palette.canvasFallback": "Légende des couleurs.",
       "palette.currentAria": "Couleur de la synthèse actuelle",
       "palette.saturation": "Poids requis pour une couleur intense",
-      "palette.noEvidence": "Aucune preuve",
+      "palette.uncertain": "Incertitude",
       "palette.dissonance": "Dissonance",
       "palette.against": "Contre",
       "palette.for": "Pour",
-      "palette.help": "Des valeurs plus faibles renforcent les couleurs plus tôt. Le rouge et le vert se développent au-delà de la zone grise de l’a priori ; le jaune augmente lorsque des preuves contradictoires s’accumulent.",
+      "palette.help": "Des valeurs plus faibles renforcent les couleurs plus tôt. Le haut gris s’élargit avec l’intervalle a priori. Le rouge et le vert s’intensifient vers les coins inférieurs ; le jaune s’intensifie vers le bas au centre.",
       "action.reset": "Réinitialiser",
       "direction.for": "pour",
       "direction.against": "contre",
@@ -3716,7 +3763,7 @@ tbody th {
   var coneDescription = document.querySelector("#cone-description");
   var resultantLabel = document.querySelector("#resultant-label");
   var colorLegend = document.querySelector("#color-legend");
-  var legendCanvas = document.querySelector("#legend-triangle");
+  var legendCanvas = document.querySelector("#legend-canvas");
   var legendContext = legendCanvas.getContext("2d", { alpha: true });
   var saturationThreshold = document.querySelector("#saturation-threshold");
   var saturationThresholdValue = document.querySelector("#saturation-threshold-value");
@@ -4079,11 +4126,11 @@ tbody th {
       return caption.scrollWidth + Number.parseFloat(parentStyle.paddingLeft) + Number.parseFloat(parentStyle.paddingRight);
     }), 0));
     coneWrap.style.setProperty("--band-caption-overlay-width", `${captionWidth}px`);
-    const clamp2 = (value) => Math.max(geometry.minimum, Math.min(geometry.maximum, value));
-    const priorMinimumX = (clamp2(geometry.minPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
-    const priorMaximumX = (clamp2(geometry.maxPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
-    const posteriorMinimumX = (clamp2(geometry.currentInterval.minimum) - geometry.minimum) * horizontalPixelsPerDeciban;
-    const posteriorMaximumX = (clamp2(geometry.currentInterval.maximum) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const clamp3 = (value) => Math.max(geometry.minimum, Math.min(geometry.maximum, value));
+    const priorMinimumX = (clamp3(geometry.minPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const priorMaximumX = (clamp3(geometry.maxPriorDecibans) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const posteriorMinimumX = (clamp3(geometry.currentInterval.minimum) - geometry.minimum) * horizontalPixelsPerDeciban;
+    const posteriorMaximumX = (clamp3(geometry.currentInterval.maximum) - geometry.minimum) * horizontalPixelsPerDeciban;
     const negative = geometry.totalWeight < 0;
     const edgeRoom = negative ? viewportWidth - Math.max(priorMaximumX, posteriorMaximumX) : Math.min(priorMinimumX, posteriorMinimumX);
     const captionsStacked = edgeRoom < captionWidth + 18;
@@ -4122,33 +4169,35 @@ tbody th {
     const width = Math.max(1, Math.min(260, Math.round(colorLegend.clientWidth - 32)));
     const height = Math.round(width * 0.66);
     resizeCanvas2(legendCanvas, legendContext, width, height);
-    const baseLeft = { x: 14, y: 25 };
-    const baseRight = { x: width - 14, y: 25 };
-    const apex = { x: width / 2, y: height - 25 };
-    const halfBase = baseRight.x - apex.x;
-    const triangleHeight = apex.y - baseLeft.y;
-    for (let y2 = Math.ceil(baseLeft.y); y2 <= apex.y; y2 += 1) {
-      const proportion = (y2 - baseLeft.y) / triangleHeight;
-      const halfWidth = halfBase * (1 - proportion);
-      for (let x2 = Math.ceil(apex.x - halfWidth); x2 <= Math.floor(apex.x + halfWidth); x2 += 1) {
-        legendContext.fillStyle = triangleColor({
-          x: (x2 - apex.x) / halfBase,
-          height: proportion
-        }, colorOptions);
+    const centerX = width / 2;
+    const topY = 25;
+    const bottomY = height - 25;
+    const fullHalfWidth = width / 2 - 14;
+    const legendHeight = bottomY - topY;
+    const projection = createLegendProjection(colorOptions);
+    for (let y2 = Math.ceil(topY); y2 <= bottomY; y2 += 1) {
+      const legendPosition = (y2 - topY) / legendHeight;
+      const halfWidth = fullHalfWidth * projection.halfWidthAt(legendPosition);
+      for (let x2 = Math.ceil(centerX - halfWidth); x2 <= Math.floor(centerX + halfWidth); x2 += 1) {
+        legendContext.fillStyle = triangleColor(projection.colorPosition({
+          x: (x2 - centerX) / fullHalfWidth,
+          height: legendPosition
+        }), colorOptions);
         legendContext.fillRect(x2, y2, 1, 1);
       }
     }
     legendContext.strokeStyle = "#334155";
     legendContext.lineWidth = 1.5;
     legendContext.beginPath();
-    legendContext.moveTo(baseLeft.x, baseLeft.y);
-    legendContext.lineTo(baseRight.x, baseRight.y);
-    legendContext.lineTo(apex.x, apex.y);
+    legendContext.moveTo(centerX - fullHalfWidth * projection.topHalfWidth, topY);
+    legendContext.lineTo(centerX + fullHalfWidth * projection.topHalfWidth, topY);
+    legendContext.lineTo(centerX + fullHalfWidth, bottomY);
+    legendContext.lineTo(centerX - fullHalfWidth, bottomY);
     legendContext.closePath();
     legendContext.stroke();
-    const position = trianglePosition(currentDiagram.summary, colorOptions);
-    const x = apex.x + position.x * halfBase;
-    const y = baseLeft.y + position.height * triangleHeight;
+    const position = projection.legendPosition(trianglePosition(currentDiagram.summary, colorOptions));
+    const x = centerX + position.x * fullHalfWidth;
+    const y = topY + position.height * legendHeight;
     legendContext.beginPath();
     legendContext.arc(x, y, 5, 0, Math.PI * 2);
     legendContext.fillStyle = currentDiagram.resultant.color;
@@ -4158,14 +4207,14 @@ tbody th {
     legendContext.stroke();
     legendContext.fillStyle = "#334155";
     legendContext.font = "700 10px system-ui";
+    legendContext.textAlign = "center";
+    legendContext.fillText(i18n.t("palette.uncertain"), centerX, 10);
     legendContext.textAlign = "left";
-    legendContext.fillText(i18n.t("palette.against"), 0, 10);
+    legendContext.fillText(i18n.t("palette.against"), 0, height - 5);
     legendContext.textAlign = "center";
-    legendContext.fillText(i18n.t("palette.noEvidence"), width / 2, 10);
+    legendContext.fillText(i18n.t("palette.dissonance"), centerX, height - 5);
     legendContext.textAlign = "right";
-    legendContext.fillText(i18n.t("palette.for"), width, 10);
-    legendContext.textAlign = "center";
-    legendContext.fillText(i18n.t("palette.dissonance"), apex.x, height - 5);
+    legendContext.fillText(i18n.t("palette.for"), width, height - 5);
     legendContext.textAlign = "start";
   }
   function drawVisualization() {

@@ -25,9 +25,11 @@ The demo supports English and French, with editable categories and illustrative 
 <img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/no-evidence.png" width="360" alt="Initial diagram with no evidence, a net weight of zero decibans, and a prior interval.">
 
 With no evidence, the result is `none (0 dBan)`. The prior band is visible and
-the probability remains indeterminate. The color legend places evidence against
-at the upper left, no evidence at the top center, evidence for at the upper
-right, and dissonance at the lower point.
+the probability remains indeterminate. The color legend starts with uncertain
+gray along a top edge whose width follows the prior interval. It widens downward
+to red for evidence against, yellow for dissonance, and green for evidence for.
+An exact prior collapses the top edge to a point. A shifted prior can tint the
+result even when no evidence has been added.
 
 The diagram places the editable prior and read-only posterior on their own
 probability axes. Expand or collapse the evidence path between them with the
@@ -36,7 +38,7 @@ from prior to posterior; the surrounding envelope is shown at half opacity.
 Evidence arrows descend one pixel for every two horizontal pixels, while their
 horizontal positions retain the deciban and probability scale.
 
-<img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/color-legend.png" width="360" alt="Downward triangular color legend with evidence against at the upper left, no evidence at the top center, evidence for at the upper right, and dissonance at the lower point.">
+<img src="https://raw.githubusercontent.com/Bycelium/EvidencesDiagrams/main/images/color-legend.png" width="360" alt="Color legend widening from a prior-dependent gray top edge to red at the lower left, yellow at the lower center, and green at the lower right.">
 
 ### Adding and combining evidence
 

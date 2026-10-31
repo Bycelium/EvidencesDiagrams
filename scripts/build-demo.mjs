@@ -15,7 +15,7 @@ const checkOnly = process.argv.includes('--check');
 const cssTag = '<link rel="stylesheet" href="./style.css">';
 const javaScriptTag = '<script type="module" src="./main.js"></script>';
 const faviconTag = '<link rel="icon" href="./favicon.svg" type="image/svg+xml" sizes="any">';
-const generatedComment = '<!-- Generated from demo/index.template.html, demo/style.css, demo/favicon.svg, demo/main.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->\n';
+const generatedComment = '<!-- Generated from demo/index.template.html, demo/style.css, demo/favicon.svg, demo/main.js, demo/color-legend.js, demo/geometry.js, and demo/diagram-renderer.js by pnpm build:demo. -->\n';
 
 function pngDimensions(content) {
   const signature = '89504e470d0a1a0a';

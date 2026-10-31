@@ -1171,7 +1171,7 @@ tbody th {
   margin-top: .8rem;
 }
 
-#legend-triangle {
+#legend-canvas {
   display: block;
   width: min(100%, 260px);
   height: auto;
